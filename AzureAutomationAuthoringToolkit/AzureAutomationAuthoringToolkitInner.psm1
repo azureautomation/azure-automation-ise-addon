@@ -90,7 +90,9 @@ function Get-AzureAutomationAuthoringToolkitStaticAsset {
         throw $_
     }
 
-    $AssetValue = $StaticAssets.$Type.$Name
+    $AssetValue = $StaticAssets.$Type | Where-Object -FilterScript {
+        $_.Name -eq $Name
+    }
 
     if($AssetValue) {
         Write-Verbose "AzureAutomationAuthoringToolkit: Found static value for $Type asset '$Name.'"
@@ -100,7 +102,9 @@ function Get-AzureAutomationAuthoringToolkitStaticAsset {
         }
     }
     else {
-        $AssetValue = $SecureStaticAssets.$Type.$Name
+        $AssetValue = $SecureStaticAssets.$Type | Where-Object -FilterScript {
+            $_.Name -eq $Name
+        }
 
         if($AssetValue) {
             Write-Verbose "AzureAutomationAuthoringToolkit: Found secure static value for $Type asset '$Name.'"
@@ -219,6 +223,9 @@ function Get-AutomationVariable {
             }
         }
     }
+    else {
+        $AssetValue = $AssetValue.Value
+    }
 
     Write-Output $AssetValue
 }
@@ -247,7 +254,15 @@ function Get-AutomationConnection {
     }
     else {
         # Convert PSCustomObject to Hashtable
-        $AssetValue = $AssetValue.psobject.properties | foreach -begin {$h=@{}} -process {$h."$($_.Name)" = $_.Value} -end {$h}
+        $Temp = @{}
+
+        $AssetValue.psobject.properties | ForEach-Object {
+            if($_.Name -ne "Name") {
+                $Temp."$($_.Name)" = $_.Value
+            }
+        }
+
+        $AssetValue = $Temp
     }
 
     Write-Output $AssetValue
