@@ -19,11 +19,6 @@ workflow Get-AutomationPSCredential {
     Write-Verbose "AzureAutomationAuthoringToolkit: Looking for static credential asset with name '$Name'"
 
     $AssetValue = Get-AzureAutomationAuthoringToolkitStaticAsset -Type PSCredential -Name $Name
-    
-    if(!$AssetValue) {   
-        throw "AzureAutomationAuthoringToolkit: Static PSCredential asset named '$Name' not found." 
-        ## TODO: check if Az Automation throws an exception if pscred asset not found, as we should match that behavior
-    }
 
     if($AssetValue) {
         Write-Verbose "AzureAutomationAuthoringToolkit: Converting '$Name' asset value to a proper PSCredential"

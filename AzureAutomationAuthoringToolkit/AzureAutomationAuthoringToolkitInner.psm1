@@ -90,31 +90,55 @@ function Get-AzureAutomationAuthoringToolkitStaticAsset {
         throw $_
     }
 
-    $AssetValue = $StaticAssets.$Type | Where-Object -FilterScript {
+    $Asset = $StaticAssets.$Type | Where-Object -FilterScript {
         $_.Name -eq $Name
     }
 
-    if($AssetValue) {
+    if($Asset) {
         Write-Verbose "AzureAutomationAuthoringToolkit: Found static value for $Type asset '$Name.'"
-
-        if($Type -eq "Certificate") {
-            $AssetValue = Get-AzureAutomationAuthoringToolkitLocalCertificate -Name $Name -Thumbprint $AssetValue.Thumbprint
-        }
     }
     else {
-        $AssetValue = $SecureStaticAssets.$Type | Where-Object -FilterScript {
+        $Asset = $SecureStaticAssets.$Type | Where-Object -FilterScript {
             $_.Name -eq $Name
         }
 
-        if($AssetValue) {
+        if($Asset) {
             Write-Verbose "AzureAutomationAuthoringToolkit: Found secure static value for $Type asset '$Name.'"
-        }
-        else {
-            Write-Verbose "AzureAutomationAuthoringToolkit: Static value for $Type asset '$Name' not found."
         }
     }
 
-    Write-Output $AssetValue
+    if($Asset) {
+        if($Type -eq "Certificate") {
+            $AssetValue = Get-AzureAutomationAuthoringToolkitLocalCertificate -Name $Name -Thumbprint $Asset.Thumbprint
+        }
+        elseif($Type -eq "Variable") {
+            $AssetValue = $Asset.Value
+        }
+        elseif($Type -eq "Connection") {
+             # Convert PSCustomObject to Hashtable
+            $Temp = @{}
+
+            $Asset.psobject.properties | ForEach-Object {
+                if($_.Name -ne "Name") {
+                    $Temp."$($_.Name)" = $_.Value
+                }
+            }
+
+            $AssetValue = $Temp
+        }
+        elseif($Type -eq "PSCredential") {
+            $AssetValue = @{
+                Username = $Asset.Username
+                Password = $Asset.Password
+            }
+        }
+
+        Write-Output $AssetValue
+    }
+    else {
+        Write-Verbose "AzureAutomationAuthoringToolkit: Static value for $Type asset '$Name' not found." 
+        Write-Warning "AzureAutomationAuthoringToolkit: Warning - Static value for $Type asset '$Name' not found."
+    }
 }
 
 <#
@@ -123,8 +147,8 @@ function Get-AzureAutomationAuthoringToolkitStaticAsset {
 #>
 function Get-AzureAutomationAuthoringToolkitConfiguration {       
     $ConfigurationError = "AzureAutomationAuthoringToolkit: AzureAutomationAuthoringToolkit configuration defined in 
-    '$script:ConfigurationPath' is incorrect. Make sure the file exists, contains valid JSON, and contains 'AutomationAccountName,'
-    'StaticAssetsPath,' and 'SecureStaticAssetsPath' fields."
+    '$script:ConfigurationPath' is incorrect. Make sure the file exists, contains valid JSON, and contains 'StaticAssetsPath'
+    and 'SecureStaticAssetsPath' fields."
 
     Write-Verbose "AzureAutomationAuthoringToolkit: Grabbing AzureAutomationAuthoringToolkit configuration."
 
@@ -136,49 +160,11 @@ function Get-AzureAutomationAuthoringToolkitConfiguration {
         throw $_
     }
 
-    if(!($Configuration.AutomationAccountName -and $Configuration.StaticAssetsPath -and $Configuration.SecureStaticAssetsPath)) {
+    if(!($Configuration.StaticAssetsPath -and $Configuration.SecureStaticAssetsPath)) {
         throw $ConfigurationError
     }
 
     Write-Output $Configuration
-}
-
-<#
-    .SYNOPSIS
-        Test if the Azure Automation Authoring Toolkit can talk to the proper Azure Automation account.
-        Not meant to be called directly.
-#>
-function Test-AzureAutomationAuthoringToolkitAzureConnection {
-    $Configuration = Get-AzureAutomationAuthoringToolkitConfiguration
-    $AccountName = $Configuration.AutomationAccountName
-
-    Write-Verbose "AzureAutomationAuthoringToolkit: Testing AzureAutomationAuthoringToolkit ability to connect to Azure."
-
-    try {
-        Get-AzureAutomationAccount -ErrorAction Stop | Out-Null
-    }
-    catch {
-        Write-Error "AzureAutomationAuthoringToolkit: AzureAutomationAuthoringToolkit could not connect to Azure.
-        Make sure the Azure PowerShell module is installed and a connection from the Azure 
-        PowerShell module to Azure has been set up with either Import-AzurePublishSettingsFile, 
-        Set-AzureSubscription, or Add-AzureAccount. For more info see: http://azure.microsoft.com/en-us/documentation/articles/powershell-install-configure/#Connect"
-
-        throw $_
-    }
-    
-    try {
-        Get-AzureAutomationAccount -Name $AccountName -ErrorAction Stop | Out-Null
-    }
-    catch {
-        Write-Error "AzureAutomationAuthoringToolkit: AzureAutomationAuthoringToolkit could not find the Azure 
-        Automation account '$AccountName'. Make sure it exists in Azure Automation for the current subscription. If you 
-        intended to use a different Azure Automation account, update the 'AutomationAccountName' field in $script:ConfigurationPath"
-
-        throw $_
-    }
-    
-    Write-Verbose "AzureAutomationAuthoringToolkit: AzureAutomationAuthoringToolkit was able to connect to Azure 
-    and Automation account '$AccountName.'"  
 }
 
 <#
@@ -198,34 +184,6 @@ function Get-AutomationVariable {
     Write-Verbose "AzureAutomationAuthoringToolkit: Looking for static variable asset with name '$Name'"
 
     $AssetValue = Get-AzureAutomationAuthoringToolkitStaticAsset -Type Variable -Name $Name
-    
-    if(!$AssetValue) {
-        $Configuration = Get-AzureAutomationAuthoringToolkitConfiguration
-        $AccountName = $Configuration.AutomationAccountName
-
-        Write-Verbose "AzureAutomationAuthoringToolkit: Static variable asset named '$Name' not found, 
-        attempting to use Azure Automation cmdlets to grab its value from '$AccountName' automation account."
-        
-        Test-AzureAutomationAuthoringToolkitAzureConnection
-
-        $Variable = Get-AzureAutomationVariable -Name $Name -AutomationAccountName $AccountName
-
-        if(!$Variable) {
-            throw "AzureAutomationAuthoringToolkit: Variable asset named '$Name' does not exist in '$AccountName' automation account."
-            ## TODO: check if Az Automation throws an exception if var asset not found, as we should match that behavior
-        }
-        else {           
-            if($Variable.Encrypted) {
-                throw "AzureAutomationAuthoringToolkit: Variable asset named '$Name' exists in '$AccountName' automation account, but it is encrypted."
-            }
-            else {
-                $AssetValue = $Variable.Value
-            }
-        }
-    }
-    else {
-        $AssetValue = $AssetValue.Value
-    }
 
     Write-Output $AssetValue
 }
@@ -247,23 +205,6 @@ function Get-AutomationConnection {
     Write-Verbose "AzureAutomationAuthoringToolkit: Looking for static connection asset with name '$Name'"
 
     $AssetValue = Get-AzureAutomationAuthoringToolkitStaticAsset -Type Connection -Name $Name
-    
-    if(!$AssetValue) {
-        throw "AzureAutomationAuthoringToolkit: Static Connection asset named '$Name' not found." 
-        ## TODO: check if Az Automation throws an exception if connection asset not found, as we should match that behavior
-    }
-    else {
-        # Convert PSCustomObject to Hashtable
-        $Temp = @{}
-
-        $AssetValue.psobject.properties | ForEach-Object {
-            if($_.Name -ne "Name") {
-                $Temp."$($_.Name)" = $_.Value
-            }
-        }
-
-        $AssetValue = $Temp
-    }
 
     Write-Output $AssetValue
 }
@@ -315,6 +256,7 @@ function Set-AutomationVariable {
         else {
             throw "AzureAutomationAuthoringToolkit: Cannot update variable asset '$Name.' It does not exist."
             ## TODO: check if Az Automation throws an exception if var asset not found, as we should match that behavior
+            ## test showed there is an exception if not found
         }
     }
 }
@@ -336,99 +278,6 @@ function Get-AutomationCertificate {
     Write-Verbose "AzureAutomationAuthoringToolkit: Looking for static certificate asset with name '$Name'"
 
     $AssetValue = Get-AzureAutomationAuthoringToolkitStaticAsset -Type Certificate -Name $Name
-    
-    if(!$AssetValue) {
-        $Configuration = Get-AzureAutomationAuthoringToolkitConfiguration
-        $AccountName = $Configuration.AutomationAccountName
-
-        Write-Verbose "AzureAutomationAuthoringToolkit: Static certificate asset named '$Name' not found, 
-        attempting to use Azure Automation cmdlets to grab its thumbprint from '$AccountName' automation account."
-        
-        Test-AzureAutomationAuthoringToolkitAzureConnection
-
-        $CertAsset = Get-AzureAutomationCertificate -Name $Name -AutomationAccountName $AccountName
-
-        if(!$CertAsset) {
-            throw "AzureAutomationAuthoringToolkit: Certificate asset named '$Name' does not exist in '$AccountName' automation account."
-            ## TODO: check if Az Automation throws an exception if cert asset not found, as we should match that behavior
-        }
-        else {           
-            try {
-                $AssetValue = Get-AzureAutomationAuthoringToolkitLocalCertificate -Name $Name -Thumbprint $CertAsset.Thumbprint
-            }
-            catch {
-                throw "AzureAutomationAuthoringToolkit: Certificate asset '$Name' referenced certificate with 
-                thumbprint '$($CertAsset.Thumbprint)' but no certificate with that thumbprint exist on the local system." 
-            }
-        }
-    }
 
     Write-Output $AssetValue
-}
-
-<#
-    .SYNOPSIS
-        Exports runbooks from Azure Automation to the local filesystem.
-        Part of the Azure Automation Authoring Toolkit to help author runbooks locally.
-#>
-function Export-AzureAutomationRunbooksToLocal {
-    [CmdletBinding(HelpUri='http://aka.ms/azureautomationauthoringtoolkit')]
-    [OutputType([System.IO.FileInfo])]
-    
-    param(
-        [Parameter(Mandatory=$False)]
-        [string[]] $RunbookName,
-
-        [Parameter(Mandatory=$False)]
-        [string] $Path,
-
-        [Parameter(Mandatory=$False)]
-        [switch] $Draft,
-
-        [Parameter(Mandatory=$False)]
-        [switch] $Force
-    )
-
-    $Configuration = Get-AzureAutomationAuthoringToolkitConfiguration
-    $AccountName = $Configuration.AutomationAccountName
-
-    Test-AzureAutomationAuthoringToolkitAzureConnection
-
-    if(!$RunbookName) {
-        $RunbookName = (Get-AzureAutomationRunbook -AutomationAccountName $AccountName).Name
-    }
-
-    $Slot = "Published"
-    if($Draft.IsPresent) {
-        $Slot = "Draft"
-    }
-
-    if(!$Path) {
-        $Path = (pwd).Path
-    }
-
-    $Output = @()
-
-    $RunbookName | ForEach-Object {
-        Write-Verbose "AzureAutomationAuthoringToolkit: Outputting runbook '$_' to $Path"
-        
-        $RbDefinition = Get-AzureAutomationRunbookDefinition -AutomationAccountName $AccountName -Name $_ -Slot $Slot
-        $FilePath = "$Path\$_.ps1"
-        $FilePresent = Get-Item -Path $FilePath -ErrorAction SilentlyContinue
-
-        if($RbDefinition) {
-            
-            if(!$FilePresent -or ($FilePresent -and $Force.IsPresent)) {
-                Remove-Item $FilePath -Force -ErrorAction SilentlyContinue
-                $RbDefinition.Content >> $FilePath
-
-                $Output += (Get-Item $FilePath)
-            }
-            else {
-                Write-Error "AzureAutomationAuthoringToolkit: $FilePath already exists and -Force was not specified. Skipping runbook '$_'"
-            }
-        }
-    }
-
-    Write-Output $Output
 }
