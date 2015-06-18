@@ -7,24 +7,36 @@ $script:StaticAssetsPath = "$PSScriptRoot\StaticAssets.json"
 $script:SecureStaticAssetsPath = "$PSScriptRoot\SecureStaticAssets.json"
 $script:IseAddonPath = "$PSScriptRoot\ISEaddon\AzureAutomation.dll"
 
+$script:IseAddOnTextForPowerShellProfile = "Add-AzureAutomationIseAddOnToIse"
+
 <#
     .SYNOPSIS
-        Adds the Azure Automation ISE Add-on to the current PowerShell ISE session.
+        Adds the Azure Automation ISE add-on to the current PowerShell ISE session.
         Not meant to be called directly.
 #>
 function Add-AzureAutomationIseAddOnToIse {
     if($PSIse) {
         Add-Type -Path $script:IseAddonPath | Out-Null
-        $PSIse.CurrentPowerShellTab.VerticalAddOnTools.Add(‘Azure Automation ISE Add-on’, [AzureAutomation.AzureAutomationControl], $True) | Out-Null
+        $PSIse.CurrentPowerShellTab.VerticalAddOnTools.Add(‘Azure Automation ISE add-on’, [AzureAutomation.AzureAutomationControl], $True) | Out-Null
     }
 }
 
 <#
     .SYNOPSIS
-        Sets up the Azure Automation ISE Add-on for later use in the PowerShell ISE.
+        Sets up the Azure Automation ISE add-on for use in the PowerShell ISE.
 #>
-function Initialize-AzureAutomationIseAddOn {
-    Add-Content $Profile "Add-AzureAutomationIseAddOnToIse"
+function Install-AzureAutomationIseAddOn {
+    Add-Content $Profile $script:IseAddOnTextForPowerShellProfile
+    Add-AzureAutomationIseAddOnToIse
+}
+
+<#
+    .SYNOPSIS
+        Removes the Azure Automation ISE add-on from the PowerShell ISE.
+#>
+function Uninstall-AzureAutomationIseAddOn {
+    $Content = Get-Content $Profile
+    $Content.Replace($script:IseAddOnTextForPowerShellProfile, "") | Set-Content $Profile
 }
 
 <#
