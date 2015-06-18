@@ -263,34 +263,26 @@ function Set-AutomationVariable {
     $StaticAssetValue = Get-AzureAutomationAuthoringToolkitStaticAsset -Type Variable -Name $Name
 
     if($StaticAssetValue) {
-        Write-Warning "AzureAutomationAuthoringToolkit: Warning - Variable asset '$Name' has a static value defined locally. 
-        Since the toolkit's Get-AutomationVariable activity will return that static value, this call of the 
-        Set-AutomationVariable activity will not attempt to update the real value in Azure Automation. If you truely wish to
-        update the variable asset in Azure Automation, remove the '$Name' variable asset from '$script:StaticAssetsPath'. This 
-        way, both AzureAutomationAuthoringToolkit Get-AutomationVariable and Set-AutomationVariable will use / affect the 
-        value in Azure Automation."
+        $StaticAssets = Get-Content $script:StaticAssetsPath -Raw | ConvertFrom-Json
+        $SecureStaticAssets = Get-Content $script:SecureStaticAssetsPath -Raw | ConvertFrom-Json
+
+        $StaticAssets.Variable | ForEach-Object {
+            if($_.Name -eq $Name) {
+                $_.Value = $Value
+            }
+        }
+
+        $SecureStaticAssets.Variable | ForEach-Object {
+            if($_.Name -eq $Name) {
+                $_.Value = $Value
+            }
+        }
+
+        Set-Content $script:StaticAssetsPath -Value (ConvertTo-Json -InputObject $StaticAssets -Depth 999)
+        Set-Content $script:SecureStaticAssetsPath -Value (ConvertTo-Json -InputObject $SecureStaticAssets -Depth 999)
     }
     else {
-        $Configuration = Get-AzureAutomationAuthoringToolkitConfiguration
-        $AccountName = $Configuration.AutomationAccountName
-
-        Write-Verbose "AzureAutomationAuthoringToolkit: Static variable asset with name '$Name' not found, looking for real 
-        asset in Azure Automation account '$AccountName.'"
-
-        Test-AzureAutomationAuthoringToolkitAzureConnection
-    
-        $Variable = Get-AzureAutomationVariable -Name $Name -AutomationAccountName $AccountName
-
-        if($Variable) {
-            Write-Verbose "AzureAutomationAuthoringToolkit: Variable asset '$Name' found. Updating it."
-
-            Set-AzureAutomationVariable -Name $Name -Value $Value -Encrypted $Variable.Encrypted -AutomationAccountName $AccountName | Out-Null
-        }
-        else {
-            throw "AzureAutomationAuthoringToolkit: Cannot update variable asset '$Name.' It does not exist."
-            ## TODO: check if Az Automation throws an exception if var asset not found, as we should match that behavior
-            ## test showed there is an exception if not found
-        }
+        throw "Variable '$Name' not found for account 'AuthoringToolkit'"
     }
 }
 
