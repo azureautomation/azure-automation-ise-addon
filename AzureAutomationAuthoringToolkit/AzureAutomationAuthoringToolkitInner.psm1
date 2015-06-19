@@ -9,6 +9,17 @@ $script:IseAddonPath = "$PSScriptRoot\ISEaddon\AzureAutomation.dll"
 
 $script:IseAddOnTextForPowerShellProfile = "Add-AzureAutomationIseAddOnToIse"
 
+function _findObjectByName {
+    param(
+        [object] $ObjectArray,
+        [string] $Name
+    )
+    
+    $ObjectArray | Where-Object {
+        return $_.Name -eq $Name
+    }
+}
+
 <#
     .SYNOPSIS
         Adds the Azure Automation ISE add-on to the current PowerShell ISE session.
@@ -123,17 +134,13 @@ function Get-AzureAutomationAuthoringToolkitStaticAsset {
         throw $_
     }
 
-    $Asset = $StaticAssets.$Type | Where-Object -FilterScript {
-        $_.Name -eq $Name
-    }
+    $Asset = _findObjectByName -ObjectArray $StaticAssets.$Type -Name $Name
 
     if($Asset) {
         Write-Verbose "AzureAutomationAuthoringToolkit: Found static value for $Type asset '$Name.'"
     }
     else {
-        $Asset = $SecureStaticAssets.$Type | Where-Object -FilterScript {
-            $_.Name -eq $Name
-        }
+        $Asset = _findObjectByName -ObjectArray $SecureStaticAssets.$Type -Name $Name
 
         if($Asset) {
             Write-Verbose "AzureAutomationAuthoringToolkit: Found secure static value for $Type asset '$Name.'"
@@ -181,16 +188,24 @@ function Get-AzureAutomationAuthoringToolkitStaticAsset {
 function Get-AzureAutomationAuthoringToolkitConfiguration {       
     $ConfigurationError = "AzureAutomationAuthoringToolkit: AzureAutomationAuthoringToolkit configuration defined in 
     '$script:ConfigurationPath' is incorrect. Make sure the file exists, contains valid JSON, and contains 'StaticAssetsPath'
-    and 'SecureStaticAssetsPath' fields."
+    and 'SecureStaticAssetsPath' settings."
 
     Write-Verbose "AzureAutomationAuthoringToolkit: Grabbing AzureAutomationAuthoringToolkit configuration."
 
     try {
-        $Configuration = Get-Content $script:ConfigurationPath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $ConfigurationTemp = Get-Content $script:ConfigurationPath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
     }
     catch {
         Write-Error $ConfigurationError
         throw $_
+    }
+
+    $Configuration = @{}
+    $ConfigurationTemp | ForEach-Object {
+        $Key = $_.Name
+        $Value = $_.Value
+
+        $Configuration.$Key = $Value
     }
 
     if(!($Configuration.StaticAssetsPath -and $Configuration.SecureStaticAssetsPath)) {
@@ -277,6 +292,8 @@ function Set-AutomationVariable {
                 $_.Value = $Value
             }
         }
+
+        Write-Verbose "AzureAutomationAuthoringToolkit: Setting value of static variable asset with name '$Name'"
 
         Set-Content $script:StaticAssetsPath -Value (ConvertTo-Json -InputObject $StaticAssets -Depth 999)
         Set-Content $script:SecureStaticAssetsPath -Value (ConvertTo-Json -InputObject $SecureStaticAssets -Depth 999)
