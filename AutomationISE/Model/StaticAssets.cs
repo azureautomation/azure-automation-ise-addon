@@ -133,6 +133,7 @@ namespace AutomationAzure
             var secureAssetsSerialized = jss.Serialize(secureAssets);
             var secureAssetFile = System.IO.Path.Combine(workspace, secureStaticAssetsFile);
             File.WriteAllText(secureAssetFile, secureAssetsSerialized);
+
         }
 
         public class VariableJson
