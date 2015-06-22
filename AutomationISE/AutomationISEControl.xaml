@@ -1,0 +1,81 @@
+﻿<UserControl x:Class="AutomationISE.AutomationISEControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:AutomationISE"
+             mc:Ignorable="d" 
+             d:DesignHeight="413.139" d:DesignWidth="389.206">
+    <Grid Margin="0,0,-61,-59">
+        <TabControl x:Name="mainTabControl" HorizontalAlignment="Left" Height="394" Margin="10,10,0,0" VerticalAlignment="Top" Width="371">
+            <TabItem x:Name="configurationTab" Header="Configuration">
+                <TabItem.Background>
+                    <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
+                        <GradientStop Color="#FFF0F0F0" Offset="0"/>
+                        <GradientStop Color="White" Offset="1"/>
+                    </LinearGradientBrush>
+                </TabItem.Background>
+                <Grid Background="White">
+                    <Label x:Name="azureADlabel" Content="Azure AD Username" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="147"/>
+                    <TextBox x:Name="azureADTextBox" HorizontalAlignment="Left" Height="23" Margin="10,36,0,0" TextWrapping="Wrap" Text="username@contoso.onmicrosoft.com" VerticalAlignment="Top" Width="300" TextChanged="azureADTextBox_TextChanged"/>
+                    <Label x:Name="passwordLabel" Content="Password" HorizontalAlignment="Left" Margin="10,60,0,0" VerticalAlignment="Top" Width="251"/>
+                    <PasswordBox x:Name="passwordBox" HorizontalAlignment="Left" Margin="10,85,0,0" VerticalAlignment="Top" Width="300"/>
+                    <Button x:Name="loginButton" Content="Login" HorizontalAlignment="Left" Margin="10,108,0,0" VerticalAlignment="Top" Width="75" Background="White" Click="loginButton_Click"/>
+                    <ComboBox x:Name="subscriptionComboBox" HorizontalAlignment="Left" Margin="10,165,0,0" VerticalAlignment="Top" Width="300" SelectionChanged="SubscriptionComboBox_SelectionChanged"/>
+                    <ComboBox x:Name="accountsComboBox" HorizontalAlignment="Left" Margin="10,224,0,0" VerticalAlignment="Top" Width="300" SelectionChanged="accountsComboBox_SelectionChanged"/>
+                    <TextBox x:Name="workspaceTextBox" HorizontalAlignment="Left" Height="22" Margin="10,291,0,0" TextWrapping="Wrap" Text="C:\" VerticalAlignment="Top" Width="290" TextChanged="workspaceTextBox_TextChanged"/>
+                </Grid>
+            </TabItem>
+            <TabItem x:Name="runbookTab" Header="Runbooks" Height="22" VerticalAlignment="Bottom">
+                <TabItem.Background>
+                    <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
+                        <GradientStop Color="#FFF0F0F0" Offset="0"/>
+                        <GradientStop Color="White" Offset="1"/>
+                    </LinearGradientBrush>
+                </TabItem.Background>
+                <Grid Background="White">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="256*"/>
+                        <ColumnDefinition Width="109*"/>
+                    </Grid.ColumnDefinitions>
+                    <ListView x:Name="RunbookslistView" HorizontalAlignment="Left" Height="273" Margin="10,48,0,0" VerticalAlignment="Top" Width="345" Grid.ColumnSpan="2">
+                        <ListView.View>
+                            <GridView>
+                                <GridView.ColumnHeaderContextMenu>
+                                    <ContextMenu/>
+                                </GridView.ColumnHeaderContextMenu>
+                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
+                                <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Status}" />
+                                <GridViewColumn Header="LocalStatus" DisplayMemberBinding="{Binding LocalStatus}"/>
+                                <GridViewColumn Header="LastModified" DisplayMemberBinding="{Binding LastModified}"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </Grid>
+            </TabItem>
+            <TabItem x:Name="settingsTab" Header="Settings" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="55">
+                <TabItem.Background>
+                    <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
+                        <GradientStop Color="#FFF0F0F0" Offset="0"/>
+                        <GradientStop Color="White" Offset="1"/>
+                    </LinearGradientBrush>
+                </TabItem.Background>
+                <Grid Background="White">
+                    <ListView x:Name="assetsListView" HorizontalAlignment="Left" Height="252" Margin="10,52,0,0" VerticalAlignment="Top" Width="345" SelectionChanged="assetsListView_SelectionChanged">
+                        <ListView.View>
+                            <GridView>
+                                <GridView.ColumnHeaderContextMenu>
+                                    <ContextMenu/>
+                                </GridView.ColumnHeaderContextMenu>
+                                <GridViewColumn Header="Name"   DisplayMemberBinding="{Binding Name}"/>
+                                <GridViewColumn Header="Status"   DisplayMemberBinding="{Binding Status}"/>
+                                <GridViewColumn Header="LastModified"  DisplayMemberBinding="{Binding LastModified}"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                    <ComboBox x:Name="assetsComboBox" HorizontalAlignment="Left" Margin="10,25,0,0" VerticalAlignment="Top" Width="279" SelectionChanged="assetsComboBox_SelectionChanged"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>
