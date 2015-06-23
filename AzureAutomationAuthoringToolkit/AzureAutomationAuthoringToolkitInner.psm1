@@ -22,6 +22,16 @@ function _findObjectByName {
 
 <#
     .SYNOPSIS
+        Unblocks the files used by the AzureAutomationAuthoringToolkit module so they can be used in PowerShell Workflow
+#>
+function Unblock-AzureAutomationAuthoringToolkit {
+    Unblock-File $PSScriptRoot\AzureAutomationAuthoringToolkit.psd1
+    Unblock-File $PSScriptRoot\AzureAutomationAuthoringToolkit.psm1
+    Unblock-File $PSScriptRoot\AzureAutomationAuthoringToolkitInner.psm1
+}
+
+<#
+    .SYNOPSIS
         Adds the Azure Automation ISE add-on to the current PowerShell ISE session.
         Not meant to be called directly.
 #>
@@ -39,6 +49,7 @@ function Add-AzureAutomationIseAddOnToIse {
 function Install-AzureAutomationIseAddOn {
     Add-Content $Profile $script:IseAddOnTextForPowerShellProfile
     Add-AzureAutomationIseAddOnToIse
+    Unblock-AzureAutomationAuthoringToolkit
 }
 
 <#
