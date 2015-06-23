@@ -52,19 +52,25 @@ namespace AutomationISE
 
         private async void loginButton_Click(object sender, RoutedEventArgs e)
         {
-            String ADUsername = azureADTextBox.Text;
-            SecureString ADPassword = passwordBox.SecurePassword;
-            Properties.Settings.Default["ADUserName"] = ADUsername;
-            Properties.Settings.Default["localWorkspace"] = workspaceTextBox.Text;
-            Properties.Settings.Default.Save();
+            try {
+                String ADUsername = azureADTextBox.Text;
+                SecureString ADPassword = passwordBox.SecurePassword;
+                Properties.Settings.Default["ADUserName"] = ADUsername;
+                Properties.Settings.Default["localWorkspace"] = workspaceTextBox.Text;
+                Properties.Settings.Default.Save();
 
-            AuthenticationResult ADToken = await AuthenticateHelper.GetAuthorizationHeader(ADUsername, ADPassword);
-            subscriptionClient = new AutomationAzure.AutomationSubscription(ADToken,workspaceTextBox.Text);
+                AuthenticationResult ADToken = await AuthenticateHelper.GetAuthorizationHeader(ADUsername, ADPassword);
+                subscriptionClient = new AutomationAzure.AutomationSubscription(ADToken, workspaceTextBox.Text);
 
 
-            SubscriptionListResult subscriptions = await subscriptionClient.ListSubscriptions();
-            subscriptionComboBox.ItemsSource = subscriptions.Subscriptions;
-            subscriptionComboBox.DisplayMemberPath = "DisplayName";
+                SubscriptionListResult subscriptions = await subscriptionClient.ListSubscriptions();
+                subscriptionComboBox.ItemsSource = subscriptions.Subscriptions;
+                subscriptionComboBox.DisplayMemberPath = "DisplayName";
+            }
+            catch (Exception exception)
+            {
+                var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
+            }
         }
 
         private void azureADTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -100,8 +106,8 @@ namespace AutomationISE
             var selectedAsset = assetsComboBox.SelectedValue;
             if (selectedAsset.ToString() == Constants.assetVariable)
             {
-                List<StaticAssets.VariableJson> assetVariableList = new List<StaticAssets.VariableJson>();
-                StaticAssets.VariableJson variables = new StaticAssets.VariableJson();
+        //        List<StaticAssets.VariableJson> assetVariableList = new List<StaticAssets.VariableJson>();
+          //      StaticAssets.VariableJson variables = new StaticAssets.VariableJson();
 
                 AutomationAccount automationAccount = (AutomationAccount)accountsComboBox.SelectedValue;
                 List<AutomationVariable> variablesList = await automationAccount.ListVariables();
