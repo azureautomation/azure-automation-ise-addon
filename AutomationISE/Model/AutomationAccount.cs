@@ -48,7 +48,7 @@ namespace AutomationAzure
             this.automationManagementClient = automationClient;
             this.AutomationAccountName = automationResource.Name;
             this.Location = automationResource.Location;
-            string accountPath = automationClient.Credentials.SubscriptionId + "\\" + resourceGroup.Name + "\\" + AutomationAccountName;
+            string accountPath = automationClient.Credentials.SubscriptionId + "\\" + resourceGroup.Name + "\\" + automationResource.Location + "\\"+ AutomationAccountName;
             this.automationAccountWorkspace = System.IO.Path.Combine(automationAccountWorkspace, accountPath);
 
             this.RessourceGroupName = resourceGroup.Name;
