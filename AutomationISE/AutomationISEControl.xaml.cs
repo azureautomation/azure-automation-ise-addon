@@ -22,6 +22,8 @@ using AutomationAzure;
 using System.Security;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Azure.Subscriptions.Models;
+using System.Threading;
+using System.Windows.Threading;
 
 namespace AutomationISE
 {
@@ -60,11 +62,17 @@ namespace AutomationISE
                 Properties.Settings.Default["localWorkspace"] = workspaceTextBox.Text;
                 Properties.Settings.Default.Save();
 
+                UpdateStatusBox(configurationStatusTextBox, "Launching login window to sign in");
                 AuthenticationResult ADToken = AuthenticateHelper.GetInteractiveLogin();
+
                 subscriptionClient = new AutomationAzure.AutomationSubscription(ADToken, workspaceTextBox.Text);
 
-
+                UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveSubscriptions);
                 SubscriptionListResult subscriptions = await subscriptionClient.ListSubscriptions();
+                if (subscriptions.Subscriptions.Count > 0)
+                    UpdateStatusBox(configurationStatusTextBox, Properties.Resources.FoundSubscriptions);
+                else
+                    UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoSubscriptions);
                 subscriptionComboBox.ItemsSource = subscriptions.Subscriptions;
                 subscriptionComboBox.DisplayMemberPath = "DisplayName";
             }
@@ -82,10 +90,16 @@ namespace AutomationISE
         private async void SubscriptionComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             Subscription subscription = (Subscription) subscriptionComboBox.SelectedValue;
+            UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveAutomationAccounts);
             List<AutomationAccount> automationAccounts = await subscriptionClient.ListAutomationAccounts(subscription);
             accountsComboBox.ItemsSource = automationAccounts;
             accountsComboBox.DisplayMemberPath = "AutomationAccountName";
-            if (accountsComboBox.HasItems) accountsComboBox.SelectedItem = accountsComboBox.Items[0];
+            if (accountsComboBox.HasItems)
+            {
+                UpdateStatusBox(configurationStatusTextBox, Properties.Resources.FoundAutomationAccounts);
+                accountsComboBox.SelectedItem = accountsComboBox.Items[0];
+            }
+            else UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoAutomationAccounts);
 
         }
 
@@ -116,7 +130,6 @@ namespace AutomationISE
 
          void workspaceTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-
             Properties.Settings.Default["localWorkspace"] = workspaceTextBox.Text;
             Properties.Settings.Default.Save();
         }
@@ -128,8 +141,25 @@ namespace AutomationISE
             System.Windows.Forms.DialogResult result = dialog.ShowDialog();
             workspaceTextBox.Text = dialog.SelectedPath;
 
+            UpdateStatusBox(configurationStatusTextBox, "Saving workspace location: " + workspaceTextBox.Text);
             Properties.Settings.Default["localWorkspace"] = dialog.SelectedPath;
             Properties.Settings.Default.Save();
+        }
+
+        private void configurationStatusTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
+
+        private void UpdateStatusBox(System.Windows.Controls.TextBox statusTextBox, String Message)
+        {
+
+            var dispatchMessage = Dispatcher.BeginInvoke(DispatcherPriority.Send, (SendOrPostCallback)delegate
+            {
+                statusTextBox.AppendText(Message + "\r\n");
+            }, null);
+
+            System.Windows.Forms.Application.DoEvents();
         }
     }
 
