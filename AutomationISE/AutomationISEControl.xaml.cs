@@ -124,6 +124,7 @@ namespace AutomationISE
         private void workspaceButton_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new System.Windows.Forms.FolderBrowserDialog();
+            dialog.SelectedPath = workspaceTextBox.Text;
             System.Windows.Forms.DialogResult result = dialog.ShowDialog();
             workspaceTextBox.Text = dialog.SelectedPath;
 
