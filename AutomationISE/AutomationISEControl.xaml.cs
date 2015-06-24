@@ -35,10 +35,13 @@ namespace AutomationISE
         public AutomationISEControl()
         {
             InitializeComponent();
-            var ADUserName = Properties.Settings.Default["ADUserName"].ToString();
-            azureADTextBox.Text = ADUserName;
 
             var localWorkspace = Properties.Settings.Default["localWorkspace"].ToString();
+            if (localWorkspace == "")
+            {
+                var systemDrive = Environment.GetEnvironmentVariable("SystemDrive") + "\\";
+                localWorkspace = System.IO.Path.Combine(systemDrive, "AutomationWorkspace");
+            }
             workspaceTextBox.Text = localWorkspace;
 
             assetsComboBox.Items.Add(Constants.assetVariable);
@@ -53,13 +56,11 @@ namespace AutomationISE
         private async void loginButton_Click(object sender, RoutedEventArgs e)
         {
             try {
-                String ADUsername = azureADTextBox.Text;
-                SecureString ADPassword = passwordBox.SecurePassword;
-                Properties.Settings.Default["ADUserName"] = ADUsername;
+
                 Properties.Settings.Default["localWorkspace"] = workspaceTextBox.Text;
                 Properties.Settings.Default.Save();
 
-                AuthenticationResult ADToken = await AuthenticateHelper.GetAuthorizationHeader(ADUsername, ADPassword);
+                AuthenticationResult ADToken = AuthenticateHelper.GetInteractiveLogin();
                 subscriptionClient = new AutomationAzure.AutomationSubscription(ADToken, workspaceTextBox.Text);
 
 
@@ -84,6 +85,7 @@ namespace AutomationISE
             List<AutomationAccount> automationAccounts = await subscriptionClient.ListAutomationAccounts(subscription);
             accountsComboBox.ItemsSource = automationAccounts;
             accountsComboBox.DisplayMemberPath = "AutomationAccountName";
+            if (accountsComboBox.HasItems) accountsComboBox.SelectedItem = accountsComboBox.Items[0];
 
         }
 
@@ -106,9 +108,6 @@ namespace AutomationISE
             var selectedAsset = assetsComboBox.SelectedValue;
             if (selectedAsset.ToString() == Constants.assetVariable)
             {
-        //        List<StaticAssets.VariableJson> assetVariableList = new List<StaticAssets.VariableJson>();
-          //      StaticAssets.VariableJson variables = new StaticAssets.VariableJson();
-
                 AutomationAccount automationAccount = (AutomationAccount)accountsComboBox.SelectedValue;
                 List<AutomationVariable> variablesList = await automationAccount.ListVariables();
                 assetsListView.ItemsSource = variablesList;
@@ -118,6 +117,18 @@ namespace AutomationISE
          void workspaceTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
 
+            Properties.Settings.Default["localWorkspace"] = workspaceTextBox.Text;
+            Properties.Settings.Default.Save();
+        }
+
+        private void workspaceButton_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new System.Windows.Forms.FolderBrowserDialog();
+            System.Windows.Forms.DialogResult result = dialog.ShowDialog();
+            workspaceTextBox.Text = dialog.SelectedPath;
+
+            Properties.Settings.Default["localWorkspace"] = dialog.SelectedPath;
+            Properties.Settings.Default.Save();
         }
     }
 

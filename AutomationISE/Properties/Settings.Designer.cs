@@ -37,7 +37,7 @@ namespace AutomationISE.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("c:\\automationworkspace")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string localWorkspace {
             get {
                 return ((string)(this["localWorkspace"]));

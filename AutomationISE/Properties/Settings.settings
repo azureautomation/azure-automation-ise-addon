@@ -6,7 +6,7 @@
       <Value Profile="(Default)">username@contoso.onmicrosoft.com</Value>
     </Setting>
     <Setting Name="localWorkspace" Type="System.String" Scope="User">
-      <Value Profile="(Default)">c:\automationworkspace</Value>
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>
