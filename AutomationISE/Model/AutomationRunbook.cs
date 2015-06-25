@@ -12,78 +12,76 @@
 // limitations under the License.
 // ----------------------------------------------------------------------------------
 
-using Microsoft.Azure.Management.Automation;
+using System;
+using System.Collections.Generic;
+using Microsoft.Azure.Management.Automation.Models;
+using System.IO;
 
 namespace AutomationAzure
 {
-    using AzureAutomation;
-    using Microsoft.Azure.Management.Automation.Models;
-    using Microsoft.Azure.Management.Resources.Models;
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using AutomationManagement = Microsoft.Azure.Management.Automation;
-
     /// <summary>
     /// The automation runbook.
     /// </summary>
-    public class AutomationRunbook
+    public class AutomationRunbook : AutomationAuthoringItem
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AutomationRunbook"/> class.
-        /// </summary>
-        /// <param name="runbook">
-        /// The cloud service.
-        /// </param>
-        public AutomationRunbook(AutomationManagementClient automationClient, String resourceGroup, String automationResource, Runbook runbook)
+        // cloud only
+        public AutomationRunbook(Runbook cloudRunbook) :
+            base(cloudRunbook.Name)
         {
-            Requires.Argument("runbook", runbook).NotNull();
-
-            this.Name = runbook.Name;
-            this.Status = runbook.Properties.State;
-            this.LocalStatus = Constants.Status.CloudOnly;
-            this.LastModified = runbook.Properties.LastModifiedTime.DateTime;
-
-            this.automationManagementClient = automationClient;
-            this.RessourceGroupName = resourceGroup;
-            this.AutomationAccountName = automationResource;
-            this.Parameters = runbook.Properties.Parameters;
+            this.Status = cloudRunbook.Properties.State;
+            this.Parameters = cloudRunbook.Properties.Parameters;
+            this.LastModifiedCloud = cloudRunbook.Properties.LastModifiedTime.DateTime;
+            this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.CloudOnly;
+            
+            this.LastModifiedLocal = null;
         }
 
-        public AutomationRunbook(AutomationManagementClient automationClient, String resourceGroup, String automationResource, FileInfo runbook)
+        // local only - new
+        public AutomationRunbook(string name) :
+            base(name)
         {
-            Requires.Argument("runbook", runbook).NotNull();
+            this.Status = AutomationRunbook.Constants.Status.New;
+            this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.LocalOnly;
+            this.LastModifiedLocal = new DateTime(); // TODO: does this default to now?
 
-            this.Name = runbook.Name;
-            this.Status = Constants.notExist;
-            this.LocalStatus = Constants.Status.LocalOnly;
-            this.LastModified = runbook.LastWriteTime;
-            this.LocalFile = runbook;
-
-            this.automationManagementClient = automationClient;
-            this.RessourceGroupName = resourceGroup;
-            this.AutomationAccountName = automationResource;
+            this.LastModifiedCloud = null;
+            this.Parameters = null;
         }
 
-        /// <summary>
-        ///  Gets or sets the automation management client
-        /// </summary>
-        public AutomationManagementClient automationManagementClient { get; set; }
+        // local only - from file
+        public AutomationRunbook(FileInfo localFile)
+            : base(localFile.Name)
+        {
+            this.Status = AutomationRunbook.Constants.Status.New;
+            this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.LocalOnly;
+            this.LastModifiedLocal = localFile.LastWriteTime;
+            
+            this.LastModifiedCloud = null;
+            this.Parameters = null;
+        }
 
-        /// <summary>
-        /// Gets or sets the automation account name.
-        /// </summary>
-        public string AutomationAccountName { get; set; }
+        // both cloud and local
+        public AutomationRunbook(FileInfo localFile, Runbook cloudRunbook)
+            : base(cloudRunbook.Name)
+        {
+            this.Status = cloudRunbook.Properties.State;
+            this.LastModifiedLocal = localFile.LastWriteTime;
+            this.LastModifiedCloud = cloudRunbook.Properties.LastModifiedTime.DateTime;
+            this.Parameters = cloudRunbook.Properties.Parameters;
 
-        /// <summary>
-        /// Gets or sets the Resource group name for this automation account.
-        /// </summary>
-        public string RessourceGroupName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the Resource group name for this automation account.
-        /// </summary>
-        public FileInfo LocalFile { get; set; }
+            if (this.LastModifiedCloud > this.LastModifiedLocal)
+            {
+                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.UpdatedInCloud;
+            }
+            else if(this.LastModifiedCloud < this.LastModifiedLocal)
+            {
+                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.UpdatedLocally;
+            }
+            else
+            {
+                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
+            }
+        }
 
         /// <summary>
         /// The parameters of the runbook
@@ -91,23 +89,18 @@ namespace AutomationAzure
         public IDictionary<string,RunbookParameter> Parameters { get; set; }
 
         /// <summary>
-        /// The name of the runbook
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
         /// The cloud status for the runbook
         /// </summary>
         public string Status { get; set; }
 
-        /// <summary>
-        /// The local status for the runbook
-        /// </summary>
-        public string LocalStatus { get; set; }
-
-        /// <summary>
-        /// The last modified date of the runbook
-        /// </summary>
-        public DateTime LastModified { get; set; }
+        public class Constants
+        {
+            public class Status
+            {
+                public const String New = "New";
+                public const String InEdit = "In edit";
+                public const String Published = "Published";
+            }
+        }
     }
 }

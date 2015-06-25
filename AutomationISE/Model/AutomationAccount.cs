@@ -51,7 +51,7 @@ namespace AutomationAzure
             string accountPath = automationClient.Credentials.SubscriptionId + "\\" + resourceGroup.Name + "\\" + automationResource.Location + "\\"+ AutomationAccountName;
             this.automationAccountWorkspace = System.IO.Path.Combine(automationAccountWorkspace, accountPath);
 
-            this.RessourceGroupName = resourceGroup.Name;
+            this.ResourceGroupName = resourceGroup.Name;
 
             switch (automationResource.Properties.State)
             {
@@ -81,13 +81,13 @@ namespace AutomationAzure
         public async Task<List<AutomationRunbook>> ListRunbooks()
         {
             List<AutomationRunbook> automationRunbookList = new List<AutomationRunbook>();
-            var runbooks = await automationManagementClient.Runbooks.ListAsync(RessourceGroupName, AutomationAccountName);
+            var runbooks = await automationManagementClient.Runbooks.ListAsync(ResourceGroupName, AutomationAccountName);
             foreach (var runbook in runbooks.Runbooks)
             {
-                // Only add runbooks that are type script
-                if (runbook.Properties.RunbookType == Constants.RunbookType.Script)
+                // Only add runbooks that are not graphical
+                if (runbook.Properties.RunbookType != Constants.RunbookType.Graphical)
                 {
-                    var automationRunbook = new AutomationRunbook(automationManagementClient, RessourceGroupName, AutomationAccountName, runbook);
+                    var automationRunbook = new AutomationRunbook(runbook);
                     automationRunbookList.Add(automationRunbook);
                 }
             }
@@ -96,8 +96,39 @@ namespace AutomationAzure
 
         public async Task<List<AutomationVariable>> ListVariables()
         {
-            var automationVariableClient = new AutomationVariable(automationManagementClient, RessourceGroupName, AutomationAccountName, automationAccountWorkspace);
-            return await automationVariableClient.ListVariables();
+            List<AutomationVariable> automationVariableList = new List<AutomationVariable>();
+            var cloudVariables = await automationManagementClient.Variables.ListAsync(ResourceGroupName, AutomationAccountName);
+            var staticAssets = new StaticAssets("StaticAssets.json", "SecureStaticAssets.json", automationAccountWorkspace);
+            List<VariableJson> localVariables = staticAssets.GetVariableAssets();
+
+            // Find all variables
+            foreach (Variable cloudVariable in cloudVariables.Variables)
+            {
+                VariableJson localVariable = localVariables.FirstOrDefault(x => x.Name == cloudVariable.Name);
+                if (localVariable != null)
+                {
+                    var automationVariable = new AutomationVariable(localVariable, cloudVariable);
+                    automationVariableList.Add(automationVariable);                 
+                    localVariables.Remove(localVariable);
+                }
+                else
+                {
+                    var automationVariable = new AutomationVariable(cloudVariable);
+                    automationVariableList.Add(automationVariable);
+                }
+            }
+
+            // Add remaining locally created assets
+            foreach (VariableJson localVariable in localVariables)
+            {
+                AutomationVariable automationVariable = new AutomationVariable(localVariable, false); // TODO: track encrypted somehow instead of always false
+                automationVariableList.Add(automationVariable);
+            }
+
+            return automationVariableList;
+            
+            //var automationVariableClient = new AutomationVariable();
+            //return await automationVariableClient.ListVariables();
         }
 
         public string automationAccountWorkspace { get; set; }
@@ -110,7 +141,7 @@ namespace AutomationAzure
         /// <summary>
         /// Gets or sets the Resource group name for this automation account.
         /// </summary>
-        public string RessourceGroupName { get; set; }
+        public string ResourceGroupName { get; set; }
 
         /// <summary>
         /// Gets or sets the location.

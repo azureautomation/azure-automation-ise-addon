@@ -27,15 +27,10 @@ namespace AutomationAzure
             this.staticAssetsFile = staticAssetsFile;
             this.secureStaticAssetsFile = secureStaticAssetsFile;
             this.workspace = workspace;
+
             DirectoryInfo dir = Directory.CreateDirectory(workspace);
-            if (File.Exists(System.IO.Path.Combine(workspace, staticAssetsFile)) == false)
-            {
-                CreateStaticAssetFile();
-            }
-            if (File.Exists(System.IO.Path.Combine(workspace, secureStaticAssetsFile)) == false)
-            {
-                CreateSecureStaticAssetFile();
-            }
+            CreateStaticAssetFile();
+            CreateSecureStaticAssetFile();
         }
 
         public string workspace { get; set; }
@@ -50,22 +45,20 @@ namespace AutomationAzure
             return jss.Deserialize<StaticAssetsJson>((File.ReadAllText(assetsFile)));
         }
 
-        public List<AutomationVariable> GetVariableAssets()
+        public List<VariableJson> GetVariableAssets()
         {
-            List<AutomationVariable> automationVariableList = new List<AutomationVariable>();
+            List<VariableJson> automationVariableList = new List<VariableJson>();
             var staticAssets = ParseAssetsFile(System.IO.Path.Combine(workspace, staticAssetsFile));
 
             foreach (var variable in staticAssets.Variable)
             {
-                var automationVariable = new AutomationVariable(variable);
-                automationVariableList.Add(automationVariable);
+                automationVariableList.Add(variable);
             }
 
             var secureStaticAssets = ParseAssetsFile(System.IO.Path.Combine(workspace, secureStaticAssetsFile));
             foreach (var variable in secureStaticAssets.Variable)
             {
-                var automationVariable = new AutomationVariable(variable,Constants.encryptedTrue);
-                automationVariableList.Add(automationVariable);
+                automationVariableList.Add(variable);
             }
 
             return automationVariableList;
@@ -74,7 +67,7 @@ namespace AutomationAzure
 
         public void CreateVariable(VariableJson variable)
         {
-            List<AutomationVariable> variableList = GetVariableAssets();
+            /*List<AutomationVariable> variableList = GetVariableAssets();
             var variableAsset = variableList.FirstOrDefault(x => x.Name == variable.Name);
             if (variableAsset != null)
             {
@@ -84,65 +77,76 @@ namespace AutomationAzure
             else
             {
 
-            }
+            }*/
         }
 
         private void CreateStaticAssetFile()
         {
-            StaticAssetsJson staticAssets = new StaticAssetsJson();
+            string staticAssetsFilePath = System.IO.Path.Combine(this.workspace, this.staticAssetsFile);
 
-            // Add Certificate structure
-            staticAssets.Certificate = new List<CertificateJson>();
-            CertificateJson certs = new CertificateJson();
-            staticAssets.Certificate.Add(certs);
+            if (!File.Exists(staticAssetsFilePath))
+            {
+                StaticAssetsJson staticAssets = new StaticAssetsJson();
 
-            // Add Variables structure
-            staticAssets.Variable = new List<VariableJson>();
-            VariableJson variables = new VariableJson();
-            staticAssets.Variable.Add(variables);
+                // Add Certificate structure
+                staticAssets.Certificate = new List<CertificateJson>();
+                CertificateJson certs = new CertificateJson();
+                staticAssets.Certificate.Add(certs);
 
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            var assetsSerialized = jss.Serialize(staticAssets);
-            var staticAssetFile = System.IO.Path.Combine(workspace, staticAssetsFile);
-            File.WriteAllText(staticAssetFile, assetsSerialized);
+                // Add Variables structure
+                staticAssets.Variable = new List<VariableJson>();
+                VariableJson variables = new VariableJson();
+                staticAssets.Variable.Add(variables);
+
+                JavaScriptSerializer jss = new JavaScriptSerializer();
+                var assetsSerialized = jss.Serialize(staticAssets);
+
+                File.WriteAllText(staticAssetsFilePath, assetsSerialized);
+            }
+            else
+            {
+                throw new Exception("file exists");
+            }
         }
 
         private void CreateSecureStaticAssetFile()
         {
-            JavaScriptSerializer jss = new JavaScriptSerializer();
+            string secureStaticAssetsFilePath = System.IO.Path.Combine(this.workspace, this.secureStaticAssetsFile);
+            
+            if (!File.Exists(secureStaticAssetsFilePath))
+            {
+                JavaScriptSerializer jss = new JavaScriptSerializer();
 
-            SecureStaticAssetsJson secureAssets = new SecureStaticAssetsJson();
+                SecureStaticAssetsJson secureAssets = new SecureStaticAssetsJson();
 
-            secureAssets.PSCredential = new List<PSCredentialJson>();
-            secureAssets.Variable = new List<VariableJson>();
-            secureAssets.Connection = new List<ConnectionJson>();
+                secureAssets.PSCredential = new List<PSCredentialJson>();
+                secureAssets.Variable = new List<VariableJson>();
+                secureAssets.Connection = new List<ConnectionJson>();
 
-            PSCredentialJson creds = new PSCredentialJson();
-            secureAssets.PSCredential.Add(creds);
+                PSCredentialJson creds = new PSCredentialJson();
+                secureAssets.PSCredential.Add(creds);
 
-            // Add secure variables structure
-            VariableJson secureVariables = new VariableJson();
-            secureAssets.Variable.Add(secureVariables);
+                // Add secure variables structure
+                VariableJson secureVariables = new VariableJson();
+                secureAssets.Variable.Add(secureVariables);
 
-            // Add connection values
-            ConnectionJson connection = new ConnectionJson();
-            var connectionDict = new Dictionary<String, String>();
-            connection.dict = connectionDict;
-            secureAssets.Connection.Add(connection);
+                // Add connection values
+                ConnectionJson connection = new ConnectionJson();
+                var connectionDict = new Dictionary<String, String>();
+                connection.dict = connectionDict;
+                secureAssets.Connection.Add(connection);
 
-            var secureAssetsSerialized = jss.Serialize(secureAssets);
-            var secureAssetFile = System.IO.Path.Combine(workspace, secureStaticAssetsFile);
-            File.WriteAllText(secureAssetFile, secureAssetsSerialized);
+                var secureAssetsSerialized = jss.Serialize(secureAssets);
+                File.WriteAllText(secureStaticAssetsFilePath, secureAssetsSerialized);
+            }
+            else
+            {
+                throw new Exception("file exists");
+            }
 
         }
 
-        public class VariableJson
-        {
-            public string Name { get; set; }
-            public string Value { get; set; }
-            public DateTime LastModified { get; set; }
-
-        }
+       
 
         public class CertificateJson
         {

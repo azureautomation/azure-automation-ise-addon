@@ -28,14 +28,6 @@ namespace AutomationAzure
         // Runbook values
         public const String notExist = "N/A";
 
-        // Assets values
-
-        public class Status
-        {
-            public const String LocalOnly = "LocalOnly";
-            public const String InSync = "InSync";
-            public const String CloudOnly = "CloudOnly";
-        }
 
         public const bool encryptedTrue = true;
 

@@ -163,6 +163,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Model\AuthenticateHelper.cs" />
+    <Compile Include="Model\AutomationAuthoringItem.cs" />
+    <Compile Include="Model\AutomationAsset.cs" />
+    <Compile Include="Model\AutomationCredential.cs" />
     <Compile Include="Model\AutomationVariable.cs" />
     <Compile Include="Model\AutomationRunbook.cs" />
     <Compile Include="Model\AutomationSubscription.cs" />

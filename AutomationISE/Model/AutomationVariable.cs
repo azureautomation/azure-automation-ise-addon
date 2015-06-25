@@ -12,143 +12,95 @@
 // limitations under the License.
 // ----------------------------------------------------------------------------------
 
-using Microsoft.Azure.Management.Automation;
+using System;
+using System.Collections.Generic;
+using Microsoft.Azure.Management.Automation.Models;
 
 namespace AutomationAzure
 {
-    using AzureAutomation;
-    using Microsoft.Azure.Management.Automation.Models;
-    using Microsoft.Azure.Management.Resources.Models;
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Threading.Tasks;
-    using AutomationManagement = Microsoft.Azure.Management.Automation;
-
     /// <summary>
     /// The automation variable.
     /// </summary>
-    public class AutomationVariable
+    public class AutomationVariable : AutomationAsset
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AutomationVariable"/> class.
-        /// </summary>
-        public AutomationVariable(AutomationManagementClient automationClient, String resourceGroup, String automationResource, Variable variable, bool encrypted = false)
+        // cloud only
+        public AutomationVariable(Variable cloudVariable)
+            : base(cloudVariable.Name)
         {
-            Requires.Argument("variable", variable).NotNull();
+            this.Encrypted = cloudVariable.Properties.IsEncrypted;
+            this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.CloudOnly;
+            this.LastModifiedCloud = cloudVariable.Properties.LastModifiedTime.DateTime;
 
-            this.Name = variable.Name;
-            this.Status = Constants.Status.CloudOnly;
-            this.LastModified = variable.Properties.LastModifiedTime.DateTime;
-            this.Encrypted = variable.Properties.IsEncrypted;
+            IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
+            valueFields.Add("Value", cloudVariable.Properties.Value);
+            this.ValueFields = valueFields;
 
-            this.automationManagementClient = automationClient;
-            this.RessourceGroupName = resourceGroup;
-            this.AutomationAccountName = automationResource;
+            this.LastModifiedLocal = null;
+        }
+        
+        // local only - new
+        public AutomationVariable(String name, Object value, bool encrypted)
+            : base(name)
+        {
+            this.Encrypted = encrypted; 
+            this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.LocalOnly;
+            this.LastModifiedLocal = new DateTime(); // TODO: does this default to now?
+            
+            IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
+            valueFields.Add("Value", value);
+            this.ValueFields = valueFields;
+
+            this.LastModifiedCloud = null;
         }
 
-        public AutomationVariable(AutomationManagementClient automationClient, String resourceGroup, String automationResource, String workspace)
+        // local only - from json
+        public AutomationVariable(VariableJson localJson, bool encrypted)
+            : base(localJson.Name)
         {
-            Requires.Argument("automationClient", automationClient).NotNull();
-            Requires.Argument("resourceGroup", resourceGroup).NotNull();
-            Requires.Argument("automationResource", automationResource).NotNull();
-
-            this.automationManagementClient = automationClient;
-            this.RessourceGroupName = resourceGroup;
-            this.AutomationAccountName = automationResource;
-            this.Workspace = workspace;
-        }
-
-        public AutomationVariable(StaticAssets.VariableJson variable, bool encrypted = false)
-        {
-            Requires.Argument("variable", variable).NotNull();
-
-            this.Name = variable.Name;
-            this.Status = Constants.Status.LocalOnly;
-            this.LastModified = variable.LastModified;
             this.Encrypted = encrypted;
+            this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.LocalOnly;
+            this.LastModifiedLocal = localJson.LastModified;
+            
+            IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
+            valueFields.Add("Value", localJson.Value);
+            this.ValueFields = valueFields;
 
+            this.LastModifiedCloud = null;
         }
 
-        public async Task<List<AutomationVariable>> ListVariables()
+        // both cloud and local
+        public AutomationVariable(VariableJson localJson, Variable cloudVariable)
+            : base(localJson.Name)
         {
-            List<AutomationVariable> automationVariableList = new List<AutomationVariable>();
-            var variables = await automationManagementClient.Variables.ListAsync(RessourceGroupName, AutomationAccountName);
-            var staticAsset = new StaticAssets("StaticAssets.json", "SecureStaticAssets.json",Workspace);
-            List<AutomationVariable> staticAssets = staticAsset.GetVariableAssets();
+            this.Encrypted = cloudVariable.Properties.IsEncrypted;
+            this.LastModifiedLocal = localJson.LastModified;
+            this.LastModifiedCloud = cloudVariable.Properties.LastModifiedTime.DateTime;
 
-            // Find all variables
-            foreach (var variableAsset in variables.Variables)
+            IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
+            valueFields.Add("Value", localJson.Value);
+            this.ValueFields = valueFields;
+
+            if (this.LastModifiedCloud > this.LastModifiedLocal)
             {
-                var staticVar = staticAssets.FirstOrDefault(x => x.Name == variableAsset.Name);
-                if (staticVar != null)
-                {
-                    var automationVariable = new AutomationVariable(automationManagementClient, RessourceGroupName, AutomationAccountName, variableAsset);
-                    if (staticVar.LastModified > automationVariable.LastModified)
-                    {
-                        staticVar.Status = Constants.Status.InSync;
-                        automationVariableList.Add(staticVar);
-                    }
-                    else
-                    {
-                        automationVariable.Status = Constants.Status.InSync;
-                        automationVariableList.Add(automationVariable);
-                    }
-                    staticAssets.Remove(staticVar);
-                }
-                else
-                {
-                    var automationVariable = new AutomationVariable(automationManagementClient, RessourceGroupName, AutomationAccountName, variableAsset);
-                    automationVariableList.Add(automationVariable);
-                }
+                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.UpdatedInCloud;
             }
-
-            // Add remaining locally created assets
-            foreach (var variableAsset in staticAssets)
+            else if(this.LastModifiedCloud < this.LastModifiedLocal)
             {
-                automationVariableList.Add(variableAsset);
+                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.UpdatedLocally;
             }
-
-            return automationVariableList;
+            else
+            {
+                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
+            }
         }
 
-        public string Workspace { get; set; }
-
         /// <summary>
-        ///  Gets or sets the automation management client
+        /// Whether the automation variable is encrypted or not.
         /// </summary>
-        public AutomationManagementClient automationManagementClient { get; set; }
-
-        /// <summary>
-        /// Gets or sets the automation account name.
-        /// </summary>
-        public string AutomationAccountName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the Resource group name for this automation account.
-        /// </summary>
-        public string RessourceGroupName { get; set; }
-        /// <summary>
-        /// The name of the runbook
-        /// </summary>
-        public string Name { get; set; }
-
         public bool Encrypted { get; set; }
+    }
 
-        /// <summary>
-        /// The cloud status for the variable
-        /// </summary>
-        public string Status { get; set; }
-
-        /// <summary>
-        /// The local status for the variable
-        /// </summary>
-        public string LocalStatus { get; set; }
-
-        /// <summary>
-        /// The last modified date of the variable
-        /// </summary>
-        public DateTime LastModified { get; set; }
+    public class VariableJson : AssetJson {
+        public Object Value { get; set; }
     }
 }
