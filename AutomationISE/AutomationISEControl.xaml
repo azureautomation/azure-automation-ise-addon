@@ -55,8 +55,9 @@
                                 </GridView.ColumnHeaderContextMenu>
                                 <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
                                 <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Status}" />
-                                <GridViewColumn Header="LocalStatus" DisplayMemberBinding="{Binding LocalStatus}"/>
-                                <GridViewColumn Header="LastModified" DisplayMemberBinding="{Binding LastModified}"/>
+                                <GridViewColumn Header="Sync Status" DisplayMemberBinding="{Binding SyncStatus}"/>
+                                <GridViewColumn Header="Last Modified (Local)" DisplayMemberBinding="{Binding LastModifiedLocal}"/>
+                                <GridViewColumn Header="Last Modified (Cloud)" DisplayMemberBinding="{Binding LastModifiedCloud}"/>
                             </GridView>
                         </ListView.View>
                     </ListView>
@@ -77,8 +78,9 @@
                                     <ContextMenu/>
                                 </GridView.ColumnHeaderContextMenu>
                                 <GridViewColumn Header="Name"   DisplayMemberBinding="{Binding Name}"/>
-                                <GridViewColumn Header="Status"   DisplayMemberBinding="{Binding Status}"/>
-                                <GridViewColumn Header="LastModified"  DisplayMemberBinding="{Binding LastModified}"/>
+                                <GridViewColumn Header="Sync Status"   DisplayMemberBinding="{Binding SyncStatus}"/>
+                                <GridViewColumn Header="Last Modified (Local)"  DisplayMemberBinding="{Binding LastModifiedLocal}"/>
+                                <GridViewColumn Header="Last Modified (Cloud)"  DisplayMemberBinding="{Binding LastModifiedCloud}"/>
                             </GridView>
                         </ListView.View>
                     </ListView>

@@ -43,7 +43,7 @@ namespace AutomationAzure
             : base(name)
         {
             this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.LocalOnly;
-            this.LastModifiedLocal = new DateTime(); // TODO: does this default to now?
+            this.LastModifiedLocal = DateTime.Now;
             
             IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
             valueFields.Add("Username", username);

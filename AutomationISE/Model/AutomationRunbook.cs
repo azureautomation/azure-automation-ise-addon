@@ -42,7 +42,7 @@ namespace AutomationAzure
         {
             this.Status = AutomationRunbook.Constants.Status.New;
             this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.LocalOnly;
-            this.LastModifiedLocal = new DateTime(); // TODO: does this default to now?
+            this.LastModifiedLocal = DateTime.Now;
 
             this.LastModifiedCloud = null;
             this.Parameters = null;
@@ -98,7 +98,7 @@ namespace AutomationAzure
             public class Status
             {
                 public const String New = "New";
-                public const String InEdit = "In edit";
+                public const String InEdit = "Edit";
                 public const String Published = "Published";
             }
         }
