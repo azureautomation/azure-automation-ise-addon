@@ -98,7 +98,7 @@ namespace AutomationAzure
         {
             List<AutomationVariable> automationVariableList = new List<AutomationVariable>();
             var cloudVariables = await automationManagementClient.Variables.ListAsync(ResourceGroupName, AutomationAccountName);
-            var staticAssets = new StaticAssets("StaticAssets.json", "SecureStaticAssets.json", automationAccountWorkspace);
+            var staticAssets = new StaticAssets(Constants.staticAssetsFile, Constants.secureStaticAssetsFile, automationAccountWorkspace);
             List<VariableJson> localVariables = staticAssets.GetVariableAssets();
 
             // Find all variables

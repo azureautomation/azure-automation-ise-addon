@@ -31,6 +31,7 @@
                     <Label x:Name="subscriptionLabel" Content="Select Subscription" HorizontalAlignment="Left" Margin="7,126,0,0" VerticalAlignment="Top"/>
                     <Label x:Name="automationAccountLabel" Content="Select Automation Account" HorizontalAlignment="Left" Margin="7,181,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
                     <TextBox x:Name="configurationStatusTextBox" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="278" Margin="10,271,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="331" BorderThickness="2" TextChanged="configurationStatusTextBox_TextChanged"/>
+                    <Label x:Name="configurationStatusLabel" Content="Status" HorizontalAlignment="Left" Margin="10,247,0,0" VerticalAlignment="Top" Width="64"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="runbookTab" Header="Runbooks" Margin="-2">

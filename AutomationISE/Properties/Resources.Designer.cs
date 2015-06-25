@@ -97,7 +97,7 @@ namespace AutomationISE.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Retrieving any automation accounts in this subscription. Please wait....
+        ///   Looks up a localized string similar to Retrieving any automation accounts. Please wait....
         /// </summary>
         internal static string RetrieveAutomationAccounts {
             get {

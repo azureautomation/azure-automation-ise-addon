@@ -105,7 +105,8 @@ namespace AutomationAzure
             }
             else
             {
-                throw new Exception("file exists");
+                // I don't think it is an exception if the file exists
+                //     throw new Exception("file exists");
             }
         }
 
@@ -141,7 +142,8 @@ namespace AutomationAzure
             }
             else
             {
-                throw new Exception("file exists");
+                // I don't think it is an exception if the file exists
+           //     throw new Exception("file exists");
             }
 
         }
