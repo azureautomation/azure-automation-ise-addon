@@ -61,6 +61,15 @@ namespace AutomationISE.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to User cancelled sign in.
+        /// </summary>
+        internal static string CancelSignIn {
+            get {
+                return ResourceManager.GetString("CancelSignIn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Found automation accounts.
         /// </summary>
         internal static string FoundAutomationAccounts {

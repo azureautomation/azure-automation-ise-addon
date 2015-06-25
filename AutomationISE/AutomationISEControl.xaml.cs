@@ -86,6 +86,14 @@ namespace AutomationISE
                 else
                     UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoSubscriptions);
             }
+            catch (Microsoft.IdentityModel.Clients.ActiveDirectory.AdalServiceException)
+            {
+                UpdateStatusBox(configurationStatusTextBox, Properties.Resources.CancelSignIn);
+            }
+            catch (Microsoft.IdentityModel.Clients.ActiveDirectory.AdalException)
+            {
+                UpdateStatusBox(configurationStatusTextBox, Properties.Resources.CancelSignIn);
+            }
             catch (Exception exception)
             {
                 var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
