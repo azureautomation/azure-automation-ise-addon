@@ -37,6 +37,7 @@ function Unblock-AzureAutomationAuthoringToolkit {
 #>
 function Add-AzureAutomationIseAddOnToIse {
     if($PSIse) {
+    	Unblock-File $PSScriptRoot\ISEaddon\AzureAutomation.dll
         Add-Type -Path $script:IseAddonPath | Out-Null
         $PSIse.CurrentPowerShellTab.VerticalAddOnTools.Add(‘Azure Automation ISE add-on’, [AzureAutomation.AzureAutomationControl], $True) | Out-Null
     }
