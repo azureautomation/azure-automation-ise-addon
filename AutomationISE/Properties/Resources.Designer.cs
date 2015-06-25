@@ -9,6 +9,7 @@
 //------------------------------------------------------------------------------
 
 namespace AutomationISE.Properties {
+    using System;
     
     
     /// <summary>
@@ -37,7 +38,7 @@ namespace AutomationISE.Properties {
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
-                if ((resourceMan == null)) {
+                if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("AutomationISE.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
@@ -56,6 +57,60 @@ namespace AutomationISE.Properties {
             }
             set {
                 resourceCulture = value;
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Found automation accounts.
+        /// </summary>
+        internal static string FoundAutomationAccounts {
+            get {
+                return ResourceManager.GetString("FoundAutomationAccounts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Found subscriptions. Please select one.
+        /// </summary>
+        internal static string FoundSubscriptions {
+            get {
+                return ResourceManager.GetString("FoundSubscriptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No automation accounts found in this subscription. Please create one in the portal.
+        /// </summary>
+        internal static string NoAutomationAccounts {
+            get {
+                return ResourceManager.GetString("NoAutomationAccounts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No subscriptions found for this user account. Please create one in the portal.
+        /// </summary>
+        internal static string NoSubscriptions {
+            get {
+                return ResourceManager.GetString("NoSubscriptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retrieving any automation accounts in this subscription. Please wait....
+        /// </summary>
+        internal static string RetrieveAutomationAccounts {
+            get {
+                return ResourceManager.GetString("RetrieveAutomationAccounts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retrieving subscriptions for this user account. Please wait....
+        /// </summary>
+        internal static string RetrieveSubscriptions {
+            get {
+                return ResourceManager.GetString("RetrieveSubscriptions", resourceCulture);
             }
         }
     }
