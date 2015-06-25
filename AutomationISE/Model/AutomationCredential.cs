@@ -25,73 +25,42 @@ namespace AutomationAzure
     {
         // cloud only
         public AutomationCredential(Credential cloudCredential)
-            : base(cloudCredential.Name)
+            : base(cloudCredential.Name, null, cloudCredential.Properties.LastModifiedTime.DateTime)
         {
-            this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.CloudOnly;
-            this.LastModifiedCloud = cloudCredential.Properties.LastModifiedTime.DateTime;
-
             IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
             valueFields.Add("Username", cloudCredential.Properties.UserName);
             valueFields.Add("Password", null);
             this.ValueFields = valueFields;
-
-            this.LastModifiedLocal = null;
         }
         
         // local only - new
         public AutomationCredential(String name, string username, string password)
-            : base(name)
+            : base(name, DateTime.Now, null)
         {
-            this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.LocalOnly;
-            this.LastModifiedLocal = DateTime.Now;
-            
             IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
             valueFields.Add("Username", username);
             valueFields.Add("Password", password);
             this.ValueFields = valueFields;
-
-            this.LastModifiedCloud = null;
         }
 
         // local only - from json
         public AutomationCredential(CredentialJson localJson)
-            : base(localJson.Name)
+            : base(localJson, null)
         {
-            this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.LocalOnly;
-            this.LastModifiedLocal = localJson.LastModified;
-            
             IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
             valueFields.Add("Username", localJson.Username);
             valueFields.Add("Password", localJson.Password);
             this.ValueFields = valueFields;
-
-            this.LastModifiedCloud = null;
         }
 
         // both cloud and local
         public AutomationCredential(CredentialJson localJson, Credential cloudCredential)
-            : base(localJson.Name)
+            : base(localJson, cloudCredential.Properties.LastModifiedTime.DateTime)
         {
-            this.LastModifiedLocal = localJson.LastModified;
-            this.LastModifiedCloud = cloudCredential.Properties.LastModifiedTime.DateTime;
-
             IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
             valueFields.Add("Username", localJson.Username);
             valueFields.Add("Password", localJson.Password);
             this.ValueFields = valueFields;
-
-            if (this.LastModifiedCloud > this.LastModifiedLocal)
-            {
-                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.UpdatedInCloud;
-            }
-            else if(this.LastModifiedCloud < this.LastModifiedLocal)
-            {
-                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.UpdatedLocally;
-            }
-            else
-            {
-                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
-            }
         }
     }
 

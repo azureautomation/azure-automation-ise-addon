@@ -25,61 +25,29 @@ namespace AutomationAzure
         /// <summary>
         /// Initializes a new instance of the <see cref="AutomationAsset"/> class.
         /// </summary>
-        public AutomationAsset(string name, IDictionary<String, Object> valueFields) :
-            base(name)
+        public AutomationAsset(string name, DateTime? lastModifiedLocal, DateTime? lastModifiedCloud, IDictionary<String, Object> valueFields) :
+            base(name, lastModifiedLocal, lastModifiedCloud)
         {
-            this.Name = name;
             this.ValueFields = valueFields;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AutomationAsset"/> class.
         /// </summary>
-        public AutomationAsset(string name) :
-            base(name)
+        public AutomationAsset(string name, DateTime? lastModifiedLocal, DateTime? lastModifiedCloud) :
+            base(name, lastModifiedLocal, lastModifiedCloud)
         {
-            this.Name = name;
+            this.ValueFields = null;
         }
 
-        /*public async Task<List<AutomationAsset>> ListAssets(String type)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AutomationAsset"/> class.
+        /// </summary>
+        public AutomationAsset(AssetJson localJson, DateTime? lastModifiedCloud) :
+            base(localJson.Name, localJson.LastModified, lastModifiedCloud)
         {
-            List<AutomationAsset> automationAssetList = new List<AutomationAsset>();
-            var assets = await automationManagementClient.Assets.ListAsync(RessourceGroupName, AutomationAccountName);
-
-            // Find all variables
-            foreach (var variableAsset in variables.Variables)
-            {
-                var staticVar = staticAssets.FirstOrDefault(x => x.Name == variableAsset.Name);
-                if (staticVar != null)
-                {
-                    var automationVariable = new AutomationVariable(automationManagementClient, RessourceGroupName, AutomationAccountName, variableAsset);
-                    if (staticVar.LastModified > automationVariable.LastModified)
-                    {
-                        staticVar.Status = Constants.Status.InSync;
-                        automationVariableList.Add(staticVar);
-                    }
-                    else
-                    {
-                        automationVariable.Status = Constants.Status.InSync;
-                        automationVariableList.Add(automationVariable);
-                    }
-                    staticAssets.Remove(staticVar);
-                }
-                else
-                {
-                    var automationVariable = new AutomationVariable(automationManagementClient, RessourceGroupName, AutomationAccountName, variableAsset);
-                    automationVariableList.Add(automationVariable);
-                }
-            }
-
-            // Add remaining locally created assets
-            foreach (var variableAsset in staticAssets)
-            {
-                automationVariableList.Add(variableAsset);
-            }
-
-            return automationVariableList;
-        }*/
+            this.ValueFields = null;
+        }
 
         /// <summary>
         /// The value of the asset

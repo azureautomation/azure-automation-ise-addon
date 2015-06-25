@@ -25,73 +25,46 @@ namespace AutomationAzure
     {
         // cloud only
         public AutomationVariable(Variable cloudVariable)
-            : base(cloudVariable.Name)
+            : base(cloudVariable.Name, null, cloudVariable.Properties.LastModifiedTime.DateTime)
         {
             this.Encrypted = cloudVariable.Properties.IsEncrypted;
-            this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.CloudOnly;
-            this.LastModifiedCloud = cloudVariable.Properties.LastModifiedTime.DateTime;
 
             IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
             valueFields.Add("Value", cloudVariable.Properties.Value);
             this.ValueFields = valueFields;
-
-            this.LastModifiedLocal = null;
         }
         
         // local only - new
         public AutomationVariable(String name, Object value, bool encrypted)
-            : base(name)
+            : base(name, DateTime.Now, null)
         {
             this.Encrypted = encrypted; 
-            this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.LocalOnly;
-            this.LastModifiedLocal = DateTime.Now;
-            
+ 
             IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
             valueFields.Add("Value", value);
             this.ValueFields = valueFields;
-
-            this.LastModifiedCloud = null;
         }
 
         // local only - from json
         public AutomationVariable(VariableJson localJson, bool encrypted)
-            : base(localJson.Name)
+            : base(localJson, null)
         {
             this.Encrypted = encrypted;
-            this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.LocalOnly;
-            this.LastModifiedLocal = localJson.LastModified;
             
             IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
             valueFields.Add("Value", localJson.Value);
             this.ValueFields = valueFields;
-
-            this.LastModifiedCloud = null;
         }
 
         // both cloud and local
         public AutomationVariable(VariableJson localJson, Variable cloudVariable)
-            : base(localJson.Name)
+            : base(localJson, cloudVariable.Properties.LastModifiedTime.DateTime)
         {
             this.Encrypted = cloudVariable.Properties.IsEncrypted;
-            this.LastModifiedLocal = localJson.LastModified;
-            this.LastModifiedCloud = cloudVariable.Properties.LastModifiedTime.DateTime;
 
             IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
             valueFields.Add("Value", localJson.Value);
             this.ValueFields = valueFields;
-
-            if (this.LastModifiedCloud > this.LastModifiedLocal)
-            {
-                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.UpdatedInCloud;
-            }
-            else if(this.LastModifiedCloud < this.LastModifiedLocal)
-            {
-                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.UpdatedLocally;
-            }
-            else
-            {
-                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
-            }
         }
 
         /// <summary>

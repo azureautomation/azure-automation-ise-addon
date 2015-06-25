@@ -24,9 +24,35 @@ namespace AutomationAzure
         /// <summary>
         /// Initializes a new instance of the <see cref="AutomationAuthoringItem"/> class.
         /// </summary>
-        public AutomationAuthoringItem(string name)
+        public AutomationAuthoringItem(string name, DateTime? lastModifiedLocal, DateTime? lastModifiedCloud)
         {
             this.Name = name;
+            this.LastModifiedLocal = lastModifiedLocal;
+            this.LastModifiedCloud = lastModifiedCloud;
+
+            if (this.LastModifiedLocal == null)
+            {
+                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.CloudOnly;
+            }
+            else if(this.LastModifiedCloud == null) 
+            {
+                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.LocalOnly;
+            }
+            else
+            {
+                if (this.LastModifiedCloud > this.LastModifiedLocal)
+                {
+                    this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.UpdatedInCloud;
+                }
+                else if (this.LastModifiedCloud < this.LastModifiedLocal)
+                {
+                    this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.UpdatedLocally;
+                }
+                else
+                {
+                    this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
+                }
+            }
         }
 
         /// <summary>

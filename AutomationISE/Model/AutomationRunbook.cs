@@ -26,61 +26,34 @@ namespace AutomationAzure
     {
         // cloud only
         public AutomationRunbook(Runbook cloudRunbook) :
-            base(cloudRunbook.Name)
+            base(cloudRunbook.Name, null, cloudRunbook.Properties.LastModifiedTime.DateTime)
         {
             this.Status = cloudRunbook.Properties.State;
             this.Parameters = cloudRunbook.Properties.Parameters;
-            this.LastModifiedCloud = cloudRunbook.Properties.LastModifiedTime.DateTime;
-            this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.CloudOnly;
-            
-            this.LastModifiedLocal = null;
         }
 
         // local only - new
         public AutomationRunbook(string name) :
-            base(name)
+            base(name, DateTime.Now, null)
         {
             this.Status = AutomationRunbook.Constants.Status.New;
-            this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.LocalOnly;
-            this.LastModifiedLocal = DateTime.Now;
-
-            this.LastModifiedCloud = null;
             this.Parameters = null;
         }
 
         // local only - from file
         public AutomationRunbook(FileInfo localFile)
-            : base(localFile.Name)
+            : base(localFile.Name, localFile.LastWriteTime, null)
         {
             this.Status = AutomationRunbook.Constants.Status.New;
-            this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.LocalOnly;
-            this.LastModifiedLocal = localFile.LastWriteTime;
-            
-            this.LastModifiedCloud = null;
             this.Parameters = null;
         }
 
         // both cloud and local
         public AutomationRunbook(FileInfo localFile, Runbook cloudRunbook)
-            : base(cloudRunbook.Name)
+            : base(cloudRunbook.Name, localFile.LastWriteTime, cloudRunbook.Properties.LastModifiedTime.DateTime)
         {
             this.Status = cloudRunbook.Properties.State;
-            this.LastModifiedLocal = localFile.LastWriteTime;
-            this.LastModifiedCloud = cloudRunbook.Properties.LastModifiedTime.DateTime;
             this.Parameters = cloudRunbook.Properties.Parameters;
-
-            if (this.LastModifiedCloud > this.LastModifiedLocal)
-            {
-                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.UpdatedInCloud;
-            }
-            else if(this.LastModifiedCloud < this.LastModifiedLocal)
-            {
-                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.UpdatedLocally;
-            }
-            else
-            {
-                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
-            }
         }
 
         /// <summary>
