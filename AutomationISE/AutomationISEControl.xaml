@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:AutomationISE"
              mc:Ignorable="d" d:DesignWidth="402.638" Height="634.035">
     <Grid Margin="0,0,-34,-429" HorizontalAlignment="Left">
-        <TabControl x:Name="mainTabControl" HorizontalAlignment="Center" Height="603" RenderTransformOrigin="0.742,0.537" Margin="0,10,0,0" VerticalAlignment="Top">
+        <TabControl x:Name="mainTabControl" HorizontalAlignment="Center" Height="603" RenderTransformOrigin="0.742,0.537" Margin="0,10,0,0" VerticalAlignment="Top" SelectionChanged="TabControl_SelectionChanged">
             <TabItem x:Name="configurationTab" Header="Configuration" Margin="-2">
                 <TabItem.Background>
                     <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">

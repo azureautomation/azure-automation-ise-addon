@@ -25,6 +25,8 @@ using Microsoft.Azure.Subscriptions.Models;
 using System.Threading;
 using System.Windows.Threading;
 
+using System.Diagnostics;
+
 namespace AutomationISE
 {
     /// <summary>
@@ -212,6 +214,22 @@ namespace AutomationISE
 
             System.Windows.Forms.Application.DoEvents();
         }
-    }
 
+        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            TabItem selectedTab = (TabItem)((TabControl)sender).SelectedItem;
+            switch (selectedTab.Name)
+            {
+                case "configurationTab":
+                    break;
+                case "runbookTab":
+                    break;
+                case "settingsTab":
+                    break;
+                default:
+                    Debug.WriteLine("Couldn't find tab handler with name: " + selectedTab.Name);
+                    return;
+            }
+        }
+    }
 }
