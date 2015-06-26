@@ -163,7 +163,7 @@ namespace AutomationISE
                 if (selectedAsset.ToString() == Constants.assetVariable)
                 {
                     AutomationAccount automationAccount = (AutomationAccount)accountsComboBox.SelectedValue;
-                    List<AutomationVariable> variablesList = await automationAccount.ListVariables();
+                    ISet<AutomationAsset> variablesList = await automationAccount.ListVariables();
                     assetsListView.ItemsSource = variablesList;
                 }
             }

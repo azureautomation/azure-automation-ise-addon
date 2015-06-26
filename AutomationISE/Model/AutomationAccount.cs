@@ -94,41 +94,10 @@ namespace AutomationAzure
             return automationRunbookList;
         }
 
-        public async Task<List<AutomationVariable>> ListVariables()
+        public async Task<ISet<AutomationAsset>> ListVariables()
         {
-            List<AutomationVariable> automationVariableList = new List<AutomationVariable>();
-            var cloudVariables = await automationManagementClient.Variables.ListAsync(ResourceGroupName, AutomationAccountName);
-            var staticAssets = new StaticAssets(Constants.staticAssetsFile, Constants.secureStaticAssetsFile, automationAccountWorkspace);
-            List<VariableJson> localVariables = staticAssets.GetVariableAssets();
-
-            // Find all variables
-            foreach (Variable cloudVariable in cloudVariables.Variables)
-            {
-                VariableJson localVariable = localVariables.FirstOrDefault(x => x.Name == cloudVariable.Name);
-                if (localVariable != null)
-                {
-                    var automationVariable = new AutomationVariable(localVariable, cloudVariable);
-                    automationVariableList.Add(automationVariable);                 
-                    localVariables.Remove(localVariable);
-                }
-                else
-                {
-                    var automationVariable = new AutomationVariable(cloudVariable);
-                    automationVariableList.Add(automationVariable);
-                }
-            }
-
-            // Add remaining locally created assets
-            foreach (VariableJson localVariable in localVariables)
-            {
-                AutomationVariable automationVariable = new AutomationVariable(localVariable, false); // TODO: track encrypted somehow instead of always false
-                automationVariableList.Add(automationVariable);
-            }
-
-            return automationVariableList;
-            
-            //var automationVariableClient = new AutomationVariable();
-            //return await automationVariableClient.ListVariables();
+            var staticAssets = new StaticAssets(Constants.localAssetsFileName, Constants.secureLocalAssetsFileName, automationAccountWorkspace); 
+            return await AutomationAsset.GetAll(automationAccountWorkspace, automationManagementClient, ResourceGroupName, AutomationAccountName);
         }
 
         public string automationAccountWorkspace { get; set; }

@@ -46,10 +46,10 @@ namespace AutomationAzure
         }
 
         // local only - from json
-        public AutomationVariable(VariableJson localJson, bool encrypted)
+        public AutomationVariable(VariableJson localJson)
             : base(localJson, null)
         {
-            this.Encrypted = encrypted;
+            this.Encrypted = localJson.Encrypted;
             
             IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
             valueFields.Add("Value", localJson.Value);
@@ -75,5 +75,6 @@ namespace AutomationAzure
 
     public class VariableJson : AssetJson {
         public Object Value { get; set; }
+        public bool Encrypted { get; set; }
     }
 }

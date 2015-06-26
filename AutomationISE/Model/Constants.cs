@@ -19,8 +19,8 @@ namespace AutomationAzure
 {
     public class Constants
     {
-        public const String staticAssetsFile = "StaticAssets.json";
-        public const String secureStaticAssetsFile = "SecureStaticAssets.json";
+        public const String localAssetsFileName = "StaticAssets.json";
+        public const String secureLocalAssetsFileName = "SecureStaticAssets.json";
 
         public const String authority = "https://login.windows.net/common";
         public const String appIdURI = "https://management.core.windows.net/";
