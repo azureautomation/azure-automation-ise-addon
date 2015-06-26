@@ -1,0 +1,26 @@
+{
+    "Variable":  [
+                     {
+                         "Name":  "SampleEncryptedStringVariable",
+                         "Value":  "SomeSecretStringValue"
+                     },
+                     {
+                         "Name":  "SampleEncryptedIntVariable",
+                         "Value":  123
+                     }
+                 ],
+    "PSCredential":  [
+                         {
+                             "Name":  "SampleCredential",
+                             "Username":  "SomeUser",
+                             "Password":  "SomePassword"
+                         }
+                     ],
+    "Connection":  [
+                       {
+                           "Name":  "SampleConnection",
+                           "SomeFieldName":  "SomeFieldValue",
+                           "SomeOtherFieldName":  321
+                       }
+                   ]
+}

@@ -3,8 +3,8 @@
 #>
 
 $script:ConfigurationPath = "$PSScriptRoot\Config.json"
-$script:StaticAssetsPath = "$PSScriptRoot\StaticAssets.json"
-$script:SecureStaticAssetsPath = "$PSScriptRoot\SecureStaticAssets.json"
+$script:LocalAssetsPath = "$PSScriptRoot\LocalAssets.json"
+$script:SecureLocalAssetsPath = "$PSScriptRoot\SecureLocalAssets.json"
 $script:IseAddonPath = "$PSScriptRoot\ISEaddon\AzureAutomation.dll"
 
 $script:IseAddOnTextForPowerShellProfile = "Add-AzureAutomationIseAddOnToIse"
@@ -94,9 +94,9 @@ function Get-AzureAutomationAuthoringToolkitLocalCertificate {
 
 <#
     .SYNOPSIS
-        Get static assets defined for the Azure Automation Authoring Toolkit. Not meant to be called directly.
+        Get local assets defined for the Azure Automation Authoring Toolkit. Not meant to be called directly.
 #>
-function Get-AzureAutomationAuthoringToolkitStaticAsset {
+function Get-AzureAutomationAuthoringToolkitLocalAsset {
     param(
         [Parameter(Mandatory=$True)]
         [ValidateSet('Variable', 'Certificate', 'PSCredential', 'Connection')]
@@ -108,56 +108,56 @@ function Get-AzureAutomationAuthoringToolkitStaticAsset {
 
     $Configuration = Get-AzureAutomationAuthoringToolkitConfiguration
 
-    if($Configuration.StaticAssetsPath -eq "default") {
-        Write-Verbose "Grabbing static assets from default location '$script:StaticAssetsPath'"
+    if($Configuration.LocalAssetsPath -eq "default") {
+        Write-Verbose "Grabbing local assets from default location '$script:LocalAssetsPath'"
     }
     else {
-        $script:StaticAssetsPath = $Configuration.StaticAssetsPath
-        Write-Verbose "Grabbing static assets from user-specified location '$script:StaticAssetsPath'"
+        $script:LocalAssetsPath = $Configuration.LocalAssetsPath
+        Write-Verbose "Grabbing local assets from user-specified location '$script:LocalAssetsPath'"
     }
 
-    if($Configuration.SecureStaticAssetsPath -eq "default") {
-        Write-Verbose "Grabbing secure static assets from default location '$script:SecureStaticAssetsPath'"
+    if($Configuration.SecureLocalAssetsPath -eq "default") {
+        Write-Verbose "Grabbing secure local assets from default location '$script:SecureLocalAssetsPath'"
     }
     else {
-        $script:SecureStaticAssetsPath = $Configuration.SecureStaticAssetsPath
-        Write-Verbose "Grabbing secure static assets from user-specified location '$script:SecureStaticAssetsPath'"
+        $script:SecureLocalAssetsPath = $Configuration.SecureLocalAssetsPath
+        Write-Verbose "Grabbing secure local assets from user-specified location '$script:SecureLocalAssetsPath'"
     }
     
-    $StaticAssetsError = "AzureAutomationAuthoringToolkit: AzureAutomationAuthoringToolkit static assets defined in 
-    '$script:StaticAssetsPath' is incorrect. Make sure the file exists, and it contains valid JSON."
+    $LocalAssetsError = "AzureAutomationAuthoringToolkit: AzureAutomationAuthoringToolkit local assets defined in 
+    '$script:LocalAssetsPath' is incorrect. Make sure the file exists, and it contains valid JSON."
 
-    $SecureStaticAssetsError = "AzureAutomationAuthoringToolkit: AzureAutomationAuthoringToolkit secure static assets defined in 
-    '$script:SecureStaticAssetsPath' is incorrect. Make sure the file exists, and it contains valid JSON."
+    $SecureLocalAssetsError = "AzureAutomationAuthoringToolkit: AzureAutomationAuthoringToolkit secure local assets defined in 
+    '$script:SecureLocalAssetsPath' is incorrect. Make sure the file exists, and it contains valid JSON."
     
-    Write-Verbose "AzureAutomationAuthoringToolkit: Looking for static value for $Type asset '$Name.'"
+    Write-Verbose "AzureAutomationAuthoringToolkit: Looking for local value for $Type asset '$Name.'"
       
     try {
-        $StaticAssets = Get-Content $script:StaticAssetsPath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $LocalAssets = Get-Content $script:LocalAssetsPath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
     }
     catch {
-        Write-Error $StaticAssetsError
+        Write-Error $LocalAssetsError
         throw $_
     }
 
     try {
-        $SecureStaticAssets = Get-Content $script:SecureStaticAssetsPath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $SecureLocalAssets = Get-Content $script:SecureLocalAssetsPath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
     }
     catch {
-        Write-Error $SecureStaticAssetsError
+        Write-Error $SecureLocalAssetsError
         throw $_
     }
 
-    $Asset = _findObjectByName -ObjectArray $StaticAssets.$Type -Name $Name
+    $Asset = _findObjectByName -ObjectArray $LocalAssets.$Type -Name $Name
 
     if($Asset) {
-        Write-Verbose "AzureAutomationAuthoringToolkit: Found static value for $Type asset '$Name.'"
+        Write-Verbose "AzureAutomationAuthoringToolkit: Found local value for $Type asset '$Name.'"
     }
     else {
-        $Asset = _findObjectByName -ObjectArray $SecureStaticAssets.$Type -Name $Name
+        $Asset = _findObjectByName -ObjectArray $SecureLocalAssets.$Type -Name $Name
 
         if($Asset) {
-            Write-Verbose "AzureAutomationAuthoringToolkit: Found secure static value for $Type asset '$Name.'"
+            Write-Verbose "AzureAutomationAuthoringToolkit: Found secure local value for $Type asset '$Name.'"
         }
     }
 
@@ -190,8 +190,8 @@ function Get-AzureAutomationAuthoringToolkitStaticAsset {
         Write-Output $AssetValue
     }
     else {
-        Write-Verbose "AzureAutomationAuthoringToolkit: Static value for $Type asset '$Name' not found." 
-        Write-Warning "AzureAutomationAuthoringToolkit: Warning - Static value for $Type asset '$Name' not found."
+        Write-Verbose "AzureAutomationAuthoringToolkit: Local value for $Type asset '$Name' not found." 
+        Write-Warning "AzureAutomationAuthoringToolkit: Warning - Local value for $Type asset '$Name' not found."
     }
 }
 
@@ -201,8 +201,8 @@ function Get-AzureAutomationAuthoringToolkitStaticAsset {
 #>
 function Get-AzureAutomationAuthoringToolkitConfiguration {       
     $ConfigurationError = "AzureAutomationAuthoringToolkit: AzureAutomationAuthoringToolkit configuration defined in 
-    '$script:ConfigurationPath' is incorrect. Make sure the file exists, contains valid JSON, and contains 'StaticAssetsPath'
-    and 'SecureStaticAssetsPath' settings."
+    '$script:ConfigurationPath' is incorrect. Make sure the file exists, contains valid JSON, and contains 'LocalAssetsPath'
+    and 'SecureLocalAssetsPath' settings."
 
     Write-Verbose "AzureAutomationAuthoringToolkit: Grabbing AzureAutomationAuthoringToolkit configuration."
 
@@ -222,7 +222,7 @@ function Get-AzureAutomationAuthoringToolkitConfiguration {
         $Configuration.$Key = $Value
     }
 
-    if(!($Configuration.StaticAssetsPath -and $Configuration.SecureStaticAssetsPath)) {
+    if(!($Configuration.LocalAssetsPath -and $Configuration.SecureLocalAssetsPath)) {
         throw $ConfigurationError
     }
 
@@ -243,9 +243,9 @@ function Get-AutomationVariable {
         [string] $Name
     )
 
-    Write-Verbose "AzureAutomationAuthoringToolkit: Looking for static variable asset with name '$Name'"
+    Write-Verbose "AzureAutomationAuthoringToolkit: Looking for local variable asset with name '$Name'"
 
-    $AssetValue = Get-AzureAutomationAuthoringToolkitStaticAsset -Type Variable -Name $Name
+    $AssetValue = Get-AzureAutomationAuthoringToolkitLocalAsset -Type Variable -Name $Name
 
     Write-Output $AssetValue
 }
@@ -264,9 +264,9 @@ function Get-AutomationConnection {
         [string] $Name
     )
 
-    Write-Verbose "AzureAutomationAuthoringToolkit: Looking for static connection asset with name '$Name'"
+    Write-Verbose "AzureAutomationAuthoringToolkit: Looking for local connection asset with name '$Name'"
 
-    $AssetValue = Get-AzureAutomationAuthoringToolkitStaticAsset -Type Connection -Name $Name
+    $AssetValue = Get-AzureAutomationAuthoringToolkitLocalAsset -Type Connection -Name $Name
 
     Write-Output $AssetValue
 }
@@ -287,30 +287,30 @@ function Set-AutomationVariable {
         [object] $Value
     )
 
-    Write-Verbose "AzureAutomationAuthoringToolkit: Looking for static variable asset with name '$Name'"
+    Write-Verbose "AzureAutomationAuthoringToolkit: Looking for local variable asset with name '$Name'"
 
-    $StaticAssetValue = Get-AzureAutomationAuthoringToolkitStaticAsset -Type Variable -Name $Name
+    $LocalAssetValue = Get-AzureAutomationAuthoringToolkitLocalAsset -Type Variable -Name $Name
 
-    if($StaticAssetValue) {
-        $StaticAssets = Get-Content $script:StaticAssetsPath -Raw | ConvertFrom-Json
-        $SecureStaticAssets = Get-Content $script:SecureStaticAssetsPath -Raw | ConvertFrom-Json
+    if($LocalAssetValue) {
+        $LocalAssets = Get-Content $script:LocalAssetsPath -Raw | ConvertFrom-Json
+        $SecureLocalAssets = Get-Content $script:SecureLocalAssetsPath -Raw | ConvertFrom-Json
 
-        $StaticAssets.Variable | ForEach-Object {
+        $LocalAssets.Variable | ForEach-Object {
             if($_.Name -eq $Name) {
                 $_.Value = $Value
             }
         }
 
-        $SecureStaticAssets.Variable | ForEach-Object {
+        $SecureLocalAssets.Variable | ForEach-Object {
             if($_.Name -eq $Name) {
                 $_.Value = $Value
             }
         }
 
-        Write-Verbose "AzureAutomationAuthoringToolkit: Setting value of static variable asset with name '$Name'"
+        Write-Verbose "AzureAutomationAuthoringToolkit: Setting value of local variable asset with name '$Name'"
 
-        Set-Content $script:StaticAssetsPath -Value (ConvertTo-Json -InputObject $StaticAssets -Depth 999)
-        Set-Content $script:SecureStaticAssetsPath -Value (ConvertTo-Json -InputObject $SecureStaticAssets -Depth 999)
+        Set-Content $script:LocalAssetsPath -Value (ConvertTo-Json -InputObject $LocalAssets -Depth 999)
+        Set-Content $script:SecureLocalAssetsPath -Value (ConvertTo-Json -InputObject $SecureLocalAssets -Depth 999)
     }
     else {
         throw "Variable '$Name' not found for account 'AuthoringToolkit'"
@@ -331,9 +331,9 @@ function Get-AutomationCertificate {
         [string] $Name
     )
 
-    Write-Verbose "AzureAutomationAuthoringToolkit: Looking for static certificate asset with name '$Name'"
+    Write-Verbose "AzureAutomationAuthoringToolkit: Looking for local certificate asset with name '$Name'"
 
-    $AssetValue = Get-AzureAutomationAuthoringToolkitStaticAsset -Type Certificate -Name $Name
+    $AssetValue = Get-AzureAutomationAuthoringToolkitLocalAsset -Type Certificate -Name $Name
 
     Write-Output $AssetValue
 }

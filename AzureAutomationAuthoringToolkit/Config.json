@@ -1,10 +1,10 @@
 ﻿[
     {
-    	"Name": "StaticAssetsPath",
+    	"Name": "LocalAssetsPath",
     	"Value": "default"
     },
     {
-    	"Name": "SecureStaticAssetsPath",
+    	"Name": "SecureLocalAssetsPath",
     	"Value": "default"
     }
 ]

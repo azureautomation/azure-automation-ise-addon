@@ -16,9 +16,9 @@ workflow Get-AutomationPSCredential {
         [string] $Name
     )
 
-    Write-Verbose "AzureAutomationAuthoringToolkit: Looking for static credential asset with name '$Name'"
+    Write-Verbose "AzureAutomationAuthoringToolkit: Looking for local credential asset with name '$Name'"
 
-    $AssetValue = Get-AzureAutomationAuthoringToolkitStaticAsset -Type PSCredential -Name $Name
+    $AssetValue = Get-AzureAutomationAuthoringToolkitLocalAsset -Type PSCredential -Name $Name
 
     if($AssetValue) {
         Write-Verbose "AzureAutomationAuthoringToolkit: Converting '$Name' asset value to a proper PSCredential"
