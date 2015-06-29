@@ -5,9 +5,9 @@
 $script:ConfigurationPath = "$PSScriptRoot\Config.json"
 $script:LocalAssetsPath = "$PSScriptRoot\LocalAssets.json"
 $script:SecureLocalAssetsPath = "$PSScriptRoot\SecureLocalAssets.json"
-$script:IseAddonPath = "$PSScriptRoot\ISEaddon\AzureAutomation.dll"
 
-$script:IseAddOnTextForPowerShellProfile = "Add-AzureAutomationIseAddOnToIse"
+$script:StartProfileSnippetForPowerShellToLoadAzureAutomationISEAddOn = "# Start AzureAutomationISEAddOn snippet"
+$script:EndProfileSnippetForPowerShellToLoadAzureAutomationISEAddOn = "# End AzureAutomationISEAddOn snippet"
 
 function _findObjectByName {
     param(
@@ -22,46 +22,20 @@ function _findObjectByName {
 
 <#
     .SYNOPSIS
-        Unblocks the files used by the AzureAutomationAuthoringToolkit module so they can be used in PowerShell Workflow
-#>
-function Unblock-AzureAutomationAuthoringToolkit {
-    Unblock-File $PSScriptRoot\AzureAutomationAuthoringToolkit.psd1
-    Unblock-File $PSScriptRoot\AzureAutomationAuthoringToolkit.psm1
-    Unblock-File $PSScriptRoot\AzureAutomationAuthoringToolkitInner.psm1
-}
-
-<#
-    .SYNOPSIS
-        Adds the Azure Automation ISE add-on to the current PowerShell ISE session.
-        Not meant to be called directly.
-#>
-function Add-AzureAutomationIseAddOnToIse {
-    if($PSIse) {
-        Add-Type -Path $script:IseAddonPath | Out-Null
-        $PSIse.CurrentPowerShellTab.VerticalAddOnTools.Add(‘Azure Automation ISE add-on’, [AzureAutomation.AzureAutomationControl], $True) | Out-Null
-    }
-}
-
-<#
-    .SYNOPSIS
-        Sets up the Azure Automation ISE add-on for use in the PowerShell ISE.
-#>
-function Install-AzureAutomationIseAddOn {
-    Add-Content $Profile $script:IseAddOnTextForPowerShellProfile
-    
-    Unblock-AzureAutomationAuthoringToolkit
-    Unblock-File $script:IseAddonPath
-
-    Add-AzureAutomationIseAddOnToIse
-}
-
-<#
-    .SYNOPSIS
         Removes the Azure Automation ISE add-on from the PowerShell ISE.
 #>
 function Uninstall-AzureAutomationIseAddOn {
-    $Content = Get-Content $Profile
-    $Content.Replace($script:IseAddOnTextForPowerShellProfile, "") | Set-Content $Profile
+    $ProfileContent = Get-Content $Profile -Raw
+    
+    $StartProfileSnippetIndex = $ProfileContent.IndexOf($script:StartProfileSnippetForPowerShellToLoadAzureAutomationISEAddOn)
+    $EndProfileSnippetIndex = $ProfileContent.IndexOf($script:EndProfileSnippetForPowerShellToLoadAzureAutomationISEAddOn)
+
+    if($StartProfileSnippetIndex -gt -1 -and $EndProfileSnippetIndex -gt -1) {
+        $NewProfileContent = $ProfileContent.Substring(0, $StartProfileSnippetIndex)
+        $NewProfileContent += $ProfileContent.Substring($EndProfileSnippetIndex + $script:EndProfileSnippetForPowerShellToLoadAzureAutomationISEAddOn.Length)
+
+        $NewProfileContent | Set-Content $Profile
+    }
 }
 
 <#
