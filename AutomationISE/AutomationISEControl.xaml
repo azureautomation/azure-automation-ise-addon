@@ -15,13 +15,14 @@
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                     </Grid.RowDefinitions>
-                    <Button x:Name="loginButton" Content="Sign In" HorizontalAlignment="Left" Margin="10,93,0,0" VerticalAlignment="Top" Width="71" Click="loginButton_Click" Height="21"/>
+                    <Button x:Name="loginButton" Content="Sign In" HorizontalAlignment="Left" Margin="10,99,0,0" VerticalAlignment="Top" Width="71" Click="loginButton_Click" Height="21"/>
+                    <TextBox x:Name="userNameTextBox" Height="18" Margin="10,80,0,0" TextWrapping="Wrap" VerticalAlignment="Top" TextChanged="userNameTextBox_TextChanged" Grid.Column="0"/>
                     <ComboBox x:Name="subscriptionComboBox" Margin="10,148,10,0" VerticalAlignment="Top" SelectionChanged="SubscriptionComboBox_SelectionChanged" Grid.ColumnSpan="2" Height="22"/>
                     <ComboBox x:Name="accountsComboBox" Margin="10,204,10,0" VerticalAlignment="Top" SelectionChanged="accountsComboBox_SelectionChanged" Grid.ColumnSpan="2" Height="22"/>
                     <TextBox x:Name="workspaceTextBox" Height="18" Margin="10,31,0,0" TextWrapping="Wrap" VerticalAlignment="Top" TextChanged="workspaceTextBox_TextChanged" Grid.Column="0"/>
                     <Label x:Name="workspaceLabel" Content="Location to store runbooks and assets" HorizontalAlignment="Left" Margin="7,5,0,0" VerticalAlignment="Top" Width="251" Grid.ColumnSpan="2" Height="26"/>
                     <Button x:Name="workspaceButton" Content="Browse" HorizontalAlignment="Left" Margin="5,31,0,0" VerticalAlignment="Top" Width="56" Click="workspaceButton_Click" Height="18" Grid.Column="1"/>
-                    <Label x:Name="signinLabel" Content="Sign in to Azure Automation" HorizontalAlignment="Left" Margin="7,68,0,0" VerticalAlignment="Top" Width="214" Height="26"/>
+                    <Label x:Name="signinLabel" Content="Sign in to Azure Automation" HorizontalAlignment="Left" Margin="7,55,0,0" VerticalAlignment="Top" Width="214" Height="26"/>
                     <Label x:Name="subscriptionLabel" Content="Select Subscription" HorizontalAlignment="Left" Margin="7,126,0,0" VerticalAlignment="Top" Height="26" Width="111"/>
                     <Label x:Name="automationAccountLabel" Content="Select Automation Account" HorizontalAlignment="Left" Margin="7,181,0,0" VerticalAlignment="Top" Height="26" Width="154"/>
                     <TextBox x:Name="configurationStatusTextBox" Grid.ColumnSpan="2" Height="278" Margin="10,271,10,0" TextWrapping="Wrap" VerticalAlignment="Top" BorderThickness="2" TextChanged="configurationStatusTextBox_TextChanged"/>

@@ -50,6 +50,8 @@ namespace AutomationISE
                 }
                 workspaceTextBox.Text = localWorkspace;
 
+                userNameTextBox.Text = Properties.Settings.Default["ADUserName"].ToString();
+
                 assetsComboBox.Items.Add(Constants.assetVariable);
             }
             catch (Exception exception)
@@ -68,11 +70,15 @@ namespace AutomationISE
         {
             try {
 
-                Properties.Settings.Default["localWorkspace"] = workspaceTextBox.Text;
-                Properties.Settings.Default.Save();
 
                 UpdateStatusBox(configurationStatusTextBox, "Launching login window to sign in");
-                AuthenticationResult ADToken = AuthenticateHelper.GetInteractiveLogin();
+                String UserName = userNameTextBox.Text;
+                AuthenticationResult ADToken = AuthenticateHelper.GetInteractiveLogin(UserName);
+
+                Properties.Settings.Default["localWorkspace"] = workspaceTextBox.Text;
+                Properties.Settings.Default["ADUserName"] = ADToken.UserInfo.DisplayableId;
+                userNameTextBox.Text = ADToken.UserInfo.DisplayableId; 
+                Properties.Settings.Default.Save();
 
                 subscriptionClient = new AutomationAzure.AutomationSubscription(ADToken, workspaceTextBox.Text);
 
@@ -230,6 +236,11 @@ namespace AutomationISE
                     Debug.WriteLine("Couldn't find tab handler with name: " + selectedTab.Name);
                     return;
             }
+        }
+
+        private void userNameTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
         }
     }
 }
