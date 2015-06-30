@@ -8,9 +8,9 @@ TBD
 ## Installation
 
 * Download this repository by clicking the **"Download Zip"** button on the **right side** of this page 
-* Extract the contents in the Zip and copy the "AzureAutomationAuthoringToolkit" module folder to `%USERPROFILE%\Documents\WindowsPowerShell\Modules`. If this folder does not exist, place it in your user PowerShell module path. You can find the path by running $env:psmodulepath from a PowerShell window.
-* Open the PowerShell ISE, and run `Install-AzureAutomationIseAddOn`
-* The Azure Automation ISE add-on should appear on the right side of the PowerShell ISE
+* Extract the contents of the Zip
+* Open the PowerShell ISE, and run the `Install-AzureAutomationIseAddOn.ps1` PowerShell script located in the extracted folder
+* The Azure Automation ISE add-on should appear on the right side of the PowerShell ISE:
 ![alt text](https://github.com/azureautomation/azure-automation-ise-addon/blob/master/Screenshots/Automation-Add-On.png " Azure Automation Add-On")
 * From now on, opening the PowerShell ISE should automatically load the Azure Automation ISE add-on
 
