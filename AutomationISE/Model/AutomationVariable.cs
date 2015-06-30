@@ -25,7 +25,7 @@ namespace AutomationAzure
     {
         // cloud only
         public AutomationVariable(Variable cloudVariable)
-            : base(cloudVariable.Name, null, cloudVariable.Properties.LastModifiedTime.DateTime)
+            : base(cloudVariable.Name, null, cloudVariable.Properties.LastModifiedTime.LocalDateTime)
         {
             this.Encrypted = cloudVariable.Properties.IsEncrypted;
 
@@ -58,7 +58,7 @@ namespace AutomationAzure
 
         // both cloud and local
         public AutomationVariable(VariableJson localJson, Variable cloudVariable)
-            : base(localJson, cloudVariable.Properties.LastModifiedTime.DateTime)
+            : base(localJson, cloudVariable.Properties.LastModifiedTime.LocalDateTime)
         {
             this.Encrypted = cloudVariable.Properties.IsEncrypted;
 
@@ -74,6 +74,34 @@ namespace AutomationAzure
     }
 
     public class VariableJson : AssetJson {
+        public VariableJson() {}
+        
+        public VariableJson(AutomationVariable variable)
+            : base(variable)
+        {
+            this.Encrypted = variable.Encrypted;
+            
+            Object tempValue;
+            variable.ValueFields.TryGetValue("Value", out tempValue);
+            this.Value = tempValue;
+        }
+
+        public override void Update(AutomationAsset asset)
+        {
+            var variable = (AutomationVariable)asset;
+            this.Encrypted = variable.Encrypted;
+
+            Object tempValue;
+            variable.ValueFields.TryGetValue("Value", out tempValue);
+
+            if(this.Encrypted != variable.Encrypted || this.Value != tempValue)
+            {
+                this.Value = tempValue;
+                this.Encrypted = variable.Encrypted;
+                this.LastModified = DateTime.Now;
+            }
+        }
+        
         public Object Value { get; set; }
         public bool Encrypted { get; set; }
     }

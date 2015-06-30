@@ -21,21 +21,73 @@ using System.Web.Script.Serialization;
 
 namespace AutomationAzure
 {
-    public static class LocalAssets
+    public class LocalAssets
     {
-        public static LocalAssetsContainerJson Get(String workspacePath)
+        public static void Set(String workspacePath, ISet<AutomationAsset> newAssets)
         {
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            string localAssetsFilePath = System.IO.Path.Combine(workspacePath, AutomationAzure.Constants.localAssetsFileName);
-            string secureLocalAssetsFilePath = System.IO.Path.Combine(workspacePath, AutomationAzure.Constants.secureLocalAssetsFileName);
+            LocalAssets localAssets = LocalAssets.Get(workspacePath);
 
-            UnsecureLocalAssetsContainerJson localAssetsJson = jss.Deserialize<UnsecureLocalAssetsContainerJson>((File.ReadAllText(localAssetsFilePath)));
-            SecureLocalAssetsContainerJson secureLocalAssetsJson = jss.Deserialize<SecureLocalAssetsContainerJson>((File.ReadAllText(localAssetsFilePath)));
+            // add / update variables
+            foreach (var newAsset in newAssets)
+            {
+                if (!(newAsset is AutomationVariable))
+                {
+                    continue;
+                }
+                
+                bool found = false;
+                foreach (var currentLocalAsset in localAssets.Variables)
+                {
+                    if (newAsset.Name == currentLocalAsset.Name)
+                    {
+                        found = true;
+                        currentLocalAsset.Update(newAsset);
+                    }
+                }
 
-            LocalAssetsContainerJson localAssetsContainer = new LocalAssetsContainerJson();
+                if (!found)
+                {
+                    localAssets.Variables.Add(new VariableJson((AutomationVariable)newAsset));
+                }
+            }
+
+            // add / update credentials
+            foreach (var newAsset in newAssets)
+            {
+                if (!(newAsset is AutomationCredential))
+                {
+                    continue;
+                }
+                
+                bool found = false;
+                foreach (var currentLocalAsset in localAssets.PSCredentials)
+                {
+                    if (newAsset.Name == currentLocalAsset.Name)
+                    {
+                        found = true;
+                        currentLocalAsset.Update(newAsset);
+                    }
+                }
+
+                if (!found)
+                {
+                    localAssets.PSCredentials.Add(new CredentialJson((AutomationCredential)newAsset));
+                }
+            }
+
+            DirectoryInfo dir = Directory.CreateDirectory(workspacePath);
+            UnsecureLocalAssetsContainerJson.Set(workspacePath, localAssets);
+            SecureLocalAssetsContainerJson.Set(workspacePath, localAssets); 
+        }
+        
+        public static LocalAssets Get(String workspacePath)
+        {
+            LocalAssets localAssetsContainer = new LocalAssets(); 
+            
+            UnsecureLocalAssetsContainerJson localAssetsJson = UnsecureLocalAssetsContainerJson.Get(workspacePath);
+            SecureLocalAssetsContainerJson secureLocalAssetsJson = SecureLocalAssetsContainerJson.Get(workspacePath);
             
             // add JSON variables to the container
-            localAssetsContainer.Variables = new List<VariableJson>();
             if (localAssetsJson.Variable != null)
             {
                 localAssetsJson.Variable.ForEach(variable => variable.Encrypted = false);
@@ -48,7 +100,6 @@ namespace AutomationAzure
             }
 
             // add JSON credentials to the container
-            localAssetsContainer.PSCredentials = new List<CredentialJson>();
             if (secureLocalAssetsJson.PSCredential != null)
             {
                 localAssetsContainer.PSCredentials.AddRange(secureLocalAssetsJson.PSCredential);
@@ -57,24 +108,87 @@ namespace AutomationAzure
             return localAssetsContainer;
         }
 
-        public class LocalAssetsContainerJson
+        public List<VariableJson> Variables = new List<VariableJson>();
+        public List<CredentialJson> PSCredentials = new List<CredentialJson>();
+        //public List<ConnectionJson> Connection;
+        //public List<CertificateJson> Certificate;
+
+        private abstract class AbstractLocalAssetsContainerJson
         {
-            public List<VariableJson> Variables;
-            public List<CredentialJson> PSCredentials;
-            //public List<ConnectionJson> Connection;
-            //public List<CertificateJson> Certificate;
+            public List<VariableJson> Variable = new List<VariableJson>();
+            public static JavaScriptSerializer jss = new JavaScriptSerializer();
         }
 
         private class UnsecureLocalAssetsContainerJson
+            : AbstractLocalAssetsContainerJson
         {
-            public List<VariableJson> Variable;
+            public static UnsecureLocalAssetsContainerJson Get(string workspacePath)
+            {
+                string localAssetsFilePath = System.IO.Path.Combine(workspacePath, AutomationAzure.Constants.localAssetsFileName);
+                try
+                {
+                    return jss.Deserialize<UnsecureLocalAssetsContainerJson>(File.ReadAllText(localAssetsFilePath));
+                }
+                catch
+                {
+                    return new UnsecureLocalAssetsContainerJson();
+                }
+            }
+
+            public static void Set(string workspacePath, LocalAssets localAssets)
+            {
+                var localAssetsUnsecure = new UnsecureLocalAssetsContainerJson();
+                foreach (var localVariableAsset in localAssets.Variables)
+                {
+                    if (!localVariableAsset.Encrypted)
+                    {
+                        localAssetsUnsecure.Variable.Add(localVariableAsset);
+                    }
+                }
+                
+                string localAssetsFilePath = System.IO.Path.Combine(workspacePath, AutomationAzure.Constants.localAssetsFileName);
+                var assetsSerialized = jss.Serialize(localAssetsUnsecure);
+                File.WriteAllText(localAssetsFilePath, assetsSerialized);
+            }
+           
             //public List<CertificateJson> Certificate;
         }
 
         private class SecureLocalAssetsContainerJson
+            : AbstractLocalAssetsContainerJson
         {
-            public List<VariableJson> Variable;
-            public List<CredentialJson> PSCredential;
+            public static SecureLocalAssetsContainerJson Get(string workspacePath)
+            {
+                string secureLocalAssetsFilePath = System.IO.Path.Combine(workspacePath, AutomationAzure.Constants.secureLocalAssetsFileName);
+                try
+                {
+                    return jss.Deserialize<SecureLocalAssetsContainerJson>(File.ReadAllText(secureLocalAssetsFilePath));
+                }
+                catch
+                {
+                    return new SecureLocalAssetsContainerJson();
+                }
+            }
+
+            public static void Set(string workspacePath, LocalAssets localAssets)
+            {
+                var localAssetsSecure = new SecureLocalAssetsContainerJson();
+                foreach (var localVariableAsset in localAssets.Variables)
+                {
+                    if (localVariableAsset.Encrypted)
+                    {
+                        localAssetsSecure.Variable.Add(localVariableAsset);
+                    }
+                }
+
+                localAssetsSecure.PSCredential.AddRange(localAssetsSecure.PSCredential);
+
+                string secureLocalAssetsFilePath = System.IO.Path.Combine(workspacePath, AutomationAzure.Constants.secureLocalAssetsFileName);
+                var assetsSerialized = jss.Serialize(localAssetsSecure);
+                File.WriteAllText(secureLocalAssetsFilePath, assetsSerialized);
+            }
+
+            public List<CredentialJson> PSCredential = new List<CredentialJson>();
             //public List<ConnectionJson> Connection;
         }
 

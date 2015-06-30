@@ -142,6 +142,11 @@ namespace AutomationISE
                 {
                     List<AutomationRunbook> runbooksList = await automationAccount.ListRunbooks();
                     RunbookslistView.ItemsSource = runbooksList;
+
+                    if (!automationAccount.WorkspaceExists())
+                    {
+                        automationAccount.DownloadAllVariables();
+                    }
                 }
             }
             catch (Exception exception)

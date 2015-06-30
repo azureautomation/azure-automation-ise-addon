@@ -19,7 +19,7 @@ namespace AutomationAzure
     /// <summary>
     /// The automation asset
     /// </summary>
-    public abstract class AutomationAuthoringItem
+    public abstract class AutomationAuthoringItem : IComparable<AutomationAuthoringItem>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AutomationAuthoringItem"/> class.
@@ -52,6 +52,25 @@ namespace AutomationAzure
                 {
                     this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
                 }
+            }
+        }
+
+        public int CompareTo(AutomationAuthoringItem other)
+        {
+            if (this.GetType().Equals(other.GetType()))
+            {
+                if (this.Name != null)
+                {
+                    return this.Name.CompareTo(other.Name);
+                }
+                else
+                {
+                    return -1;
+                }
+            }
+            else
+            {
+                return this.GetType().FullName.CompareTo(other.GetType().FullName);
             }
         }
 

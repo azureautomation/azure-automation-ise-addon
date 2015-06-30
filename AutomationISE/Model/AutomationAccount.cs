@@ -22,6 +22,7 @@ namespace AutomationAzure
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
     using AutomationManagement = Microsoft.Azure.Management.Automation;
@@ -96,8 +97,17 @@ namespace AutomationAzure
 
         public async Task<ISet<AutomationAsset>> ListVariables()
         {
-            var staticAssets = new StaticAssets(Constants.localAssetsFileName, Constants.secureLocalAssetsFileName, automationAccountWorkspace); 
             return await AutomationAsset.GetAll(automationAccountWorkspace, automationManagementClient, ResourceGroupName, AutomationAccountName);
+        }
+
+        public async void DownloadAllVariables()
+        {
+            AutomationAsset.DownloadAllFromCloud(automationAccountWorkspace, automationManagementClient, ResourceGroupName, AutomationAccountName);
+        }
+
+        public bool WorkspaceExists()
+        {
+            return Directory.Exists(automationAccountWorkspace);
         }
 
         public string automationAccountWorkspace { get; set; }

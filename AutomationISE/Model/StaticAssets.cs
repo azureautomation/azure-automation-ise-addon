@@ -95,8 +95,8 @@ namespace AutomationAzure
 
                 // Add Variables structure
                 staticAssets.Variable = new List<VariableJson>();
-                VariableJson variables = new VariableJson();
-                staticAssets.Variable.Add(variables);
+                //VariableJson variables = new VariableJson();
+                //staticAssets.Variable.Add(variables);
 
                 JavaScriptSerializer jss = new JavaScriptSerializer();
                 var assetsSerialized = jss.Serialize(staticAssets);
@@ -128,8 +128,8 @@ namespace AutomationAzure
                 secureAssets.PSCredential.Add(creds);
 
                 // Add secure variables structure
-                VariableJson secureVariables = new VariableJson();
-                secureAssets.Variable.Add(secureVariables);
+                //VariableJson secureVariables = new VariableJson();
+                //secureAssets.Variable.Add(secureVariables);
 
                 // Add connection values
                 ConnectionJson connection = new ConnectionJson();

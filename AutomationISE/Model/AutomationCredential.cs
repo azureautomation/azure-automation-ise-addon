@@ -25,7 +25,7 @@ namespace AutomationAzure
     {
         // cloud only
         public AutomationCredential(Credential cloudCredential)
-            : base(cloudCredential.Name, null, cloudCredential.Properties.LastModifiedTime.DateTime)
+            : base(cloudCredential.Name, null, cloudCredential.Properties.LastModifiedTime.LocalDateTime)
         {
             IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
             valueFields.Add("Username", cloudCredential.Properties.UserName);
@@ -55,7 +55,7 @@ namespace AutomationAzure
 
         // both cloud and local
         public AutomationCredential(CredentialJson localJson, Credential cloudCredential)
-            : base(localJson, cloudCredential.Properties.LastModifiedTime.DateTime)
+            : base(localJson, cloudCredential.Properties.LastModifiedTime.LocalDateTime)
         {
             IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
             valueFields.Add("Username", localJson.Username);
@@ -65,6 +65,35 @@ namespace AutomationAzure
     }
 
     public class CredentialJson : AssetJson {
+        public CredentialJson() { }
+        
+        public CredentialJson(AutomationCredential credential)
+            : base(credential)
+        {
+            Object tempUsername, tempPassword;
+            credential.ValueFields.TryGetValue("Username", out tempUsername);
+            credential.ValueFields.TryGetValue("Password", out tempPassword);
+
+            this.Username = (string)tempUsername;
+            this.Password = (string)tempPassword;
+        }
+
+        public override void Update(AutomationAsset asset)
+        {
+            var credential = (AutomationCredential)asset;
+            
+            Object tempUsername, tempPassword;
+            credential.ValueFields.TryGetValue("Username", out tempUsername);
+            credential.ValueFields.TryGetValue("Password", out tempPassword);
+
+            if (this.Username != (string)tempUsername || this.Password != (string)tempPassword)
+            {
+                this.Username = (string)tempUsername;
+                this.Password = (string)tempPassword;
+                this.LastModified = DateTime.Now;
+            }
+        }
+        
         public string Username { get; set; }
         public string Password { get; set; }
     }
