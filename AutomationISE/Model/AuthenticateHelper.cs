@@ -38,11 +38,16 @@ namespace AutomationAzure
             return await AuthContext.AcquireTokenAsync(Constants.appIdURI, Constants.clientID, Creds);
         }
 
-        public static AuthenticationResult GetInteractiveLogin()
+        public static AuthenticationResult GetInteractiveLogin(String Username = null)
         {
             var ctx = new AuthenticationContext(string.Format(Constants.authority, Constants.tenant));
-            return ctx.AcquireToken(Constants.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Always);
 
+            if (Username != null)
+            {
+                UserIdentifier user = new UserIdentifier(Username, UserIdentifierType.RequiredDisplayableId);
+                return ctx.AcquireToken(Constants.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Always, user);
+            }
+            else return ctx.AcquireToken(Constants.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Always);
         }
     }
 }
