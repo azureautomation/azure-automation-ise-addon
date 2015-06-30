@@ -163,6 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Model\AuthenticateHelper.cs" />
+    <Compile Include="Model\AutomationISEClient.cs" />
     <Compile Include="Model\LocalAssets.cs" />
     <Compile Include="Model\AutomationAuthoringItem.cs" />
     <Compile Include="Model\AutomationAsset.cs" />

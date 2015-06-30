@@ -19,6 +19,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Microsoft.PowerShell.Host.ISE;
 using AutomationAzure;
+using AutomationISE.Model;
 using System.Security;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Azure.Subscriptions.Models;
@@ -34,22 +35,27 @@ namespace AutomationISE
     /// </summary>
     public partial class AutomationISEControl : UserControl, IAddOnToolHostObject
     {
-        AutomationSubscription subscriptionClient;
-        public string workspace;
+        private AutomationISEClient iseClient;
         public AutomationISEControl()
         {
             try
             {
                 InitializeComponent();
+                iseClient = new AutomationISEClient();
 
-                var localWorkspace = Properties.Settings.Default["localWorkspace"].ToString();
+                /* Determine working directory */
+                String localWorkspace = Properties.Settings.Default["localWorkspace"].ToString();
                 if (localWorkspace == "")
                 {
-                    var systemDrive = Environment.GetEnvironmentVariable("SystemDrive") + "\\";
+                    String systemDrive = Environment.GetEnvironmentVariable("SystemDrive") + "\\";
                     localWorkspace = System.IO.Path.Combine(systemDrive, "AutomationWorkspace");
+                    Properties.Settings.Default["localWorkspace"] = localWorkspace;
+                    Properties.Settings.Default.Save();
                 }
-                workspaceTextBox.Text = localWorkspace;
+                iseClient.workspace = localWorkspace;
 
+                /* Update UI */
+                workspaceTextBox.Text = iseClient.workspace;
                 assetsComboBox.Items.Add(Constants.assetVariable);
             }
             catch (Exception exception)
@@ -67,21 +73,16 @@ namespace AutomationISE
         private async void loginButton_Click(object sender, RoutedEventArgs e)
         {
             try {
-
-                Properties.Settings.Default["localWorkspace"] = workspaceTextBox.Text;
-                Properties.Settings.Default.Save();
-
-                UpdateStatusBox(configurationStatusTextBox, "Launching login window to sign in");
-                AuthenticationResult ADToken = AuthenticateHelper.GetInteractiveLogin();
-
-                subscriptionClient = new AutomationAzure.AutomationSubscription(ADToken, workspaceTextBox.Text);
+                UpdateStatusBox(configurationStatusTextBox, "Launching login window");
+                iseClient.azureADAuthResult = AuthenticateHelper.GetInteractiveLogin();
 
                 UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveSubscriptions);
-                SubscriptionListResult subscriptions = await subscriptionClient.ListSubscriptions();
-                if (subscriptions.Subscriptions.Count > 0)
+                IList<Subscription> subscriptions = await iseClient.GetSubscriptions();
+                //TODO: what if there are no subscriptions? Does this still work?
+                if (subscriptions.Count > 0)
                 {
                     UpdateStatusBox(configurationStatusTextBox, Properties.Resources.FoundSubscriptions);
-                    subscriptionComboBox.ItemsSource = subscriptions.Subscriptions;
+                    subscriptionComboBox.ItemsSource = subscriptions;
                     subscriptionComboBox.DisplayMemberPath = "DisplayName";
                     subscriptionComboBox.SelectedItem = subscriptionComboBox.Items[0];
                 }
@@ -111,13 +112,13 @@ namespace AutomationISE
         {
             try
             {
-                Subscription subscription = (Subscription)subscriptionComboBox.SelectedValue;
-                if (subscription != null)
+                iseClient.currSubscription = (Subscription)subscriptionComboBox.SelectedValue;
+                if (iseClient.currSubscription != null)
                 {
                     UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveAutomationAccounts);
-                    List<AutomationAccount> automationAccounts = await subscriptionClient.ListAutomationAccounts(subscription);
+                    IList<Microsoft.Azure.Management.Automation.Models.AutomationAccount> automationAccounts = await iseClient.GetAutomationAccounts();
                     accountsComboBox.ItemsSource = automationAccounts;
-                    accountsComboBox.DisplayMemberPath = "AutomationAccountName";
+                    accountsComboBox.DisplayMemberPath = "Name";
                     if (accountsComboBox.HasItems)
                     {
                         UpdateStatusBox(configurationStatusTextBox, Properties.Resources.FoundAutomationAccounts);
@@ -137,11 +138,13 @@ namespace AutomationISE
         {
             try
             {
-                AutomationAccount automationAccount = (AutomationAccount)accountsComboBox.SelectedValue;
-                if (automationAccount != null)
+                Microsoft.Azure.Management.Automation.Models.AutomationAccount account = (Microsoft.Azure.Management.Automation.Models.AutomationAccount)accountsComboBox.SelectedValue;
+                if (account != null)
                 {
-                    List<AutomationRunbook> runbooksList = await automationAccount.ListRunbooks();
-                    RunbookslistView.ItemsSource = runbooksList;
+                    /* Update Runbooks */
+                    //List<AutomationRunbook> runbooksList = await automationAccount.ListRunbooks();
+                    //RunbookslistView.ItemsSource = runbooksList;
+                    UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
                 }
             }
             catch (Exception exception)
@@ -151,11 +154,7 @@ namespace AutomationISE
 
         }
 
-        private async void assetsListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-
-        }
+        private async void assetsListView_SelectionChanged(object sender, SelectionChangedEventArgs e) { } 
 
         private async void assetsComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -175,23 +174,25 @@ namespace AutomationISE
             }
         }
 
-         void workspaceTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void workspaceTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            Properties.Settings.Default["localWorkspace"] = workspaceTextBox.Text;
+            //TODO: refactor this
+            iseClient.workspace = workspaceTextBox.Text;
+            Properties.Settings.Default["localWorkspace"] = iseClient.workspace;
             Properties.Settings.Default.Save();
         }
-
         private void workspaceButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 var dialog = new System.Windows.Forms.FolderBrowserDialog();
-                dialog.SelectedPath = workspaceTextBox.Text;
+                dialog.SelectedPath = iseClient.workspace;
                 System.Windows.Forms.DialogResult result = dialog.ShowDialog();
-                workspaceTextBox.Text = dialog.SelectedPath;
+                iseClient.workspace = dialog.SelectedPath;
+                workspaceTextBox.Text = iseClient.workspace;
 
-                UpdateStatusBox(configurationStatusTextBox, "Saving workspace location: " + workspaceTextBox.Text);
-                Properties.Settings.Default["localWorkspace"] = dialog.SelectedPath;
+                UpdateStatusBox(configurationStatusTextBox, "Saving workspace location: " + iseClient.workspace);
+                Properties.Settings.Default["localWorkspace"] = iseClient.workspace;
                 Properties.Settings.Default.Save();
             }
             catch (Exception exception)
@@ -200,10 +201,7 @@ namespace AutomationISE
             }
         }
 
-        private void configurationStatusTextBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-
-        }
+        private void configurationStatusTextBox_TextChanged(object sender, TextChangedEventArgs e) { }
 
         private void UpdateStatusBox(System.Windows.Controls.TextBox statusTextBox, String Message)
         {
