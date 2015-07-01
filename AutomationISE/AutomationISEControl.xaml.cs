@@ -53,6 +53,7 @@ namespace AutomationISE
                 userNameTextBox.Text = Properties.Settings.Default["ADUserName"].ToString();
 
                 assetsComboBox.Items.Add(Constants.assetVariable);
+                assetsComboBox.Items.Add(Constants.assetCredential);
             }
             catch (Exception exception)
             {
@@ -148,11 +149,6 @@ namespace AutomationISE
                 {
                     List<AutomationRunbook> runbooksList = await automationAccount.ListRunbooks();
                     RunbookslistView.ItemsSource = runbooksList;
-
-                    if (!automationAccount.WorkspaceExists())
-                    {
-                        automationAccount.DownloadAllVariables();
-                    }
                 }
             }
             catch (Exception exception)
@@ -173,11 +169,14 @@ namespace AutomationISE
             try
             {
                 var selectedAsset = assetsComboBox.SelectedValue;
+                var automationAccount = (AutomationAccount)accountsComboBox.SelectedValue;
                 if (selectedAsset.ToString() == Constants.assetVariable)
                 {
-                    AutomationAccount automationAccount = (AutomationAccount)accountsComboBox.SelectedValue;
-                    ISet<AutomationAsset> variablesList = await automationAccount.ListVariables();
-                    assetsListView.ItemsSource = variablesList;
+                   assetsListView.ItemsSource = await automationAccount.GetAssetsOfType("AutomationVariable");
+                }
+                else if (selectedAsset.ToString() == Constants.assetCredential)
+                {
+                    assetsListView.ItemsSource = await automationAccount.GetAssetsOfType("AutomationCredential");
                 }
             }
             catch (Exception exception)

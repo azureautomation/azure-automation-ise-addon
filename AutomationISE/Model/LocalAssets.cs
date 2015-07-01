@@ -117,6 +117,11 @@ namespace AutomationAzure
         {
             public List<VariableJson> Variable = new List<VariableJson>();
             public static JavaScriptSerializer jss = new JavaScriptSerializer();
+
+            public static void WriteJson(string jsonFilePath, Object assets) {
+                var assetsSerialized = jss.Serialize(assets);
+                File.WriteAllText(jsonFilePath, assetsSerialized);
+            }
         }
 
         private class UnsecureLocalAssetsContainerJson
@@ -145,10 +150,8 @@ namespace AutomationAzure
                         localAssetsUnsecure.Variable.Add(localVariableAsset);
                     }
                 }
-                
-                string localAssetsFilePath = System.IO.Path.Combine(workspacePath, AutomationAzure.Constants.localAssetsFileName);
-                var assetsSerialized = jss.Serialize(localAssetsUnsecure);
-                File.WriteAllText(localAssetsFilePath, assetsSerialized);
+
+                WriteJson(System.IO.Path.Combine(workspacePath, AutomationAzure.Constants.localAssetsFileName), localAssetsUnsecure);
             }
            
             //public List<CertificateJson> Certificate;
@@ -181,11 +184,9 @@ namespace AutomationAzure
                     }
                 }
 
-                localAssetsSecure.PSCredential.AddRange(localAssetsSecure.PSCredential);
+                localAssetsSecure.PSCredential.AddRange(localAssets.PSCredentials);
 
-                string secureLocalAssetsFilePath = System.IO.Path.Combine(workspacePath, AutomationAzure.Constants.secureLocalAssetsFileName);
-                var assetsSerialized = jss.Serialize(localAssetsSecure);
-                File.WriteAllText(secureLocalAssetsFilePath, assetsSerialized);
+                WriteJson(System.IO.Path.Combine(workspacePath, AutomationAzure.Constants.secureLocalAssetsFileName), localAssetsSecure); 
             }
 
             public List<CredentialJson> PSCredential = new List<CredentialJson>();

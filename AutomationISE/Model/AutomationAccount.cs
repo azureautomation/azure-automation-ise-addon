@@ -68,6 +68,11 @@ namespace AutomationAzure
             }
 
             if (automationResource.Properties.Sku != null) this.Plan = automationResource.Properties.Sku.Name;
+
+            if(!WorkspaceExists())
+            {
+                DownloadAll();
+            }
         }
 
         /// <summary>
@@ -95,12 +100,30 @@ namespace AutomationAzure
             return automationRunbookList;
         }
 
-        public async Task<ISet<AutomationAsset>> ListVariables()
+        private async Task GetAssetsInfo()
         {
-            return await AutomationAsset.GetAll(automationAccountWorkspace, automationManagementClient, ResourceGroupName, AutomationAccountName);
+            this.Assets = (SortedSet<AutomationAsset>)await AutomationAsset.GetAll(automationAccountWorkspace, automationManagementClient, ResourceGroupName, AutomationAccountName);
         }
 
-        public async void DownloadAllVariables()
+        public async Task<SortedSet<AutomationAsset>> GetAssetsOfType(String type)
+        {
+            if (this.Assets == null)
+            {
+                await GetAssetsInfo();
+            }
+
+            var assetsOfType = new SortedSet<AutomationAsset>();
+            foreach(var asset in this.Assets) {
+                if (asset.GetType().Name == type)
+                {
+                    assetsOfType.Add(asset);
+                }
+            }
+
+            return assetsOfType;
+        }
+
+        public async void DownloadAll()
         {
             AutomationAsset.DownloadAllFromCloud(automationAccountWorkspace, automationManagementClient, ResourceGroupName, AutomationAccountName);
         }
@@ -136,5 +159,7 @@ namespace AutomationAzure
         /// Gets or sets the plan.
         /// </summary>
         public string Plan { get; set; }
+
+        public SortedSet<AutomationAsset> Assets { get; set; }
     }
 }

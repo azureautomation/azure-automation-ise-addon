@@ -70,7 +70,7 @@ namespace AutomationAzure
 
             LocalAssets localAssets = LocalAssets.Get(localWorkspacePath);
 
-            SortedSet<AutomationAsset> automationAssets = new SortedSet<AutomationAsset>();
+            var automationAssets = new SortedSet<AutomationAsset>();
 
             // Compare cloud variables to local
             foreach (var cloudAsset in cloudVariables.Variables)
