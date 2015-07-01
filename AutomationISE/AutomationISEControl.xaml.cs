@@ -250,5 +250,10 @@ namespace AutomationISE
         private void userNameTextBox_TextChanged(object sender, TextChangedEventArgs e) { }
 
         private void RefreshRunbookList_Click(object sender, RoutedEventArgs e) { }
+
+        private void DownloadRunbook_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
