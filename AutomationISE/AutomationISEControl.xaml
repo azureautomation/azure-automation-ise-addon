@@ -35,21 +35,23 @@
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="1*"/>
+                        <RowDefinition Height="45"/>
                     </Grid.RowDefinitions>
-                    <ListView x:Name="RunbookslistView" Margin="10,48,10,0" Grid.Row="0" Grid.Column="0">
+                    <ListView x:Name="RunbookslistView" Margin="10,10,10,0" Grid.Row="0" Grid.Column="0">
                         <ListView.View>
                             <GridView>
                                 <GridView.ColumnHeaderContextMenu>
                                     <ContextMenu/>
                                 </GridView.ColumnHeaderContextMenu>
-                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
-                                <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Status}" />
-                                <GridViewColumn Header="Sync Status" DisplayMemberBinding="{Binding SyncStatus}"/>
-                                <GridViewColumn Header="Last Modified (Local)" DisplayMemberBinding="{Binding LastModifiedLocal}"/>
-                                <GridViewColumn Header="Last Modified (Cloud)" DisplayMemberBinding="{Binding LastModifiedCloud}"/>
+                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding cloudRunbook.Name}"/>
+                                <GridViewColumn Header="Status" DisplayMemberBinding="{Binding cloudRunbook.Properties.State}" />
+                                <GridViewColumn Header="Sync Status"/>
+                                <GridViewColumn Header="Last Modified (Local)" />
+                                <GridViewColumn Header="Last Modified (Cloud)" DisplayMemberBinding="{Binding cloudRunbook.Properties.LastModifiedTime}"/>
                             </GridView>
                         </ListView.View>
                     </ListView>
+                    <Button x:Name="RefreshRunbookList" Grid.Column="0" Grid.Row="1" Margin="10,10,10,10" Content="Refresh" Click="RefreshRunbookList_Click" />
                 </Grid>
             </TabItem>
             <TabItem x:Name="settingsTab" Header="Assets" Width="55" Margin="-2">

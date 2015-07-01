@@ -171,6 +171,8 @@
     <Compile Include="Model\AutomationVariable.cs" />
     <Compile Include="Model\AutomationRunbook.cs" />
     <Compile Include="Model\AutomationSubscription.cs" />
+    <Compile Include="Model\LocalRunbook.cs" />
+    <Compile Include="Model\LocalRunbookStore.cs" />
     <Compile Include="Model\StaticAssets.cs" />
     <Compile Include="Model\ResourceGroup.cs" />
     <Compile Include="Model\AutomationAccount.cs" />

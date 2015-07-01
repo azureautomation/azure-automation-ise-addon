@@ -30,7 +30,10 @@ namespace AutomationISE.Model
         private SubscriptionClient subscriptionClient;
         /* User Session Data */
         public Subscription currSubscription { get; set; }
+        public AutomationAccount currAccount { get; set; }
         public String workspace { get; set; }
+
+        private Dictionary<AutomationAccount, ResourceGroupExtended> accountResourceGroups;
 
         public AutomationISEClient()
         {
@@ -40,6 +43,7 @@ namespace AutomationISE.Model
             subscriptionCreds = null;
             subscriptionClient = null;
             currSubscription = null;
+            accountResourceGroups = null;
         }
 
         public async Task<IList<Subscription>> GetSubscriptions()
@@ -57,7 +61,6 @@ namespace AutomationISE.Model
         }
         public async Task<IList<AutomationAccount>> GetAutomationAccounts()
         {
-            //TODO: use right kind of Automation Account class (our custom one, if it is the best solution)
             if(currSubscription == null)
                 throw new Exception("Cannot get Automation Accounts until an Azure subscription has been set.");
             if (automationManagementClient == null) //lazy instantiation
@@ -66,6 +69,11 @@ namespace AutomationISE.Model
                     subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, azureADAuthResult.AccessToken);
                 automationManagementClient = new AutomationManagementClient(subscriptionCreds);
             }
+            //TODO: does this belong here?
+            if (accountResourceGroups == null)
+                accountResourceGroups = new Dictionary<AutomationAccount, ResourceGroupExtended>();
+            else
+                accountResourceGroups.Clear();
             IList<AutomationAccount> result = new List<AutomationAccount>();
             IList<ResourceGroupExtended> resourceGroups = await this.GetResourceGroups();
             foreach (ResourceGroupExtended resourceGroup in resourceGroups)
@@ -74,6 +82,7 @@ namespace AutomationISE.Model
                 foreach (AutomationAccount account in accountListResponse.AutomationAccounts)
                 {
                     result.Add(account);
+                    accountResourceGroups.Add(account, resourceGroup);
                 }
             }
             return result;
@@ -90,6 +99,14 @@ namespace AutomationISE.Model
             }
             ResourceGroupListResult resourceGroupResult = await resourceManagementClient.ResourceGroups.ListAsync(null);
             return resourceGroupResult.ResourceGroups;
+        }
+
+        public async Task<IList<Runbook>> GetRunbooks()
+        {
+            if (currAccount == null)
+                throw new Exception("Cannot get runbooks until an account has been set.");
+            RunbookListResponse cloudRunbooks = await automationManagementClient.Runbooks.ListAsync(accountResourceGroups[currAccount].Name, currAccount.Name);
+            return cloudRunbooks.Runbooks;
         }
     }
 }

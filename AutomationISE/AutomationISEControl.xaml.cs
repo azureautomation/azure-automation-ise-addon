@@ -36,12 +36,14 @@ namespace AutomationISE
     public partial class AutomationISEControl : UserControl, IAddOnToolHostObject
     {
         private AutomationISEClient iseClient;
+        private LocalRunbookStore runbookStore;
         public AutomationISEControl()
         {
             try
             {
                 InitializeComponent();
                 iseClient = new AutomationISEClient();
+                runbookStore = new LocalRunbookStore();
 
                 /* Determine working directory */
                 String localWorkspace = Properties.Settings.Default["localWorkspace"].ToString();
@@ -57,6 +59,7 @@ namespace AutomationISE
                 /* Update UI */
                 workspaceTextBox.Text = iseClient.workspace;
                 assetsComboBox.Items.Add(Constants.assetVariable);
+                RefreshRunbookList.IsEnabled = false;
             }
             catch (Exception exception)
             {
@@ -139,12 +142,16 @@ namespace AutomationISE
             try
             {
                 Microsoft.Azure.Management.Automation.Models.AutomationAccount account = (Microsoft.Azure.Management.Automation.Models.AutomationAccount)accountsComboBox.SelectedValue;
+                iseClient.currAccount = account;
                 if (account != null)
                 {
                     /* Update Runbooks */
-                    //List<AutomationRunbook> runbooksList = await automationAccount.ListRunbooks();
-                    //RunbookslistView.ItemsSource = runbooksList;
+                    IList<Microsoft.Azure.Management.Automation.Models.Runbook> cloudRunbooks = await iseClient.GetRunbooks();
+                    runbookStore.UpdateLocalRunbooks(cloudRunbooks);
+                    /* Update UI */
+                    RunbookslistView.ItemsSource = runbookStore.localRunbooks;
                     UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
+                    RefreshRunbookList.IsEnabled = true;
                 }
             }
             catch (Exception exception)
@@ -228,6 +235,11 @@ namespace AutomationISE
                     Debug.WriteLine("Couldn't find tab handler with name: " + selectedTab.Name);
                     return;
             }
+        }
+
+        private void RefreshRunbookList_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
