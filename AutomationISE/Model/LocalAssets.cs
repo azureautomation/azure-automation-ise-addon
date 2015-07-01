@@ -88,22 +88,14 @@ namespace AutomationAzure
             SecureLocalAssetsContainerJson secureLocalAssetsJson = SecureLocalAssetsContainerJson.Get(workspacePath);
             
             // add JSON variables to the container
-            if (localAssetsJson.Variable != null)
-            {
-                localAssetsJson.Variable.ForEach(variable => variable.Encrypted = false);
-                localAssetsContainer.Variables.AddRange(localAssetsJson.Variable);
-            }
-            if (secureLocalAssetsJson.Variable != null)
-            {
-                secureLocalAssetsJson.Variable.ForEach(variable => variable.Encrypted = true);
-                localAssetsContainer.Variables.AddRange(secureLocalAssetsJson.Variable);
-            }
+            localAssetsJson.Variable.ForEach(variable => variable.Encrypted = false);
+            localAssetsContainer.Variables.AddRange(localAssetsJson.Variable);
+
+            secureLocalAssetsJson.Variable.ForEach(variable => variable.Encrypted = true);
+            localAssetsContainer.Variables.AddRange(secureLocalAssetsJson.Variable);
 
             // add JSON credentials to the container
-            if (secureLocalAssetsJson.PSCredential != null)
-            {
-                localAssetsContainer.PSCredentials.AddRange(secureLocalAssetsJson.PSCredential);
-            } 
+            localAssetsContainer.PSCredentials.AddRange(secureLocalAssetsJson.PSCredential);
 
             return localAssetsContainer;
         }

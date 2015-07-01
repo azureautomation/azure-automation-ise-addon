@@ -27,8 +27,16 @@ namespace AutomationAzure
         public AutomationAuthoringItem(string name, DateTime? lastModifiedLocal, DateTime? lastModifiedCloud)
         {
             this.Name = name;
-            this.LastModifiedLocal = lastModifiedLocal;
-            this.LastModifiedCloud = lastModifiedCloud;
+           
+            if (lastModifiedCloud != null)
+            {
+                this.LastModifiedCloud = ((DateTime)lastModifiedCloud).ToLocalTime();
+            }
+
+            if (lastModifiedLocal != null)
+            {
+                this.LastModifiedLocal = ((DateTime)lastModifiedLocal).ToLocalTime();
+            }
 
             if (this.LastModifiedLocal == null)
             {
@@ -87,12 +95,12 @@ namespace AutomationAzure
         /// <summary>
         /// The last modified date of the item locally
         /// </summary>
-        public Nullable<DateTime> LastModifiedLocal { get; set; }
+        public DateTime? LastModifiedLocal { get; set; }
 
         /// <summary>
         /// The last modified date of the item in the cloud
         /// </summary>
-        public Nullable<DateTime> LastModifiedCloud { get; set; }
+        public DateTime? LastModifiedCloud { get; set; }
 
         public class Constants
         {
