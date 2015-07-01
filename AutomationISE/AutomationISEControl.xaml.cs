@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.PowerShell.Host.ISE;
-using AutomationAzure;
+using Microsoft.Azure.Management.Automation.Models;
 using AutomationISE.Model;
 using System.Security;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
@@ -59,8 +59,8 @@ namespace AutomationISE
                 /* Update UI */
                 workspaceTextBox.Text = iseClient.workspace;
 		        userNameTextBox.Text = Properties.Settings.Default["ADUserName"].ToString();
-                assetsComboBox.Items.Add(Constants.assetVariable);
-		        assetsComboBox.Items.Add(Constants.assetCredential);
+                assetsComboBox.Items.Add(AutomationAzure.Constants.assetVariable);
+		        assetsComboBox.Items.Add(AutomationAzure.Constants.assetCredential);
                 RefreshRunbookList.IsEnabled = false;
             }
             catch (Exception exception)
@@ -84,7 +84,7 @@ namespace AutomationISE
                 Properties.Settings.Default.Save();
 
                 UpdateStatusBox(configurationStatusTextBox, "Launching login window");
-                iseClient.azureADAuthResult = AuthenticateHelper.GetInteractiveLogin(UserName);
+                iseClient.azureADAuthResult = AutomationAzure.AuthenticateHelper.GetInteractiveLogin(UserName);
 
                 UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveSubscriptions);
                 IList<Subscription> subscriptions = await iseClient.GetSubscriptions();
@@ -126,7 +126,7 @@ namespace AutomationISE
                 if (iseClient.currSubscription != null)
                 {
                     UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveAutomationAccounts);
-                    IList<Microsoft.Azure.Management.Automation.Models.AutomationAccount> automationAccounts = await iseClient.GetAutomationAccounts();
+                    IList<AutomationAccount> automationAccounts = await iseClient.GetAutomationAccounts();
                     accountsComboBox.ItemsSource = automationAccounts;
                     accountsComboBox.DisplayMemberPath = "Name";
                     if (accountsComboBox.HasItems)
@@ -148,12 +148,12 @@ namespace AutomationISE
         {
             try
             {
-                Microsoft.Azure.Management.Automation.Models.AutomationAccount account = (Microsoft.Azure.Management.Automation.Models.AutomationAccount)accountsComboBox.SelectedValue;
+                AutomationAccount account = (AutomationAccount)accountsComboBox.SelectedValue;
                 iseClient.currAccount = account;
                 if (account != null)
                 {
                     /* Update Runbooks */
-                    IList<Microsoft.Azure.Management.Automation.Models.Runbook> cloudRunbooks = await iseClient.GetRunbooks();
+                    IList<Runbook> cloudRunbooks = await iseClient.GetRunbooks();
                     runbookStore.UpdateLocalRunbooks(cloudRunbooks);
                     /* Update UI */
                     RunbookslistView.ItemsSource = runbookStore.localRunbooks;
@@ -175,12 +175,12 @@ namespace AutomationISE
             try
             {
                 var selectedAsset = assetsComboBox.SelectedValue;
-                var automationAccount = (AutomationAccount)accountsComboBox.SelectedValue;
-                if (selectedAsset.ToString() == Constants.assetVariable)
+                var automationAccount = (AutomationAzure.AutomationAccount)accountsComboBox.SelectedValue;
+                if (selectedAsset.ToString() == AutomationAzure.Constants.assetVariable)
                 {
                    assetsListView.ItemsSource = await automationAccount.GetAssetsOfType("AutomationVariable");
                 }
-                else if (selectedAsset.ToString() == Constants.assetCredential)
+                else if (selectedAsset.ToString() == AutomationAzure.Constants.assetCredential)
                 {
                     assetsListView.ItemsSource = await automationAccount.GetAssetsOfType("AutomationCredential");
                 }
