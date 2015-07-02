@@ -14,7 +14,7 @@
 
 using System;
 
-namespace AutomationAzure
+namespace AutomationISE.Model
 {
     /// <summary>
     /// The automation asset

@@ -20,7 +20,7 @@ using Microsoft.Azure.Management.Automation;
 using System.Web.Script.Serialization;
 using Newtonsoft.Json;
 
-namespace AutomationAzure
+namespace AutomationISE.Model
 {
     public class LocalAssets
     {
@@ -124,7 +124,7 @@ namespace AutomationAzure
             {
                 try
                 {
-                    string localAssetsFilePath = System.IO.Path.Combine(workspacePath, AutomationAzure.Constants.localAssetsFileName); 
+                    string localAssetsFilePath = System.IO.Path.Combine(workspacePath, AutomationISE.Model.Constants.localAssetsFileName); 
                     return jss.Deserialize<UnsecureLocalAssetsContainerJson>(File.ReadAllText(localAssetsFilePath));
                 }
                 catch
@@ -144,7 +144,7 @@ namespace AutomationAzure
                     }
                 }
 
-                WriteJson(System.IO.Path.Combine(workspacePath, AutomationAzure.Constants.localAssetsFileName), localAssetsUnsecure);
+                WriteJson(System.IO.Path.Combine(workspacePath, AutomationISE.Model.Constants.localAssetsFileName), localAssetsUnsecure);
             }
            
             //public List<CertificateJson> Certificate;
@@ -157,7 +157,7 @@ namespace AutomationAzure
             {
                 try
                 {
-                    string secureLocalAssetsFilePath = System.IO.Path.Combine(workspacePath, AutomationAzure.Constants.secureLocalAssetsFileName);
+                    string secureLocalAssetsFilePath = System.IO.Path.Combine(workspacePath, AutomationISE.Model.Constants.secureLocalAssetsFileName);
                     return jss.Deserialize<SecureLocalAssetsContainerJson>(File.ReadAllText(secureLocalAssetsFilePath));
                 }
                 catch
@@ -179,7 +179,7 @@ namespace AutomationAzure
 
                 localAssetsSecure.PSCredential.AddRange(localAssets.PSCredentials);
 
-                WriteJson(System.IO.Path.Combine(workspacePath, AutomationAzure.Constants.secureLocalAssetsFileName), localAssetsSecure); 
+                WriteJson(System.IO.Path.Combine(workspacePath, AutomationISE.Model.Constants.secureLocalAssetsFileName), localAssetsSecure); 
             }
 
             public List<CredentialJson> PSCredential = new List<CredentialJson>();

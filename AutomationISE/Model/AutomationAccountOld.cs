@@ -14,7 +14,7 @@
 
 using Microsoft.Azure.Management.Automation;
 
-namespace AutomationAzure
+namespace AutomationISE.Model
 {
     using AzureAutomation;
     using Microsoft.Azure.Management.Automation.Models;

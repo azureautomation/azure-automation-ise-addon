@@ -27,7 +27,7 @@ using System.Threading;
 using Microsoft.IdentityModel.Clients;
 using System.Security;
 
-namespace AutomationAzure
+namespace AutomationISE.Model
 {
     static class AuthenticateHelper
     {
