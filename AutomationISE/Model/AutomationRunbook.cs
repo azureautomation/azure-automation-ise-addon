@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using Microsoft.Azure.Management.Automation.Models;
 using System.IO;
 
-namespace AutomationAzure
+namespace AutomationISE.Model
 {
     /// <summary>
     /// The automation runbook.

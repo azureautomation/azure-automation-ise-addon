@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Management.Automation;
 using Microsoft.Azure.Management.Automation.Models;
 
-namespace AutomationAzure
+namespace AutomationISE.Model
 {
     /// <summary>
     /// The automation asset

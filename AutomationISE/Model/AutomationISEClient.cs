@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace AutomationISE.Model
 {
     using AzureAutomation;
-    using AutomationAzure;
+    using AutomationISE.Model;
     using Microsoft.Azure;
     using Microsoft.Azure.Management.Resources;
     using Microsoft.Azure.Management.Resources.Models;

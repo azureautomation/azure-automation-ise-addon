@@ -15,7 +15,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace AutomationAzure
+namespace AutomationISE.Model
 {
     public class Constants
     {

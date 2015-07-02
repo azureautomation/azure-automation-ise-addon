@@ -59,8 +59,8 @@ namespace AutomationISE
                 /* Update UI */
                 workspaceTextBox.Text = iseClient.workspace;
 		        userNameTextBox.Text = Properties.Settings.Default["ADUserName"].ToString();
-                assetsComboBox.Items.Add(AutomationAzure.Constants.assetVariable);
-		        assetsComboBox.Items.Add(AutomationAzure.Constants.assetCredential);
+                assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetVariable);
+		        assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCredential);
                 RefreshRunbookList.IsEnabled = false;
             }
             catch (Exception exception)
@@ -84,7 +84,7 @@ namespace AutomationISE
                 Properties.Settings.Default.Save();
 
                 UpdateStatusBox(configurationStatusTextBox, "Launching login window");
-                iseClient.azureADAuthResult = AutomationAzure.AuthenticateHelper.GetInteractiveLogin(UserName);
+                iseClient.azureADAuthResult = AutomationISE.Model.AuthenticateHelper.GetInteractiveLogin(UserName);
 
                 UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveSubscriptions);
                 IList<Subscription> subscriptions = await iseClient.GetSubscriptions();
@@ -181,11 +181,11 @@ namespace AutomationISE
             try
             {
                 var selectedAssetType = assetsComboBox.SelectedValue;
-                if (selectedAssetType.ToString() == AutomationAzure.Constants.assetVariable)
+                if (selectedAssetType.ToString() == AutomationISE.Model.Constants.assetVariable)
                 {
                     assetsListView.ItemsSource = await iseClient.GetAssetsOfType("AutomationVariable");
                 }
-                else if (selectedAssetType.ToString() == AutomationAzure.Constants.assetCredential)
+                else if (selectedAssetType.ToString() == AutomationISE.Model.Constants.assetCredential)
                 {
                     assetsListView.ItemsSource = await iseClient.GetAssetsOfType("AutomationCredential");
                 }
