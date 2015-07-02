@@ -57,12 +57,12 @@ namespace AutomationAzure
             return await subscriptionClient.Subscriptions.ListAsync();
         }
 
-        public async Task<List<AutomationAccount>> ListAutomationAccounts(Microsoft.Azure.Subscriptions.Models.Subscription subscription)
+        public async Task<List<AutomationAccountOld>> ListAutomationAccounts(Microsoft.Azure.Subscriptions.Models.Subscription subscription)
         {
             ResourceGroup ResourceClient = new ResourceGroup(subscription, ADToken);
             ResourceClient.Workspace = Workspace;
 
-            List<AutomationAccount> automationAccounts = await ResourceClient.ListAutomationAccounts();
+            List<AutomationAccountOld> automationAccounts = await ResourceClient.ListAutomationAccounts();
             return automationAccounts;
         }
 

@@ -65,9 +65,9 @@ namespace AutomationAzure
         /// Finds all the automation accounts in the resource groups for this subscription
         /// </summary>
         /// <returns></returns>
-        public async Task<List<AutomationAccount>> ListAutomationAccounts()
+        public async Task<List<AutomationAccountOld>> ListAutomationAccounts()
         {
-           List<AutomationAccount> automationAccountList = new List<AutomationAccount>();
+           List<AutomationAccountOld> automationAccountList = new List<AutomationAccountOld>();
 
             ResourceGroupListResult resourceGroups = await resourceManagementClient.ResourceGroups.ListAsync(null);
 
@@ -77,7 +77,7 @@ namespace AutomationAzure
 
                 foreach (var automationAccount in accountList.AutomationAccounts)
                 {
-                    var Account = new AutomationAccount(automationManagementClient, automationAccount, group, Workspace);
+                    var Account = new AutomationAccountOld(automationManagementClient, automationAccount, group, Workspace);
                     automationAccountList.Add(Account);
                 }
             }
