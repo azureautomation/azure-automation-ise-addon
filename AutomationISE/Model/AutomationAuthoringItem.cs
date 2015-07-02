@@ -27,16 +27,11 @@ namespace AutomationAzure
         public AutomationAuthoringItem(string name, DateTime? lastModifiedLocal, DateTime? lastModifiedCloud)
         {
             this.Name = name;
-           
-            if (lastModifiedCloud != null)
-            {
-                this.LastModifiedCloud = ((DateTime)lastModifiedCloud).ToLocalTime();
-            }
 
-            if (lastModifiedLocal != null)
-            {
-                this.LastModifiedLocal = ((DateTime)lastModifiedLocal).ToLocalTime();
-            }
+            // some datetime string formats don't store milliseconds, so remove the miliseconds in case one of these doesn't store them,
+            // which would mess up sync status comparison as they could never be equal
+            this.LastModifiedCloud = removeMillis(lastModifiedCloud);
+            this.LastModifiedLocal = removeMillis(lastModifiedLocal);
 
             if (this.LastModifiedLocal == null)
             {
@@ -79,6 +74,19 @@ namespace AutomationAzure
             else
             {
                 return this.GetType().FullName.CompareTo(other.GetType().FullName);
+            }
+        }
+
+        private DateTime? removeMillis(DateTime? original)
+        {
+            if (original != null)
+            {
+                DateTime temp = (DateTime)original;
+                return temp.AddMilliseconds(-1 * temp.Millisecond);
+            }
+            else
+            {
+                return null;
             }
         }
 

@@ -98,7 +98,7 @@ namespace AutomationAzure
             {
                 this.Value = tempValue;
                 this.Encrypted = variable.Encrypted;
-                this.LastModified = DateTime.Now;
+                this.setLastModified(DateTime.Now);
             }
         }
         

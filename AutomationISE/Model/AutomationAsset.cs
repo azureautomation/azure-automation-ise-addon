@@ -13,6 +13,7 @@
 // ----------------------------------------------------------------------------------
 
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Azure.Management.Automation;
@@ -47,14 +48,14 @@ namespace AutomationAzure
         /// Initializes a new instance of the <see cref="AutomationAsset"/> class.
         /// </summary>
         public AutomationAsset(AssetJson localJson, DateTime? lastModifiedCloud) :
-            base(localJson.Name, localJson.LastModified, lastModifiedCloud)
+            base(localJson.Name, DateTime.Parse(localJson.LastModified, null, DateTimeStyles.RoundtripKind), lastModifiedCloud)
         {
             this.ValueFields = null;
         }
 
         public static async void DownloadAllFromCloud(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
         {
-            var assets = await AutomationAsset.GetAll(localWorkspacePath, automationApi, resourceGroupName, automationAccountName);
+            var assets = await AutomationAsset.GetAll(null, automationApi, resourceGroupName, automationAccountName);
             AutomationAsset.SaveLocally(localWorkspacePath, assets);
         }
 
@@ -127,12 +128,19 @@ namespace AutomationAzure
         public AssetJson(AutomationAsset asset)
         {
             this.Name = asset.Name;
-            this.LastModified = (System.DateTime)(asset.LastModifiedLocal > asset.LastModifiedCloud ? asset.LastModifiedLocal : asset.LastModifiedCloud);
+
+            var lastModifiedDatetime = (System.DateTime)(asset.LastModifiedLocal > asset.LastModifiedCloud ? asset.LastModifiedLocal : asset.LastModifiedCloud);
+            setLastModified(lastModifiedDatetime);
+        }
+
+        public void setLastModified(DateTime lastModified)
+        {
+            this.LastModified = lastModified.ToString("u");
         }
 
         public abstract void Update(AutomationAsset asset);
         
         public string Name { get; set; }
-        public DateTime LastModified { get; set; }
+        public string LastModified { get; set; }
     }
 }

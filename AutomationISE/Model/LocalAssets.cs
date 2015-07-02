@@ -121,9 +121,9 @@ namespace AutomationAzure
         {
             public static UnsecureLocalAssetsContainerJson Get(string workspacePath)
             {
-                string localAssetsFilePath = System.IO.Path.Combine(workspacePath, AutomationAzure.Constants.localAssetsFileName);
                 try
                 {
+                    string localAssetsFilePath = System.IO.Path.Combine(workspacePath, AutomationAzure.Constants.localAssetsFileName); 
                     return jss.Deserialize<UnsecureLocalAssetsContainerJson>(File.ReadAllText(localAssetsFilePath));
                 }
                 catch
@@ -154,9 +154,9 @@ namespace AutomationAzure
         {
             public static SecureLocalAssetsContainerJson Get(string workspacePath)
             {
-                string secureLocalAssetsFilePath = System.IO.Path.Combine(workspacePath, AutomationAzure.Constants.secureLocalAssetsFileName);
                 try
                 {
+                    string secureLocalAssetsFilePath = System.IO.Path.Combine(workspacePath, AutomationAzure.Constants.secureLocalAssetsFileName);
                     return jss.Deserialize<SecureLocalAssetsContainerJson>(File.ReadAllText(secureLocalAssetsFilePath));
                 }
                 catch

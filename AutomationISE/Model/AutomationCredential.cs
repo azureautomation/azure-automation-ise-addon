@@ -90,7 +90,7 @@ namespace AutomationAzure
             {
                 this.Username = (string)tempUsername;
                 this.Password = (string)tempPassword;
-                this.LastModified = DateTime.Now;
+                this.setLastModified(DateTime.Now);
             }
         }
         
