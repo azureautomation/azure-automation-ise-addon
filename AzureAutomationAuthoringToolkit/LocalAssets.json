@@ -2,17 +2,20 @@
     "Variable":  [
                      {
                          "Name":  "SampleStringVariable",
-                         "Value":  "SomeStringValue"
+                         "Value":  "SomeStringValue",
+                         "LastModified": "2014-05-26 17:01:38Z"
                      },
                      {
                          "Name":  "SampleIntVariable",
-                         "Value":  123
+                         "Value":  123,
+                         "LastModified": "2014-05-26 17:01:38Z"
                      }
                  ],
     "Certificate":  [
                         {
                             "Name":  "SampleCertificate",
-                            "Thumbprint":  "132D0D44534B6997CDB2D5C339E25576609C5BC6"
+                            "Thumbprint":  "132D0D44534B6997CDB2D5C339E25576609C5BC6",
+                            "LastModified": "2014-05-26 17:01:38Z"
                         }
                     ]
 }

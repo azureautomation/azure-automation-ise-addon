@@ -2,25 +2,29 @@
     "Variable":  [
                      {
                          "Name":  "SampleEncryptedStringVariable",
-                         "Value":  "SomeSecretStringValue"
+                         "Value":  "SomeSecretStringValue",
+                         "LastModified": "2014-05-26 17:01:38Z"
                      },
                      {
                          "Name":  "SampleEncryptedIntVariable",
-                         "Value":  123
+                         "Value":  123,
+                         "LastModified": "2014-05-26 17:01:38Z"
                      }
                  ],
     "PSCredential":  [
                          {
                              "Name":  "SampleCredential",
                              "Username":  "SomeUser",
-                             "Password":  "SomePassword"
+                             "Password":  "SomePassword",
+                             "LastModified": "2014-05-26 17:01:38Z"
                          }
                      ],
     "Connection":  [
                        {
                            "Name":  "SampleConnection",
                            "SomeFieldName":  "SomeFieldValue",
-                           "SomeOtherFieldName":  321
+                           "SomeOtherFieldName":  321,
+                           "LastModified": "2014-05-26 17:01:38Z"
                        }
                    ]
 }

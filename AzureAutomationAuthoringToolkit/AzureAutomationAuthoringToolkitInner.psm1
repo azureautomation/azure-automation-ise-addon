@@ -147,7 +147,7 @@ function Get-AzureAutomationAuthoringToolkitLocalAsset {
             $Temp = @{}
 
             $Asset.psobject.properties | ForEach-Object {
-                if($_.Name -ne "Name") {
+                if($_.Name -ne "Name" -and $_.Name -ne "LastModified") {
                     $Temp."$($_.Name)" = $_.Value
                 }
             }
