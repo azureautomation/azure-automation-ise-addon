@@ -108,14 +108,6 @@ namespace AutomationISE.Model
             return resourceGroupResult.ResourceGroups;
         }
 
-        public async Task<IList<Runbook>> GetRunbooks()
-        {
-            if (currAccount == null)
-                throw new Exception("Cannot get runbooks until an account has been set.");
-            RunbookListResponse cloudRunbooks = await automationManagementClient.Runbooks.ListAsync(accountResourceGroups[currAccount].Name, currAccount.Name);
-            return cloudRunbooks.Runbooks;
-        }
-
         private async Task GetAssetsInfo()
         {
             string accountPath = subscriptionCreds.SubscriptionId + "\\" + accountResourceGroups[currAccount].Name + "\\" + currAccount.Location + "\\" + currAccount.Name;

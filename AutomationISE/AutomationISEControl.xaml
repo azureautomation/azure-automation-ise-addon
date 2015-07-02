@@ -53,11 +53,11 @@
                                 <GridView.ColumnHeaderContextMenu>
                                     <ContextMenu/>
                                 </GridView.ColumnHeaderContextMenu>
-                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding cloudRunbook.Name}"/>
-                                <GridViewColumn Header="Status" DisplayMemberBinding="{Binding cloudRunbook.Properties.State}" />
-                                <GridViewColumn Header="Sync Status"/>
-                                <GridViewColumn Header="Last Modified (Local)" />
-                                <GridViewColumn Header="Last Modified (Cloud)" DisplayMemberBinding="{Binding cloudRunbook.Properties.LastModifiedTime}"/>
+                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
+                                <GridViewColumn Header="Status" DisplayMemberBinding="{Binding AuthoringState}" />
+                                <GridViewColumn Header="Sync Status" DisplayMemberBinding="{Binding SyncStatus}" />
+                                <GridViewColumn Header="Last Modified (Local)" DisplayMemberBinding="{Binding LastModifiedLocal}"  />
+                                <GridViewColumn Header="Last Modified (Cloud)" DisplayMemberBinding="{Binding LastModifiedCloud}"/>
                             </GridView>
                         </ListView.View>
                     </ListView>

@@ -19,61 +19,49 @@ using System.IO;
 
 namespace AutomationISE.Model
 {
-    /// <summary>
-    /// The automation runbook.
-    /// </summary>
     public class AutomationRunbook : AutomationAuthoringItem
     {
-        // cloud only
+        public string AuthoringState { get; set; }
+        public IDictionary<string, RunbookParameter> Parameters { get; set; }
+
+        //Runbook already exists in the cloud, but not on disk.
         public AutomationRunbook(Runbook cloudRunbook) :
             base(cloudRunbook.Name, null, cloudRunbook.Properties.LastModifiedTime.DateTime)
         {
-            this.Status = cloudRunbook.Properties.State;
+            this.AuthoringState = cloudRunbook.Properties.State;
             this.Parameters = cloudRunbook.Properties.Parameters;
         }
 
-        // local only - new
+        //TODO: verify this
+        //Runbook exists neither in the cloud nor on disk?
         public AutomationRunbook(string name) :
             base(name, DateTime.Now, null)
         {
-            this.Status = AutomationRunbook.Constants.Status.New;
+            this.AuthoringState = AutomationRunbook.AuthoringStates.New;
             this.Parameters = null;
         }
 
-        // local only - from file
+        //Runbook exists on disk, but not in the cloud.
         public AutomationRunbook(FileInfo localFile)
             : base(localFile.Name, localFile.LastWriteTime, null)
         {
-            this.Status = AutomationRunbook.Constants.Status.New;
+            this.AuthoringState = AutomationRunbook.AuthoringStates.New;
             this.Parameters = null;
         }
 
-        // both cloud and local
+        //Runbook exists both on disk and in the cloud. But are they in sync?
         public AutomationRunbook(FileInfo localFile, Runbook cloudRunbook)
             : base(cloudRunbook.Name, localFile.LastWriteTime, cloudRunbook.Properties.LastModifiedTime.DateTime)
         {
-            this.Status = cloudRunbook.Properties.State;
+            this.AuthoringState = cloudRunbook.Properties.State;
             this.Parameters = cloudRunbook.Properties.Parameters;
         }
-
-        /// <summary>
-        /// The parameters of the runbook
-        /// </summary>
-        public IDictionary<string,RunbookParameter> Parameters { get; set; }
-
-        /// <summary>
-        /// The cloud status for the runbook
-        /// </summary>
-        public string Status { get; set; }
-
-        public class Constants
+        
+        public static class AuthoringStates
         {
-            public class Status
-            {
-                public const String New = "New";
-                public const String InEdit = "Edit";
-                public const String Published = "Published";
-            }
+            public const String New = "New";
+            public const String InEdit = "In Edit";
+            public const String Published = "Published";
         }
     }
 }

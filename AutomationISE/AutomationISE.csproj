@@ -164,13 +164,13 @@
   <ItemGroup>
     <Compile Include="Model\AuthenticateHelper.cs" />
     <Compile Include="Model\AutomationISEClient.cs" />
+    <Compile Include="Model\AutomationRunbookManager.cs" />
     <Compile Include="Model\LocalAssets.cs" />
     <Compile Include="Model\AutomationAuthoringItem.cs" />
     <Compile Include="Model\AutomationAsset.cs" />
     <Compile Include="Model\AutomationCredential.cs" />
     <Compile Include="Model\AutomationVariable.cs" />
     <Compile Include="Model\AutomationRunbook.cs" />
-    <Compile Include="Model\LocalRunbook.cs" />
     <Compile Include="Model\LocalRunbookStore.cs" />
     <Compile Include="Model\Constants.cs" />
     <Compile Include="Model\Requires.cs" />
