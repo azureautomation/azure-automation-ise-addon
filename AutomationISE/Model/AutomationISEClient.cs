@@ -19,21 +19,23 @@ namespace AutomationISE.Model
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using System.IO;
+    using System.Threading;
 
     public class AutomationISEClient
     {
         /* Azure Credential Data */
         public AuthenticationResult azureADAuthResult { get; set; }
         private TokenCloudCredentials cloudCredentials;
+        private Microsoft.WindowsAzure.TokenCloudCredentials subscriptionCredentials;
         private SubscriptionCloudCredentials subscriptionCreds;
 
         /* Azure Clients */
         private ResourceManagementClient resourceManagementClient;
         private AutomationManagementClient automationManagementClient ;
-        private SubscriptionClient subscriptionClient;
+        private Microsoft.WindowsAzure.Subscriptions.SubscriptionClient subscriptionClient;
 
         /* User Session Data */
-        public Subscription currSubscription { get; set; }
+        public Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription currSubscription { get; set; }
         public AutomationAccount currAccount { get; set; }
         public String workspace { get; set; }
 
@@ -51,17 +53,18 @@ namespace AutomationISE.Model
             accountResourceGroups = null;
         }
 
-        public async Task<IList<Subscription>> GetSubscriptions()
+        public async Task<IList<Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription>> GetSubscriptions()
         {
             if (azureADAuthResult == null)
                 throw new Exception("An Azure AD Authentication Result is needed to query Azure for subscriptions.");
             if (subscriptionClient == null)  //lazy instantiation
             {
                 if (cloudCredentials == null)
-                    cloudCredentials = new TokenCloudCredentials(azureADAuthResult.AccessToken);
-                subscriptionClient = new SubscriptionClient(cloudCredentials);
+                    subscriptionCredentials = new Microsoft.WindowsAzure.TokenCloudCredentials(azureADAuthResult.AccessToken);
+                subscriptionClient = new Microsoft.WindowsAzure.Subscriptions.SubscriptionClient(subscriptionCredentials);
             }
-            SubscriptionListResult subscriptionsResult = await subscriptionClient.Subscriptions.ListAsync();
+            var cancelToken = new CancellationToken();
+            Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse subscriptionsResult = await subscriptionClient.Subscriptions.ListAsync(cancelToken);
             return subscriptionsResult.Subscriptions;
         }
 
@@ -69,12 +72,15 @@ namespace AutomationISE.Model
         {
             if(currSubscription == null)
                 throw new Exception("Cannot get Automation Accounts until an Azure subscription has been set.");
-            if (automationManagementClient == null) //lazy instantiation
-            {
-                if (subscriptionCreds == null)
-                    subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, azureADAuthResult.AccessToken);
+       //     if (automationManagementClient == null) //lazy instantiation
+       //     {
+         //       if (subscriptionCreds == null)
+          //      {
+                    var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
+                    subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, cloudtoken.AccessToken);
+          //      }
                 automationManagementClient = new AutomationManagementClient(subscriptionCreds);
-            }
+       //     }
             //TODO: does this belong here?
             if (accountResourceGroups == null)
                 accountResourceGroups = new Dictionary<AutomationAccount, ResourceGroupExtended>();
@@ -98,12 +104,15 @@ namespace AutomationISE.Model
         {
             if (currSubscription == null)
                 throw new Exception("Cannot get Automation Accounts until an Azure subscription has been set.");
-            if(resourceManagementClient == null) //lazy instantiation
-            {
-                if (subscriptionCreds == null )
-                    subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, azureADAuthResult.AccessToken);
+     //       if(resourceManagementClient == null) //lazy instantiation
+      //      {
+     //           if (subscriptionCreds == null)
+     //           {
+                    var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
+                    subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, cloudtoken.AccessToken);
+      //         }
                 resourceManagementClient = new ResourceManagementClient(subscriptionCreds);
-            }
+     //       }
             ResourceGroupListResult resourceGroupResult = await resourceManagementClient.ResourceGroups.ListAsync(null);
             return resourceGroupResult.ResourceGroups;
         }

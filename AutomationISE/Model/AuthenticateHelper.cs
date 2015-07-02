@@ -31,16 +31,16 @@ namespace AutomationISE.Model
 {
     static class AuthenticateHelper
     {
-        public static async Task<AuthenticationResult> GetAuthorizationHeader(String Username, SecureString Password)
+        public static async Task<AuthenticationResult> GetAuthorizationHeader(String Username, SecureString Password, String authority = "common")
         {
             var Creds = new Microsoft.IdentityModel.Clients.ActiveDirectory.UserCredential(Username, Password);
-            var AuthContext = new AuthenticationContext(Constants.authority);
+            var AuthContext = new AuthenticationContext(Constants.loginAuthority + authority);
             return await AuthContext.AcquireTokenAsync(Constants.appIdURI, Constants.clientID, Creds);
         }
 
-        public static AuthenticationResult GetInteractiveLogin(String Username = null)
+        public static AuthenticationResult GetInteractiveLogin(String Username = null, String authority = "common")
         {
-            var ctx = new AuthenticationContext(string.Format(Constants.authority, Constants.tenant));
+            var ctx = new AuthenticationContext(string.Format(Constants.loginAuthority + authority, Constants.tenant));
 
             if (Username != null)
             {
@@ -48,6 +48,12 @@ namespace AutomationISE.Model
                 return ctx.AcquireToken(Constants.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Always, user);
             }
             else return ctx.AcquireToken(Constants.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Always);
+        }
+
+        public static AuthenticationResult RefreshTokenByAuthority(String authority)
+        {
+            var ctx = new AuthenticationContext(string.Format(Constants.loginAuthority + authority, Constants.tenant));
+             return ctx.AcquireToken(Constants.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Never);
         }
     }
 }

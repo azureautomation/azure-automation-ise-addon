@@ -87,13 +87,13 @@ namespace AutomationISE
                 iseClient.azureADAuthResult = AutomationISE.Model.AuthenticateHelper.GetInteractiveLogin(UserName);
 
                 UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveSubscriptions);
-                IList<Subscription> subscriptions = await iseClient.GetSubscriptions();
+                IList<Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription> subscriptions = await iseClient.GetSubscriptions();
                 //TODO: what if there are no subscriptions? Does this still work?
                 if (subscriptions.Count > 0)
                 {
                     UpdateStatusBox(configurationStatusTextBox, Properties.Resources.FoundSubscriptions);
                     subscriptionComboBox.ItemsSource = subscriptions;
-                    subscriptionComboBox.DisplayMemberPath = "DisplayName";
+                    subscriptionComboBox.DisplayMemberPath = "SubscriptionName";
                     subscriptionComboBox.SelectedItem = subscriptionComboBox.Items[0];
                 }
                 else
@@ -122,7 +122,7 @@ namespace AutomationISE
         {
             try
             {
-                iseClient.currSubscription = (Subscription)subscriptionComboBox.SelectedValue;
+                iseClient.currSubscription = (Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription)subscriptionComboBox.SelectedValue;
                 if (iseClient.currSubscription != null)
                 {
                     UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveAutomationAccounts);

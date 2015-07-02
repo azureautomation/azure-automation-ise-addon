@@ -22,7 +22,7 @@ namespace AutomationISE.Model
         public const String localAssetsFileName = "LocalAssets.json";
         public const String secureLocalAssetsFileName = "SecureLocalAssets.json";
 
-        public const String authority = "https://login.windows.net/common";
+        public const String loginAuthority = "https://login.windows.net/";
         public const String appIdURI = "https://management.core.windows.net/";
         public const String clientID = "1950a258-227b-4e31-a9cf-717495945fc2";
         public const String tenant = "f0316def-610c-40f6-abf2-f0ab2296b483";
