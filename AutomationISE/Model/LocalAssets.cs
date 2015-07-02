@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using System.IO;
 using Microsoft.Azure.Management.Automation;
 using System.Web.Script.Serialization;
+using Newtonsoft.Json;
 
 namespace AutomationAzure
 {
@@ -111,7 +112,7 @@ namespace AutomationAzure
             public static JavaScriptSerializer jss = new JavaScriptSerializer();
 
             public static void WriteJson(string jsonFilePath, Object assets) {
-                var assetsSerialized = jss.Serialize(assets);
+                var assetsSerialized = JsonConvert.SerializeObject(assets, Formatting.Indented);
                 File.WriteAllText(jsonFilePath, assetsSerialized);
             }
         }

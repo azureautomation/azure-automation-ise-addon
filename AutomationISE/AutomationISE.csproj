@@ -170,7 +170,6 @@
     <Compile Include="Model\AutomationVariable.cs" />
     <Compile Include="Model\AutomationRunbook.cs" />
     <Compile Include="Model\AutomationSubscription.cs" />
-    <Compile Include="Model\StaticAssets.cs" />
     <Compile Include="Model\ResourceGroup.cs" />
     <Compile Include="Model\AutomationAccount.cs" />
     <Compile Include="Model\Constants.cs" />
