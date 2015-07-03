@@ -59,8 +59,12 @@ namespace AutomationISE
                 /* Update UI */
                 workspaceTextBox.Text = iseClient.workspace;
 		        userNameTextBox.Text = Properties.Settings.Default["ADUserName"].ToString();
+                
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetVariable);
 		        assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCredential);
+                assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCertificate);
+                assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetConnection);
+
                 RefreshRunbookList.IsEnabled = false;
             }
             catch (Exception exception)
@@ -188,6 +192,14 @@ namespace AutomationISE
                 else if (selectedAssetType.ToString() == AutomationISE.Model.Constants.assetCredential)
                 {
                     assetsListView.ItemsSource = await iseClient.GetAssetsOfType("AutomationCredential");
+                }
+                else if (selectedAssetType.ToString() == AutomationISE.Model.Constants.assetConnection)
+                {
+                    assetsListView.ItemsSource = await iseClient.GetAssetsOfType("AutomationConnection");
+                }
+                else if (selectedAssetType.ToString() == AutomationISE.Model.Constants.assetCertificate)
+                {
+                    assetsListView.ItemsSource = await iseClient.GetAssetsOfType("AutomationCertificate");
                 }
             }
             catch (Exception exception)

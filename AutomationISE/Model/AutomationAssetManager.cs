@@ -38,6 +38,7 @@ namespace AutomationISE.Model
         {
             VariableListResponse cloudVariables = await automationApi.Variables.ListAsync(resourceGroupName, automationAccountName);
             CredentialListResponse cloudCredentials = await automationApi.PsCredentials.ListAsync(resourceGroupName, automationAccountName);
+            ConnectionListResponse cloudConnections = await automationApi.Connections.ListAsync(resourceGroupName, automationAccountName);
 
             LocalAssets localAssets = LocalAssetsStore.Get(localWorkspacePath);
 
@@ -78,6 +79,25 @@ namespace AutomationISE.Model
             foreach (var localAsset in localAssets.PSCredentials)
             {
                 var automationAsset = new AutomationCredential(localAsset);
+                automationAssets.Add(automationAsset);
+            }
+
+            // Compare cloud connections to local
+            foreach (var cloudAsset in cloudConnections.Connection)
+            {
+                var localAsset = localAssets.Connections.Find(asset => asset.Name == cloudAsset.Name);
+
+                var automationAsset = (localAsset != null) ?
+                        new AutomationConnection(localAsset, cloudAsset) :
+                        new AutomationConnection(cloudAsset);
+
+                automationAssets.Add(automationAsset);
+            }
+
+            // Add remaining locally created connections
+            foreach (var localAsset in localAssets.Connections)
+            {
+                var automationAsset = new AutomationConnection(localAsset);
                 automationAssets.Add(automationAsset);
             }
 

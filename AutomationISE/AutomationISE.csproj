@@ -164,6 +164,7 @@
   <ItemGroup>
     <Compile Include="Model\AuthenticateHelper.cs" />
     <Compile Include="Model\AutomationAssetManager.cs" />
+    <Compile Include="Model\AutomationConnection.cs" />
     <Compile Include="Model\AutomationISEClient.cs" />
     <Compile Include="Model\AutomationRunbookManager.cs" />
     <Compile Include="Model\LocalAssetsStore.cs" />

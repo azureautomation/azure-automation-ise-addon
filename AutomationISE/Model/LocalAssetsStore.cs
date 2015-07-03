@@ -76,6 +76,30 @@ namespace AutomationISE.Model
                 }
             }
 
+            // add / update connections
+            foreach (var newAsset in newAssets)
+            {
+                if (!(newAsset is AutomationConnection))
+                {
+                    continue;
+                }
+
+                bool found = false;
+                foreach (var currentLocalAsset in localAssets.Connections)
+                {
+                    if (newAsset.Name == currentLocalAsset.Name)
+                    {
+                        found = true;
+                        currentLocalAsset.Update(newAsset);
+                    }
+                }
+
+                if (!found)
+                {
+                    localAssets.Connections.Add(new ConnectionJson((AutomationConnection)newAsset));
+                }
+            }
+
             DirectoryInfo dir = Directory.CreateDirectory(workspacePath);
             UnsecureLocalAssetsContainerJson.Set(workspacePath, localAssets);
             SecureLocalAssetsContainerJson.Set(workspacePath, localAssets); 
@@ -97,6 +121,9 @@ namespace AutomationISE.Model
 
             // add JSON credentials to the container
             localAssetsContainer.PSCredentials.AddRange(secureLocalAssetsJson.PSCredential);
+
+            // add JSON connections to the container
+            localAssetsContainer.Connections.AddRange(secureLocalAssetsJson.Connection);
 
             return localAssetsContainer;
         }
@@ -142,7 +169,7 @@ namespace AutomationISE.Model
                 WriteJson(System.IO.Path.Combine(workspacePath, AutomationISE.Model.Constants.localAssetsFileName), localAssetsUnsecure);
             }
            
-            //public List<CertificateJson> Certificate;
+            //public List<CertificateJson> Certificate = new List<CertificateJson>();
         }
 
         private class SecureLocalAssetsContainerJson
@@ -174,11 +201,13 @@ namespace AutomationISE.Model
 
                 localAssetsSecure.PSCredential.AddRange(localAssets.PSCredentials);
 
+                localAssetsSecure.Connection.AddRange(localAssets.Connections);
+
                 WriteJson(System.IO.Path.Combine(workspacePath, AutomationISE.Model.Constants.secureLocalAssetsFileName), localAssetsSecure); 
             }
 
             public List<CredentialJson> PSCredential = new List<CredentialJson>();
-            //public List<ConnectionJson> Connection;
+            public List<ConnectionJson> Connection = new List<ConnectionJson>();
         }
 
     }

@@ -21,7 +21,7 @@ namespace AutomationISE.Model
     {
         public List<VariableJson> Variables = new List<VariableJson>();
         public List<CredentialJson> PSCredentials = new List<CredentialJson>();
-        //public List<ConnectionJson> Connection;
-        //public List<CertificateJson> Certificate;
+        public List<ConnectionJson> Connections = new List<ConnectionJson>();
+        //public List<CertificateJson> Certificate = new List<CertificateJson>();
     }
 }
