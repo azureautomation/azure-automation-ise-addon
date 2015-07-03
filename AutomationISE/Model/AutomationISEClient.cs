@@ -40,7 +40,6 @@ namespace AutomationISE.Model
         public String workspace { get; set; }
 
         private Dictionary<AutomationAccount, ResourceGroupExtended> accountResourceGroups;
-        private ISet<AutomationAsset> Assets { get; set; }
 
         public AutomationISEClient()
         {
@@ -117,22 +116,17 @@ namespace AutomationISE.Model
             return resourceGroupResult.ResourceGroups;
         }
 
-        private async Task GetAssetsInfo()
+        private async Task<SortedSet<AutomationAsset>> GetAssetsInfo()
         {
-            string accountPath = subscriptionCreds.SubscriptionId + "\\" + accountResourceGroups[currAccount].Name + "\\" + currAccount.Location + "\\" + currAccount.Name;
-            string accountWorkspace = System.IO.Path.Combine(workspace, accountPath);
-            this.Assets = (SortedSet<AutomationAsset>)await AutomationAsset.GetAll(accountWorkspace, automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
+            return (SortedSet<AutomationAsset>)await AutomationAssetManager.GetAll(getAccountWorkspace(), automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
         }
 
         public async Task<SortedSet<AutomationAsset>> GetAssetsOfType(String type)
         {
-            if (this.Assets == null)
-            {
-                await GetAssetsInfo();
-            }
+            var assets = await GetAssetsInfo();
 
             var assetsOfType = new SortedSet<AutomationAsset>();
-            foreach (var asset in this.Assets)
+            foreach (var asset in assets)
             {
                 if (asset.GetType().Name == type)
                 {
@@ -145,16 +139,18 @@ namespace AutomationISE.Model
 
         public async void DownloadAll()
         {
-            string accountPath = subscriptionCreds.SubscriptionId + "\\" + accountResourceGroups[currAccount].Name + "\\" + currAccount.Location + "\\" + currAccount.Name;
-            string accountWorkspace = System.IO.Path.Combine(workspace, accountPath);
-            AutomationAsset.DownloadAllFromCloud(accountWorkspace, automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
+           AutomationAssetManager.DownloadAllFromCloud(getAccountWorkspace(), automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
         }
 
         public bool AccountWorkspaceExists()
         {
+            return Directory.Exists(getAccountWorkspace());
+        }
+
+        private string getAccountWorkspace()
+        {
             string accountPath = subscriptionCreds.SubscriptionId + "\\" + accountResourceGroups[currAccount].Name + "\\" + currAccount.Location + "\\" + currAccount.Name;
-            string accountWorkspace = System.IO.Path.Combine(workspace, accountPath);
-            return Directory.Exists(accountWorkspace);
+            return System.IO.Path.Combine(workspace, accountPath);
         }
     }
 }
