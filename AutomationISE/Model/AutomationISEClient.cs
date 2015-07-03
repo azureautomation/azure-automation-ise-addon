@@ -28,8 +28,8 @@ namespace AutomationISE.Model
         private SubscriptionCloudCredentials subscriptionCreds;
 
         /* Azure Clients */
+        public AutomationManagementClient automationManagementClient {get; set; }
         private ResourceManagementClient resourceManagementClient;
-        private AutomationManagementClient automationManagementClient ;
         private SubscriptionClient subscriptionClient;
 
         /* User Session Data */
@@ -37,7 +37,7 @@ namespace AutomationISE.Model
         public AutomationAccount currAccount { get; set; }
         public String workspace { get; set; }
 
-        private Dictionary<AutomationAccount, ResourceGroupExtended> accountResourceGroups;
+        public Dictionary<AutomationAccount, ResourceGroupExtended> accountResourceGroups { get; set; }
         private ISet<AutomationAsset> Assets { get; set; }
 
         public AutomationISEClient()

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Azure.Management.Automation;
@@ -14,8 +15,35 @@ namespace AutomationISE.Model
         {
             ISet<AutomationRunbook> result = new SortedSet<AutomationRunbook>();
             IList<Runbook> cloudRunbooks = await DownloadRunbooks(automationManagementClient, resourceGroupName, accountName);
-            /* Get the runbooks on disk */
-            /* For each runbook, construct the AutomationRunbook objects: "merge" the local and cloud runbooks appropriately */
+            
+            /* Dictionary of (filename, filepath) found on disk. This will come in handy */
+            string[] localRunbookFilePaths = Directory.GetFiles(workspace, "*.ps1");
+            Dictionary<string, string> filePathForRunbook = new Dictionary<string, string>();
+            foreach (string path in localRunbookFilePaths)
+            {
+                filePathForRunbook.Add(System.IO.Path.GetFileNameWithoutExtension(path), path);
+            }
+            /* Start by checking the downloaded runbooks */
+            foreach (Runbook cloudRunbook in cloudRunbooks)
+            {
+                if (filePathForRunbook.ContainsKey(cloudRunbook.Name))
+                {
+                    result.Add(new AutomationRunbook(new FileInfo(filePathForRunbook[cloudRunbook.Name]), cloudRunbook));
+                }
+                else
+                {
+                    result.Add(new AutomationRunbook(cloudRunbook));
+                }
+            }
+            /* Now look for runbooks on disk that aren't yet accounted for */
+            foreach (string localRunbookName in filePathForRunbook.Keys)
+            {
+                AutomationRunbook existingRunbook = result.FirstOrDefault(x => x.Name == localRunbookName);
+                if (existingRunbook == null)
+                {
+                    result.Add(new AutomationRunbook(new FileInfo(filePathForRunbook[localRunbookName])));
+                }
+            }
             return result;
         }
 

@@ -153,10 +153,10 @@ namespace AutomationISE
                 if (account != null)
                 {
                     /* Update Runbooks */
-                    //IList<Runbook> cloudRunbooks = await iseClient.GetRunbooks();
-                    //runbookStore.Update(cloudRunbooks);
+                    ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbooks(iseClient.automationManagementClient, 
+                        iseClient.workspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
                     /* Update UI */
-                    RunbookslistView.ItemsSource = runbookStore.localRunbooks;
+                    RunbookslistView.ItemsSource = runbooks;
                     UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
                     RefreshRunbookList.IsEnabled = true;
 
