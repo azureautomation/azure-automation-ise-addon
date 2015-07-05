@@ -258,6 +258,9 @@ namespace AutomationISE
                     break;
                 case "settingsTab":
                     break;
+                case "feedbackTab":
+                    surveyBrowserControl.Navigate(new Uri(Constants.feedbackURI));
+                    break;
                 default:
                     Debug.WriteLine("Couldn't find tab handler with name: " + selectedTab.Name);
                     return;
