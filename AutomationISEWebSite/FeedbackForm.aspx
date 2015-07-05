@@ -13,9 +13,17 @@
     </div>
         <asp:Label ID="CommentLabel" runat="server" Text="Please add feedback below."></asp:Label>
         <p>
-            <asp:TextBox ID="CommentTextBox" runat="server" Height="173px" OnTextChanged="CommentTextBox_TextChanged" TextMode="MultiLine" Width="275px"></asp:TextBox>
+            <asp:TextBox ID="CommentTextBox" runat="server" Height="200px" TextMode="MultiLine" Width="100%"></asp:TextBox>
         </p>
-        <asp:Button ID="FeedbackSubmitButton" runat="server" OnClick="FeedbackSubmitButton_Click" Text="Submit" />
+        <p>
+            <asp:Label ID="EmailLabel" runat="server" Text="Email (Optional, but lets us find more details)"></asp:Label>
+        </p>
+        <p>
+            <asp:TextBox ID="EmailTextBox" runat="server" Width="100%">youremail@yourserver.com</asp:TextBox>
+        </p>
+        <p>
+        <asp:Button ID="FeedbackSubmitButton" runat="server" OnClick="FeedbackSubmitButton_Click" Text="Submit" Height="25px" />
+        </p>
     </form>
  </body>
 </html>

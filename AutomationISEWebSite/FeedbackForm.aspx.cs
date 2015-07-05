@@ -17,30 +17,36 @@ public partial class Feedback_FeedbackForm : System.Web.UI.Page
 
     protected void FeedbackSubmitButton_Click(object sender, EventArgs e)
     {
-        var postData = CommentTextBox.Text;
-        WebRequest request = WebRequest.Create("https://s1events.azure-automation.net/webhooks?token=hoNRgU%2f9WKCvxjYRNl3dYVMuFaTmJSf3orECpa%2btz%2bY%3d");
-        request.Method = "POST";
-        byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-        request.ContentType = "application/x-www-form-urlencoded";
-        request.ContentLength = byteArray.Length;
-        Stream dataStream = request.GetRequestStream();
-        dataStream.Write(byteArray, 0, byteArray.Length);
-        dataStream.Close();
+        try {
+            var postData = CommentTextBox.Text + "EmailServer:" + EmailTextBox.Text;
+            WebRequest request = WebRequest.Create("https://s1events.azure-automation.net/webhooks?token=hoNRgU%2f9WKCvxjYRNl3dYVMuFaTmJSf3orECpa%2btz%2bY%3d");
+            request.Method = "POST";
+            byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+            request.ContentType = "application/x-www-form-urlencoded";
+            request.ContentLength = byteArray.Length;
+            Stream dataStream = request.GetRequestStream();
+            dataStream.Write(byteArray, 0, byteArray.Length);
+            dataStream.Close();
 
-        WebResponse response = request.GetResponse();
+            WebResponse response = request.GetResponse();
 
-        dataStream = response.GetResponseStream();
-        StreamReader reader = new StreamReader(dataStream);
-        string responseFromServer = reader.ReadToEnd();
-        reader.Close();
-        dataStream.Close();
-        response.Close();
+            dataStream = response.GetResponseStream();
+            StreamReader reader = new StreamReader(dataStream);
+            string responseFromServer = reader.ReadToEnd();
+            reader.Close();
+            dataStream.Close();
+            response.Close();
 
-        Response.Redirect("ThanksForm.aspx");
-    }
-
-    protected void CommentTextBox_TextChanged(object sender, EventArgs e)
-    {
-
+            Response.Redirect("ThanksForm.aspx");
+        }
+        catch (Exception exception)
+        {
+            Response.Write("<font color = 'red'>Exception Occurred</font>");
+            Response.Write("<br>");
+            Response.Write(exception.Message);
+            Response.Write("<br>");
+            Response.Write("Please retry");
+            Response.Write("<br><br>");
+        }
     }
 }
