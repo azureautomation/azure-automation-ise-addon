@@ -18,6 +18,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Azure.Management.Automation;
 using Microsoft.Azure.Management.Automation.Models;
+using System.Web.Script.Serialization;
+using System.Text;
 
 namespace AutomationISE.Model
 {
@@ -29,6 +31,67 @@ namespace AutomationISE.Model
             AutomationAssetManager.SaveLocally(localWorkspacePath, assets);
         }
 
+        public static async void DownloadFromCloud(ISet<AutomationAsset> assetsToDownload, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
+        {
+            var cloudAssets = await AutomationAssetManager.GetAll(null, automationApi, resourceGroupName, automationAccountName);
+            var assetsToSaveLocally = new SortedSet<AutomationAsset>();
+
+            foreach (var cloudAsset in cloudAssets)
+            {
+                foreach (var assetToDownload in assetsToDownload)
+                {
+                    if (cloudAsset.Equals(assetToDownload))
+                    {
+                        assetsToSaveLocally.Add(cloudAsset);
+                        break;
+                    }
+                }
+            }
+
+            AutomationAssetManager.SaveLocally(localWorkspacePath, assetsToSaveLocally);
+        }
+
+        public static async void UploadToCloud(ISet<AutomationAsset> assetsToUpload, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
+        {
+            var jss = new JavaScriptSerializer();
+            
+            foreach (var assetToUpload in assetsToUpload)
+            {
+                if (assetToUpload is AutomationVariable)
+                {
+                    var asset = (AutomationVariable)assetToUpload;
+
+                    var properties = new VariableCreateOrUpdateProperties();
+                    properties.IsEncrypted = asset.Encrypted;
+
+                    var stringBuilder = new StringBuilder();
+                    jss.Serialize(asset.getValue(), stringBuilder);
+                    properties.Value = stringBuilder.ToString();
+                    
+                    await automationApi.Variables.CreateOrUpdateAsync(resourceGroupName, automationAccountName, new VariableCreateOrUpdateParameters(asset.Name, properties));
+                }
+                else if(assetToUpload is AutomationCredential)
+                {
+                    var asset = (AutomationCredential)assetToUpload;
+
+                    var properties = new CredentialCreateOrUpdateProperties();
+                    properties.UserName = asset.getUsername();
+                    properties.Password = asset.getPassword();
+
+                    await automationApi.PsCredentials.CreateOrUpdateAsync(resourceGroupName, automationAccountName, new CredentialCreateOrUpdateParameters(asset.Name, properties));
+                }
+                else if (assetToUpload is AutomationConnection)
+                {
+                    // TODO: implement this and certificates
+                }
+            }
+        }
+
+        public static async void Sync(ISet<AutomationAsset> assetsToSync, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
+        {
+
+        }
+
         public static void SaveLocally(String localWorkspacePath, ISet<AutomationAsset> assets)
         {
             LocalAssetsStore.Set(localWorkspacePath, assets);
@@ -38,7 +101,9 @@ namespace AutomationISE.Model
         {
             VariableListResponse cloudVariables = await automationApi.Variables.ListAsync(resourceGroupName, automationAccountName);
             CredentialListResponse cloudCredentials = await automationApi.PsCredentials.ListAsync(resourceGroupName, automationAccountName);
-            ConnectionListResponse cloudConnections = await automationApi.Connections.ListAsync(resourceGroupName, automationAccountName);
+
+            // TODO: need to get one at a time to get values. values currently comes back as empty
+            //ConnectionListResponse cloudConnections = await automationApi.Connections.ListAsync(resourceGroupName, automationAccountName);
 
             LocalAssets localAssets = LocalAssetsStore.Get(localWorkspacePath);
 
@@ -83,7 +148,7 @@ namespace AutomationISE.Model
             }
 
             // Compare cloud connections to local
-            foreach (var cloudAsset in cloudConnections.Connection)
+            /*foreach (var cloudAsset in cloudConnections.Connection)
             {
                 var localAsset = localAssets.Connections.Find(asset => asset.Name == cloudAsset.Name);
 
@@ -99,7 +164,7 @@ namespace AutomationISE.Model
             {
                 var automationAsset = new AutomationConnection(localAsset);
                 automationAssets.Add(automationAsset);
-            }
+            }*/
 
             return automationAssets;
         }

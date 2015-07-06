@@ -62,8 +62,8 @@ namespace AutomationISE
                 
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetVariable);
 		        assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCredential);
-                assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCertificate);
-                assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetConnection);
+                //assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCertificate);
+                //assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetConnection);
 
                 RefreshRunbookList.IsEnabled = false;
             }
@@ -272,6 +272,11 @@ namespace AutomationISE
         private void RefreshRunbookList_Click(object sender, RoutedEventArgs e) { }
 
         private void DownloadRunbook_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void DownloadAsset_Click(object sender, RoutedEventArgs e)
         {
 
         }

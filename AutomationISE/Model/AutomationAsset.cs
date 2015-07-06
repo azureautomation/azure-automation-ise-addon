@@ -41,7 +41,7 @@ namespace AutomationISE.Model
         public AutomationAsset(string name, DateTime? lastModifiedLocal, DateTime? lastModifiedCloud) :
             base(name, lastModifiedLocal, lastModifiedCloud)
         {
-            this.ValueFields = null;
+            this.ValueFields = new Dictionary<string, Object>();
         }
 
         /// <summary>
@@ -50,13 +50,13 @@ namespace AutomationISE.Model
         public AutomationAsset(AssetJson localJson, DateTime? lastModifiedCloud) :
             base(localJson.Name, DateTime.Parse(localJson.LastModified, null, DateTimeStyles.RoundtripKind), lastModifiedCloud)
         {
-            this.ValueFields = null;
+            this.ValueFields = new Dictionary<string, Object>();
         }
 
         /// <summary>
         /// The value of the asset
         /// </summary>
-        public IDictionary<String, Object> ValueFields { get; set; }
+        protected IDictionary<String, Object> ValueFields { get; set; }
 
     }
 

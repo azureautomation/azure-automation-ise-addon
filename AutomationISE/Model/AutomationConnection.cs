@@ -60,6 +60,16 @@ namespace AutomationISE.Model
         {
             this.ValueFields = localJson.ValueFields;
         }
+
+        public IDictionary<string, Object> getFields()
+        {
+            return this.ValueFields;
+        }
+
+        public void setFields(IDictionary<string, Object> fields)
+        {
+            this.ValueFields = fields;
+        }
     }
 
     public class ConnectionJson : AssetJson {
@@ -68,30 +78,31 @@ namespace AutomationISE.Model
         public ConnectionJson(AutomationConnection connection)
             : base(connection)
         {
-            this.ValueFields = connection.ValueFields;
+            this.ValueFields = connection.getFields();
         }
 
         public override void Update(AutomationAsset asset)
         {
             var connection = (AutomationConnection)asset;
             var hasNewInfo = false;
+            var connectionFields = connection.getFields();
 
-            foreach (var key in connection.ValueFields.Keys)
+            foreach (var key in connectionFields.Keys)
             {
                 Object newValue = null;
                 Object currentValue = null;
-                connection.ValueFields.TryGetValue(key, out newValue);
+                connectionFields.TryGetValue(key, out newValue);
                 this.ValueFields.TryGetValue(key, out currentValue);
 
                 if(!newValue.Equals(currentValue)) {
                     hasNewInfo = true;
                     this.ValueFields.Add(key, newValue);
                 }
+            }
 
-                if (hasNewInfo)
-                {
-                    this.setLastModified(DateTime.Now);
-                }
+            if (hasNewInfo)
+            {
+                this.setLastModified(DateTime.Now);
             }
         }
 

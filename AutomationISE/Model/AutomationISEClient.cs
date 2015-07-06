@@ -137,7 +137,7 @@ namespace AutomationISE.Model
             return assetsOfType;
         }
 
-        public async void DownloadAll()
+        public void DownloadAll()
         {
            AutomationAssetManager.DownloadAllFromCloud(getAccountWorkspace(), automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
         }
