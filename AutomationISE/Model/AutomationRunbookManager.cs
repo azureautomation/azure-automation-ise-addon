@@ -9,6 +9,9 @@ using Microsoft.Azure.Management.Automation.Models;
 
 namespace AutomationISE.Model
 {
+    /*
+     * Responsible for syncing runbooks between the cloud and on disk.
+     */
     public static class AutomationRunbookManager
     {
         public static async Task<ISet<AutomationRunbook>> GetAllRunbooks(AutomationManagementClient automationManagementClient, string workspace, string resourceGroupName, string accountName)
@@ -16,7 +19,7 @@ namespace AutomationISE.Model
             ISet<AutomationRunbook> result = new SortedSet<AutomationRunbook>();
             IList<Runbook> cloudRunbooks = await DownloadRunbooks(automationManagementClient, resourceGroupName, accountName);
             
-            /* Dictionary of (filename, filepath) found on disk. This will come in handy */
+            /* Dictionary of (filename, filepath) tuples found on disk. This will come in handy */
             string[] localRunbookFilePaths = Directory.GetFiles(workspace, "*.ps1");
             Dictionary<string, string> filePathForRunbook = new Dictionary<string, string>();
             foreach (string path in localRunbookFilePaths)
@@ -35,11 +38,11 @@ namespace AutomationISE.Model
                     result.Add(new AutomationRunbook(cloudRunbook));
                 }
             }
-            /* Now look for runbooks on disk that aren't yet accounted for */
+            /* Now find runbooks on disk that aren't yet accounted for */
             foreach (string localRunbookName in filePathForRunbook.Keys)
             {
-                AutomationRunbook existingRunbook = result.FirstOrDefault(x => x.Name == localRunbookName);
-                if (existingRunbook == null)
+                //Not great, but works for now
+                if (result.FirstOrDefault(x => x.Name == localRunbookName) == null)
                 {
                     result.Add(new AutomationRunbook(new FileInfo(filePathForRunbook[localRunbookName])));
                 }

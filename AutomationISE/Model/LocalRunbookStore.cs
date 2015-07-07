@@ -15,18 +15,6 @@ namespace AutomationISE.Model
      */
     public class LocalRunbookStore
     {
-        public IList<AutomationRunbook> localRunbooks { get; set; }
-        public LocalRunbookStore()
-        {
-            localRunbooks = null;
-        }
-
-        public LocalRunbookStore(string workspace)
-        {
-            localRunbooks = new List<AutomationRunbook>();
-            /* scan the workspace, populate localRunbooks with what you find */
-        }
-
         public static ISet<string> GetLocalRunbookPaths(string workspace)
         {
             if (!Directory.Exists(workspace)) return null;
@@ -37,17 +25,6 @@ namespace AutomationISE.Model
                 filePathsSet.Add(path);
             }
             return filePathsSet;
-        }
-
-
-        /* TODO: May not be useful if it's better to throw out and recreate the object */
-        public void Update(IList<Runbook> cloudRunbooks)
-        {
-            localRunbooks = new List<AutomationRunbook>();
-            foreach (Runbook cloudRunbook in cloudRunbooks)
-            {
-                localRunbooks.Add(new AutomationRunbook(cloudRunbook));
-            }
         }
     }
 }

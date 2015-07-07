@@ -30,23 +30,17 @@ namespace AutomationISE.Model
         private SubscriptionCloudCredentials subscriptionCreds;
 
         /* Azure Clients */
-        public AutomationManagementClient automationManagementClient {get; set; }
+        public AutomationManagementClient automationManagementClient { get; set; }
         private ResourceManagementClient resourceManagementClient;
-//<<<<<<< HEAD
-	//???
-        //private SubscriptionClient subscriptionClient;
-//=======
-        private AutomationManagementClient automationManagementClient ;
+        //This seems to be to support LiveID:
         private Microsoft.WindowsAzure.Subscriptions.SubscriptionClient subscriptionClient;
-//>>>>>>> master
 
         /* User Session Data */
         public Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription currSubscription { get; set; }
         public AutomationAccount currAccount { get; set; }
         public String workspace { get; set; }
 
-	public Dictionary<AutomationAccount, ResourceGroupExtended> accountResourceGroups { get; set; }
-        private ISet<AutomationAsset> Assets { get; set; }
+	    public Dictionary<AutomationAccount, ResourceGroupExtended> accountResourceGroups { get; set; }
 
         public AutomationISEClient()
         {

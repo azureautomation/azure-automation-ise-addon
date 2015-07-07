@@ -202,7 +202,6 @@ namespace AutomationISE
             {
                 var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
             }
-
         }
 
         private async void accountsComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -213,21 +212,24 @@ namespace AutomationISE
                 iseClient.currAccount = account;
                 if (account != null)
                 {
+                    /* Update Status */
+                    UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
+                    UpdateStatusBox(configurationStatusTextBox, "Downloading runbooks...");
                     /* Update Runbooks */
                     ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbooks(iseClient.automationManagementClient, 
                         iseClient.workspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
                     /* Update UI */
-                    RunbookslistView.ItemsSource = runbooks;
-                    UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
-                    RefreshRunbookList.IsEnabled = true;
+                    RunbooksListView.ItemsSource = runbooks;
+                    UpdateStatusBox(configurationStatusTextBox, "Runbooks downloaded");
                     RefreshAssetList.IsEnabled = true;
 
+                    //TODO: what's the reasoning here?
                     if (!iseClient.AccountWorkspaceExists())
                     {
-                        UpdateStatusBox(configurationStatusTextBox, "Downloading assets for automation account: " + account.Name); 
+                        UpdateStatusBox(configurationStatusTextBox, "Downloading assets..."); 
                         iseClient.DownloadAll();
                     }
-
+                    //TODO: and here?
                     refresh(null, null);
                 }
             }
@@ -308,15 +310,9 @@ namespace AutomationISE
 
         private void RefreshRunbookList_Click(object sender, RoutedEventArgs e) { }
 
-        private void DownloadRunbook_Click(object sender, RoutedEventArgs e)
-        {
+        private void DownloadRunbook_Click(object sender, RoutedEventArgs e) { }
 
-        }
-
-        private void DownloadAsset_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
+        private void DownloadAsset_Click(object sender, RoutedEventArgs e) { }
 
         private void RefreshAssetList_Click(object sender, RoutedEventArgs e)
         {
