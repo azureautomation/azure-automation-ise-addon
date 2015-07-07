@@ -40,7 +40,7 @@ namespace AutomationISE.Model
         public const String assetConnection = "Connections";
         public const String assetModule = "Modules";
 
-        public const String feedbackURI = "http://iseautomation.azurewebsites.net/AutomationISEWebSite/FeedbackForm.aspx";
+        public const String feedbackURI = "http://iseautomation.azurewebsites.net/FeedbackForm.aspx";
 
         public class RunbookType
         {
