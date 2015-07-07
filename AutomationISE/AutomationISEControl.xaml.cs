@@ -67,8 +67,9 @@ namespace AutomationISE
                 //assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCertificate);
                 //assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetConnection);
 
-                RefreshRunbookList.IsEnabled = false;
-                RefreshAssetList.IsEnabled = false;
+                setRunbookAndAssetNonSelectionButtonState(false);
+                setAssetSelectionButtonState(false);
+                setRunbookSelectionButtonState(false);
 
                 startContinualGet();
             }
@@ -82,6 +83,29 @@ namespace AutomationISE
         {
             get;
             set;
+        }
+
+        public void setRunbookAndAssetNonSelectionButtonState(bool enabled) {
+            ButtonRefreshRunbookList.IsEnabled = enabled;
+            ButtonRefreshAssetList.IsEnabled = enabled;
+            ButttonNewAsset.IsEnabled = enabled;
+        }
+
+        public void setRunbookSelectionButtonState(bool enabled)
+        {
+            ButtonDownloadRunbook.IsEnabled = enabled;
+            ButtonOpenRunbook.IsEnabled = enabled;
+            ButtonPublishRunbook.IsEnabled = enabled;
+            ButtonStartRunbook.IsEnabled = enabled;
+            ButtonUploadRunbook.IsEnabled = enabled;
+        }
+
+        public void setAssetSelectionButtonState(bool enabled)
+        {
+            ButtonDownloadAsset.IsEnabled = enabled;
+            ButtonEditAsset.IsEnabled = enabled;
+            ButtonSyncAssets.IsEnabled = enabled;
+            ButtonUploadAsset.IsEnabled = enabled;
         }
 
         public void startContinualGet() {
@@ -219,8 +243,7 @@ namespace AutomationISE
                     /* Update UI */
                     RunbookslistView.ItemsSource = runbookStore.localRunbooks;
                     UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
-                    RefreshRunbookList.IsEnabled = true;
-                    RefreshAssetList.IsEnabled = true;
+                    setRunbookAndAssetNonSelectionButtonState(true);
 
                     if (!iseClient.AccountWorkspaceExists())
                     {
@@ -238,7 +261,15 @@ namespace AutomationISE
 
         }
 
-        private async void assetsListView_SelectionChanged(object sender, SelectionChangedEventArgs e) { } 
+        private async void RunbooksListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            setRunbookSelectionButtonState(RunbookslistView.SelectedItems.Count > 0);
+        }
+
+        private async void assetsListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            setAssetSelectionButtonState(assetsListView.SelectedItems.Count > 0);
+        } 
 
         private void assetsComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -306,19 +337,19 @@ namespace AutomationISE
 
         private void userNameTextBox_TextChanged(object sender, TextChangedEventArgs e) { }
 
-        private void RefreshRunbookList_Click(object sender, RoutedEventArgs e) { }
+        private void ButtonRefreshRunbookList_Click(object sender, RoutedEventArgs e) { }
 
-        private void DownloadRunbook_Click(object sender, RoutedEventArgs e)
+        private void ButtonDownloadRunbook_Click(object sender, RoutedEventArgs e)
         {
 
         }
 
-        private void DownloadAsset_Click(object sender, RoutedEventArgs e)
+        private void ButtonDownloadAsset_Click(object sender, RoutedEventArgs e)
         {
 
         }
 
-        private void RefreshAssetList_Click(object sender, RoutedEventArgs e)
+        private void ButtonRefreshAssetList_Click(object sender, RoutedEventArgs e)
         {
             refreshAssets();
         }
