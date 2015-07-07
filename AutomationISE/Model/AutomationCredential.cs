@@ -27,40 +27,56 @@ namespace AutomationISE.Model
         public AutomationCredential(Credential cloudCredential)
             : base(cloudCredential.Name, null, cloudCredential.Properties.LastModifiedTime.LocalDateTime)
         {
-            IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
-            valueFields.Add("Username", cloudCredential.Properties.UserName);
-            valueFields.Add("Password", null);
-            this.ValueFields = valueFields;
+            this.setUsername(cloudCredential.Properties.UserName);
+            this.setPassword(null);
         }
         
         // local only - new
         public AutomationCredential(String name, string username, string password)
             : base(name, DateTime.Now, null)
         {
-            IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
-            valueFields.Add("Username", username);
-            valueFields.Add("Password", password);
-            this.ValueFields = valueFields;
+            this.setUsername(username);
+            this.setPassword(password);
         }
 
         // local only - from json
         public AutomationCredential(CredentialJson localJson)
             : base(localJson, null)
         {
-            IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
-            valueFields.Add("Username", localJson.Username);
-            valueFields.Add("Password", localJson.Password);
-            this.ValueFields = valueFields;
+            this.setUsername(localJson.Username);
+            this.setPassword(localJson.Password);
         }
 
         // both cloud and local
         public AutomationCredential(CredentialJson localJson, Credential cloudCredential)
             : base(localJson, cloudCredential.Properties.LastModifiedTime.LocalDateTime)
         {
-            IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
-            valueFields.Add("Username", localJson.Username);
-            valueFields.Add("Password", localJson.Password);
-            this.ValueFields = valueFields;
+            this.setUsername(localJson.Username);
+            this.setPassword(localJson.Password);
+        }
+
+        public string getUsername()
+        {
+            Object tempValue;
+            this.ValueFields.TryGetValue("Username", out tempValue);
+            return (string)tempValue;
+        }
+
+        public void setUsername(string username)
+        {
+            this.ValueFields.Add("Username", username);
+        }
+
+        public string getPassword()
+        {
+            Object tempValue;
+            this.ValueFields.TryGetValue("Password", out tempValue);
+            return (string)tempValue;
+        }
+
+        public void setPassword(string password)
+        {
+            this.ValueFields.Add("Password", password);
         }
     }
 
@@ -70,26 +86,22 @@ namespace AutomationISE.Model
         public CredentialJson(AutomationCredential credential)
             : base(credential)
         {
-            Object tempUsername, tempPassword;
-            credential.ValueFields.TryGetValue("Username", out tempUsername);
-            credential.ValueFields.TryGetValue("Password", out tempPassword);
-
-            this.Username = (string)tempUsername;
-            this.Password = (string)tempPassword;
+            this.Username = credential.getUsername();
+            this.Password = credential.getPassword();
         }
 
         public override void Update(AutomationAsset asset)
         {
             var credential = (AutomationCredential)asset;
             
-            Object tempUsername, tempPassword;
-            credential.ValueFields.TryGetValue("Username", out tempUsername);
-            credential.ValueFields.TryGetValue("Password", out tempPassword);
+            string tempUsername, tempPassword;
+            tempUsername = credential.getUsername();
+            tempPassword = credential.getPassword();
 
-            if (this.Username != (string)tempUsername || this.Password != (string)tempPassword)
+            if (this.Username != tempUsername || this.Password != tempPassword)
             {
-                this.Username = (string)tempUsername;
-                this.Password = (string)tempPassword;
+                this.Username = tempUsername;
+                this.Password = tempPassword;
                 this.setLastModified(DateTime.Now);
             }
         }

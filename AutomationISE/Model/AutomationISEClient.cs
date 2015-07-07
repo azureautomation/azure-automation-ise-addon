@@ -19,25 +19,33 @@ namespace AutomationISE.Model
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using System.IO;
+    using System.Threading;
 
     public class AutomationISEClient
     {
         /* Azure Credential Data */
         public AuthenticationResult azureADAuthResult { get; set; }
         private TokenCloudCredentials cloudCredentials;
+        private Microsoft.WindowsAzure.TokenCloudCredentials subscriptionCredentials;
         private SubscriptionCloudCredentials subscriptionCreds;
 
         /* Azure Clients */
         public AutomationManagementClient automationManagementClient {get; set; }
         private ResourceManagementClient resourceManagementClient;
-        private SubscriptionClient subscriptionClient;
+//<<<<<<< HEAD
+	//???
+        //private SubscriptionClient subscriptionClient;
+//=======
+        private AutomationManagementClient automationManagementClient ;
+        private Microsoft.WindowsAzure.Subscriptions.SubscriptionClient subscriptionClient;
+//>>>>>>> master
 
         /* User Session Data */
-        public Subscription currSubscription { get; set; }
+        public Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription currSubscription { get; set; }
         public AutomationAccount currAccount { get; set; }
         public String workspace { get; set; }
 
-        public Dictionary<AutomationAccount, ResourceGroupExtended> accountResourceGroups { get; set; }
+	public Dictionary<AutomationAccount, ResourceGroupExtended> accountResourceGroups { get; set; }
         private ISet<AutomationAsset> Assets { get; set; }
 
         public AutomationISEClient()
@@ -51,17 +59,18 @@ namespace AutomationISE.Model
             accountResourceGroups = null;
         }
 
-        public async Task<IList<Subscription>> GetSubscriptions()
+        public async Task<IList<Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription>> GetSubscriptions()
         {
             if (azureADAuthResult == null)
                 throw new Exception("An Azure AD Authentication Result is needed to query Azure for subscriptions.");
             if (subscriptionClient == null)  //lazy instantiation
             {
                 if (cloudCredentials == null)
-                    cloudCredentials = new TokenCloudCredentials(azureADAuthResult.AccessToken);
-                subscriptionClient = new SubscriptionClient(cloudCredentials);
+                    subscriptionCredentials = new Microsoft.WindowsAzure.TokenCloudCredentials(azureADAuthResult.AccessToken);
+                subscriptionClient = new Microsoft.WindowsAzure.Subscriptions.SubscriptionClient(subscriptionCredentials);
             }
-            SubscriptionListResult subscriptionsResult = await subscriptionClient.Subscriptions.ListAsync();
+            var cancelToken = new CancellationToken();
+            Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse subscriptionsResult = await subscriptionClient.Subscriptions.ListAsync(cancelToken);
             return subscriptionsResult.Subscriptions;
         }
 
@@ -69,12 +78,15 @@ namespace AutomationISE.Model
         {
             if(currSubscription == null)
                 throw new Exception("Cannot get Automation Accounts until an Azure subscription has been set.");
-            if (automationManagementClient == null) //lazy instantiation
-            {
-                if (subscriptionCreds == null)
-                    subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, azureADAuthResult.AccessToken);
+       //     if (automationManagementClient == null) //lazy instantiation
+       //     {
+         //       if (subscriptionCreds == null)
+          //      {
+                    var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
+                    subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, cloudtoken.AccessToken);
+          //      }
                 automationManagementClient = new AutomationManagementClient(subscriptionCreds);
-            }
+       //     }
             //TODO: does this belong here?
             if (accountResourceGroups == null)
                 accountResourceGroups = new Dictionary<AutomationAccount, ResourceGroupExtended>();
@@ -98,32 +110,30 @@ namespace AutomationISE.Model
         {
             if (currSubscription == null)
                 throw new Exception("Cannot get Automation Accounts until an Azure subscription has been set.");
-            if(resourceManagementClient == null) //lazy instantiation
-            {
-                if (subscriptionCreds == null )
-                    subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, azureADAuthResult.AccessToken);
+     //       if(resourceManagementClient == null) //lazy instantiation
+      //      {
+     //           if (subscriptionCreds == null)
+     //           {
+                    var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
+                    subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, cloudtoken.AccessToken);
+      //         }
                 resourceManagementClient = new ResourceManagementClient(subscriptionCreds);
-            }
+     //       }
             ResourceGroupListResult resourceGroupResult = await resourceManagementClient.ResourceGroups.ListAsync(null);
             return resourceGroupResult.ResourceGroups;
         }
 
-        private async Task GetAssetsInfo()
+        private async Task<SortedSet<AutomationAsset>> GetAssetsInfo()
         {
-            string accountPath = subscriptionCreds.SubscriptionId + "\\" + accountResourceGroups[currAccount].Name + "\\" + currAccount.Location + "\\" + currAccount.Name;
-            string accountWorkspace = System.IO.Path.Combine(workspace, accountPath);
-            this.Assets = (SortedSet<AutomationAsset>)await AutomationAsset.GetAll(accountWorkspace, automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
+            return (SortedSet<AutomationAsset>)await AutomationAssetManager.GetAll(getAccountWorkspace(), automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
         }
 
         public async Task<SortedSet<AutomationAsset>> GetAssetsOfType(String type)
         {
-            if (this.Assets == null)
-            {
-                await GetAssetsInfo();
-            }
+            var assets = await GetAssetsInfo();
 
             var assetsOfType = new SortedSet<AutomationAsset>();
-            foreach (var asset in this.Assets)
+            foreach (var asset in assets)
             {
                 if (asset.GetType().Name == type)
                 {
@@ -134,18 +144,20 @@ namespace AutomationISE.Model
             return assetsOfType;
         }
 
-        public async void DownloadAll()
+        public void DownloadAll()
         {
-            string accountPath = subscriptionCreds.SubscriptionId + "\\" + accountResourceGroups[currAccount].Name + "\\" + currAccount.Location + "\\" + currAccount.Name;
-            string accountWorkspace = System.IO.Path.Combine(workspace, accountPath);
-            AutomationAsset.DownloadAllFromCloud(accountWorkspace, automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
+           AutomationAssetManager.DownloadAllFromCloud(getAccountWorkspace(), automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
         }
 
         public bool AccountWorkspaceExists()
         {
+            return Directory.Exists(getAccountWorkspace());
+        }
+
+        private string getAccountWorkspace()
+        {
             string accountPath = subscriptionCreds.SubscriptionId + "\\" + accountResourceGroups[currAccount].Name + "\\" + currAccount.Location + "\\" + currAccount.Name;
-            string accountWorkspace = System.IO.Path.Combine(workspace, accountPath);
-            return Directory.Exists(accountWorkspace);
+            return System.IO.Path.Combine(workspace, accountPath);
         }
     }
 }

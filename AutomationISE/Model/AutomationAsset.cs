@@ -41,7 +41,7 @@ namespace AutomationISE.Model
         public AutomationAsset(string name, DateTime? lastModifiedLocal, DateTime? lastModifiedCloud) :
             base(name, lastModifiedLocal, lastModifiedCloud)
         {
-            this.ValueFields = null;
+            this.ValueFields = new Dictionary<string, Object>();
         }
 
         /// <summary>
@@ -50,74 +50,13 @@ namespace AutomationISE.Model
         public AutomationAsset(AssetJson localJson, DateTime? lastModifiedCloud) :
             base(localJson.Name, DateTime.Parse(localJson.LastModified, null, DateTimeStyles.RoundtripKind), lastModifiedCloud)
         {
-            this.ValueFields = null;
-        }
-
-        public static async void DownloadAllFromCloud(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
-        {
-            var assets = await AutomationAsset.GetAll(null, automationApi, resourceGroupName, automationAccountName);
-            AutomationAsset.SaveLocally(localWorkspacePath, assets);
-        }
-
-        public static void SaveLocally(String localWorkspacePath, ISet<AutomationAsset> assets)
-        {
-            LocalAssets.Set(localWorkspacePath, assets);
-        }
-
-        public static async Task<ISet<AutomationAsset>> GetAll(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
-        {
-            VariableListResponse cloudVariables = await automationApi.Variables.ListAsync(resourceGroupName, automationAccountName);
-            CredentialListResponse cloudCredentials = await automationApi.PsCredentials.ListAsync(resourceGroupName, automationAccountName);
-
-            LocalAssets localAssets = LocalAssets.Get(localWorkspacePath);
-
-            var automationAssets = new SortedSet<AutomationAsset>();
-
-            // Compare cloud variables to local
-            foreach (var cloudAsset in cloudVariables.Variables)
-            {
-                var localAsset = localAssets.Variables.Find(asset => asset.Name == cloudAsset.Name);
-
-                var automationAsset = (localAsset != null) ?
-                        new AutomationVariable(localAsset, cloudAsset) :
-                        new AutomationVariable(cloudAsset);
-
-                automationAssets.Add(automationAsset);
-            }
-
-            // Add remaining locally created variables
-            foreach (var localAsset in localAssets.Variables)
-            {
-                var automationAsset = new AutomationVariable(localAsset);
-                automationAssets.Add(automationAsset);
-            }
-
-            // Compare cloud credentials to local
-            foreach (var cloudAsset in cloudCredentials.Credentials)
-            {
-                var localAsset = localAssets.PSCredentials.Find(asset => asset.Name == cloudAsset.Name);
-
-                var automationAsset = (localAsset != null) ?
-                        new AutomationCredential(localAsset, cloudAsset) :
-                        new AutomationCredential(cloudAsset);
-
-                automationAssets.Add(automationAsset);
-            }
-
-            // Add remaining locally created credentials
-            foreach (var localAsset in localAssets.PSCredentials)
-            {
-                var automationAsset = new AutomationCredential(localAsset);
-                automationAssets.Add(automationAsset);
-            }
-
-            return automationAssets;
+            this.ValueFields = new Dictionary<string, Object>();
         }
 
         /// <summary>
         /// The value of the asset
         /// </summary>
-        public IDictionary<String, Object> ValueFields { get; set; }
+        protected IDictionary<String, Object> ValueFields { get; set; }
 
     }
 

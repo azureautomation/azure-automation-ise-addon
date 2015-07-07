@@ -28,21 +28,15 @@ namespace AutomationISE.Model
             : base(cloudVariable.Name, null, cloudVariable.Properties.LastModifiedTime.LocalDateTime)
         {
             this.Encrypted = cloudVariable.Properties.IsEncrypted;
-
-            IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
-            valueFields.Add("Value", cloudVariable.Properties.Value);
-            this.ValueFields = valueFields;
+            this.setValue(cloudVariable.Properties.Value);
         }
         
         // local only - new
         public AutomationVariable(String name, Object value, bool encrypted)
             : base(name, DateTime.Now, null)
         {
-            this.Encrypted = encrypted; 
- 
-            IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
-            valueFields.Add("Value", value);
-            this.ValueFields = valueFields;
+            this.Encrypted = encrypted;
+            this.setValue(value);
         }
 
         // local only - from json
@@ -50,10 +44,7 @@ namespace AutomationISE.Model
             : base(localJson, null)
         {
             this.Encrypted = localJson.Encrypted;
-            
-            IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
-            valueFields.Add("Value", localJson.Value);
-            this.ValueFields = valueFields;
+            this.setValue(localJson.Value);
         }
 
         // both cloud and local
@@ -61,10 +52,19 @@ namespace AutomationISE.Model
             : base(localJson, cloudVariable.Properties.LastModifiedTime.LocalDateTime)
         {
             this.Encrypted = cloudVariable.Properties.IsEncrypted;
+            this.setValue(localJson.Value);            
+        }
 
-            IDictionary<String, Object> valueFields = new Dictionary<string, Object>();
-            valueFields.Add("Value", localJson.Value);
-            this.ValueFields = valueFields;
+        public Object getValue()
+        {
+            Object tempValue;
+            this.ValueFields.TryGetValue("Value", out tempValue);
+            return tempValue;
+        }
+
+        public void setValue(Object value)
+        {
+            this.ValueFields.Add("Value", value);
         }
 
         /// <summary>
@@ -80,10 +80,7 @@ namespace AutomationISE.Model
             : base(variable)
         {
             this.Encrypted = variable.Encrypted;
-            
-            Object tempValue;
-            variable.ValueFields.TryGetValue("Value", out tempValue);
-            this.Value = tempValue;
+            this.Value = variable.getValue();
         }
 
         public override void Update(AutomationAsset asset)
@@ -91,8 +88,7 @@ namespace AutomationISE.Model
             var variable = (AutomationVariable)asset;
             this.Encrypted = variable.Encrypted;
 
-            Object tempValue;
-            variable.ValueFields.TryGetValue("Value", out tempValue);
+            Object tempValue = variable.getValue();
 
             if(this.Encrypted != variable.Encrypted || this.Value != tempValue)
             {
