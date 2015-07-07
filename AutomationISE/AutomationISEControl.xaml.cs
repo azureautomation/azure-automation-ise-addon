@@ -332,17 +332,19 @@ namespace AutomationISE
             return false;
         }
 
-        //Issues with this...debug
-        private void CloseRunbookInISE(AutomationRunbook runbook)
+        /* If the user already has a local copy of that file open, then close it */
+        private void CloseRunbookIfOpen(AutomationRunbook runbook)
         {
             ISEFileCollection currentlyOpenFiles = HostObject.CurrentPowerShellTab.Files;
-            //If the user already has a local copy of that file open, then close it
-            for (int i = 0; i < currentlyOpenFiles.Count; i++)
+            if (currentlyOpenFiles != null)
             {
-                if (currentlyOpenFiles[i].FullPath.Equals(runbook.localFileInfo.FullName))
+                for (int i = 0; i < currentlyOpenFiles.Count; i++)
                 {
-                    currentlyOpenFiles.RemoveAt(i);
-                    break; //note that the file can only be open once (ISE behavior)
+                    if (currentlyOpenFiles[i].FullPath.Equals(runbook.localFileInfo.FullName))
+                    {
+                        currentlyOpenFiles.RemoveAt(i);
+                        break; //the file can only be open once (ISE behavior)
+                    }
                 }
             }
         }
@@ -358,7 +360,7 @@ namespace AutomationISE
                 DownloadRunbook.Content = "Download";
                 return;
             }
-            //CloseRunbookInISE(selectedRunbook);
+            CloseRunbookIfOpen(selectedRunbook);
             await AutomationRunbookManager.DownloadRunbook(selectedRunbook, iseClient.automationManagementClient,
                         iseClient.workspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
             RunbooksListView.Items.Refresh(); //Proper binding might be better
@@ -382,23 +384,25 @@ namespace AutomationISE
         private void OpenRunbook_Click(object sender, RoutedEventArgs e)
         {
             AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
-            ISEFileCollection currentlyOpenFiles = HostObject.CurrentPowerShellTab.Files;
-            currentlyOpenFiles.Add(selectedRunbook.localFileInfo.FullName);
+            HostObject.CurrentPowerShellTab.Files.Add(selectedRunbook.localFileInfo.FullName);
         }
 
         private async void PublishRunbook_Click(object sender, RoutedEventArgs e)
         {
+            /* Update UI */
             PublishRunbook.IsEnabled = false;
             DownloadRunbook.IsEnabled = false;
             UploadRunbook.IsEnabled = false;
             StartRunbook.IsEnabled = false;
             PublishRunbook.Content = "Publishing...";
-            AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
+            /* Do the uploading */
             //TODO (?): Check if you are overwriting draft content in the cloud
+            AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
             await AutomationRunbookManager.UploadRunbookAsDraft(selectedRunbook, iseClient.automationManagementClient,
                         iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
             await AutomationRunbookManager.PublishRunbook(selectedRunbook, iseClient.automationManagementClient,
                         iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            /* Update UI */
             RunbooksListView.Items.Refresh();
             PublishRunbook.IsEnabled = true;
             DownloadRunbook.IsEnabled = true;
