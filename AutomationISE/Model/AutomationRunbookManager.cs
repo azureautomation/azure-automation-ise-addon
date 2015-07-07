@@ -14,10 +14,50 @@ namespace AutomationISE.Model
      */
     public static class AutomationRunbookManager
     {
-        public static async Task<ISet<AutomationRunbook>> GetAllRunbooks(AutomationManagementClient automationManagementClient, string workspace, string resourceGroupName, string accountName)
+        public static async Task UploadRunbookAsDraft(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
+        {
+            RunbookCreateOrUpdateDraftProperties draftProperties = new RunbookCreateOrUpdateDraftProperties("Script", new RunbookDraft());
+            RunbookCreateOrUpdateDraftParameters draftParams = new RunbookCreateOrUpdateDraftParameters(draftProperties);
+            draftParams.Name = runbook.Name;
+            //TODO: Read this from account location
+            draftParams.Location = "East US 2";
+
+            automationManagementClient.Runbooks.CreateOrUpdateWithDraft(resourceGroupName, accountName, draftParams);
+            /* Update the runbook content from .ps1 file */
+            RunbookDraftUpdateParameters draftUpdateParams = new RunbookDraftUpdateParameters()
+            {
+                Name = runbook.Name,
+                Stream = File.ReadAllText(runbook.localFileInfo.FullName)
+            };
+            await automationManagementClient.RunbookDraft.UpdateAsync(resourceGroupName, accountName, draftUpdateParams);
+        }
+
+        public static async Task<LongRunningOperationResultResponse> PublishRunbook(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
+        {
+            RunbookDraftPublishParameters publishParams = new RunbookDraftPublishParameters
+            {
+                Name = runbook.Name,
+                PublishedBy = "ISE User: " + System.Security.Principal.WindowsIdentity.GetCurrent().Name
+            };
+            LongRunningOperationResultResponse resultResponse = await automationManagementClient.RunbookDraft.PublishAsync(resourceGroupName, accountName, publishParams);
+            //TODO: update runbook object
+            return resultResponse;
+        }
+
+        public static async Task DownloadRunbook(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string workspace, string resourceGroupName, string accountName)
+        {
+            RunbookContentResponse runbookContent = await automationManagementClient.Runbooks.ContentAsync(resourceGroupName, accountName, runbook.Name);
+            String runbookFilePath = System.IO.Path.Combine(workspace, runbook.Name + ".ps1");
+            File.WriteAllText(runbookFilePath, runbookContent.Stream.ToString());
+            
+            //TODO: do this with a setter, so the status update properly
+            runbook.localFileInfo = new FileInfo(runbookFilePath);
+        }
+
+        public static async Task<ISet<AutomationRunbook>> GetAllRunbookMetadata(AutomationManagementClient automationManagementClient, string workspace, string resourceGroupName, string accountName)
         {
             ISet<AutomationRunbook> result = new SortedSet<AutomationRunbook>();
-            IList<Runbook> cloudRunbooks = await DownloadRunbooks(automationManagementClient, resourceGroupName, accountName);
+            IList<Runbook> cloudRunbooks = await DownloadRunbookMetadata(automationManagementClient, resourceGroupName, accountName);
             
             /* Dictionary of (filename, filepath) tuples found on disk. This will come in handy */
             string[] localRunbookFilePaths = Directory.GetFiles(workspace, "*.ps1");
@@ -50,7 +90,7 @@ namespace AutomationISE.Model
             return result;
         }
 
-        private static async Task<IList<Runbook>> DownloadRunbooks(AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
+        private static async Task<IList<Runbook>> DownloadRunbookMetadata(AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
         {
             RunbookListResponse cloudRunbooks = await automationManagementClient.Runbooks.ListAsync(resourceGroupName, accountName);
             return cloudRunbooks.Runbooks;

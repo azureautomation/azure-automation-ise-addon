@@ -23,8 +23,10 @@ using AutomationISE.Model;
 using System.Security;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Azure.Subscriptions.Models;
+using System.IO;
 using System.Threading;
 using System.Windows.Threading;
+//using System.Windows.Forms;
 
 using System.Diagnostics;
 using System.Timers;
@@ -216,7 +218,7 @@ namespace AutomationISE
                     UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
                     UpdateStatusBox(configurationStatusTextBox, "Getting runbook data...");
                     /* Update Runbooks */
-                    ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbooks(iseClient.automationManagementClient, 
+                    ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient, 
                         iseClient.workspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
                     /* Update UI */
                     RunbooksListView.ItemsSource = runbooks;
@@ -309,15 +311,98 @@ namespace AutomationISE
 
         private void userNameTextBox_TextChanged(object sender, TextChangedEventArgs e) { }
 
-        private void RefreshRunbookList_Click(object sender, RoutedEventArgs e) { }
-
-        private void DownloadRunbook_Click(object sender, RoutedEventArgs e) { }
-
         private void DownloadAsset_Click(object sender, RoutedEventArgs e) { }
 
         private void RefreshAssetList_Click(object sender, RoutedEventArgs e)
         {
             refreshAssets();
+        }
+
+        private void RefreshRunbookList_Click(object sender, RoutedEventArgs e) { }
+
+        private bool ConfirmRunbookDownload()
+        {
+            String message = "Are you sure you want to import the cloud's copy of this runbook?\nAny changes you have made to it locally will be overwritten.";
+            String header = "Download Runbook";
+            System.Windows.Forms.DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(message, header, System.Windows.Forms.MessageBoxButtons.YesNo);
+            if (dialogResult == System.Windows.Forms.DialogResult.Yes)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        //Issues with this...debug
+        private void CloseRunbookInISE(AutomationRunbook runbook)
+        {
+            ISEFileCollection currentlyOpenFiles = HostObject.CurrentPowerShellTab.Files;
+            //If the user already has a local copy of that file open, then close it
+            for (int i = 0; i < currentlyOpenFiles.Count; i++)
+            {
+                if (currentlyOpenFiles[i].FullPath.Equals(runbook.localFileInfo.FullName))
+                {
+                    currentlyOpenFiles.RemoveAt(i);
+                    break; //note that the file can only be open once (ISE behavior)
+                }
+            }
+        }
+
+        private async void DownloadRunbook_Click(object sender, RoutedEventArgs e)
+        {
+            DownloadRunbook.IsEnabled = false;
+            DownloadRunbook.Content = "Downloading...";
+            AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
+            if (selectedRunbook.localFileInfo != null && File.Exists(selectedRunbook.localFileInfo.FullName) && !ConfirmRunbookDownload())
+            {
+                DownloadRunbook.IsEnabled = true;
+                return;
+            }
+            //CloseRunbookInISE(selectedRunbook);
+            await AutomationRunbookManager.DownloadRunbook(selectedRunbook, iseClient.automationManagementClient,
+                        iseClient.workspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            RunbooksListView.Items.Refresh(); //Proper binding might be better
+            DownloadRunbook.Content = "Download";
+            DownloadRunbook.IsEnabled = true;
+            OpenRunbook.IsEnabled = true;
+            PublishRunbook.IsEnabled = true;
+        }
+
+        private void RunbooksListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
+            if (selectedRunbook.localFileInfo != null && File.Exists(selectedRunbook.localFileInfo.FullName))
+            {
+                OpenRunbook.IsEnabled = true;
+                PublishRunbook.IsEnabled = true;
+            }
+            DownloadRunbook.IsEnabled = true;
+        }
+
+        private void OpenRunbook_Click(object sender, RoutedEventArgs e)
+        {
+            AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
+            ISEFileCollection currentlyOpenFiles = HostObject.CurrentPowerShellTab.Files;
+            currentlyOpenFiles.Add(selectedRunbook.localFileInfo.FullName);
+        }
+
+        private async void PublishRunbook_Click(object sender, RoutedEventArgs e)
+        {
+            PublishRunbook.IsEnabled = false;
+            DownloadRunbook.IsEnabled = false;
+            UploadRunbook.IsEnabled = false;
+            StartRunbook.IsEnabled = false;
+            PublishRunbook.Content = "Publishing...";
+            AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
+            //TODO (?): Check if you are overwriting draft content in the cloud
+            await AutomationRunbookManager.UploadRunbookAsDraft(selectedRunbook, iseClient.automationManagementClient,
+                        iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            await AutomationRunbookManager.PublishRunbook(selectedRunbook, iseClient.automationManagementClient,
+                        iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            PublishRunbook.IsEnabled = true;
+            DownloadRunbook.IsEnabled = true;
+            UploadRunbook.IsEnabled = true;
+            StartRunbook.IsEnabled = true;
+            PublishRunbook.Content = "Publish";
         }
     }
 }

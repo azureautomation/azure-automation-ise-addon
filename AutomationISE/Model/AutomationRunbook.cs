@@ -22,6 +22,23 @@ namespace AutomationISE.Model
     public class AutomationRunbook : AutomationAuthoringItem
     {
         public string AuthoringState { get; set; }
+
+        private FileInfo _localFileInfo;
+        public FileInfo localFileInfo
+        {
+            get { return _localFileInfo; }
+            set
+            {
+                _localFileInfo = value;
+                if (value != null)
+                {
+                    //need to update cloud too
+                    this.AuthoringState = AuthoringStates.InEdit;
+                    //this.LastModifiedLocal = value.LastWriteTime;
+                    this.SyncStatus = "Downloaded?";
+                }
+            }
+        }
         public IDictionary<string, RunbookParameter> Parameters { get; set; }
 
         //Runbook already exists in the cloud, but not on disk.
@@ -29,6 +46,7 @@ namespace AutomationISE.Model
             base(cloudRunbook.Name, null, cloudRunbook.Properties.LastModifiedTime.DateTime)
         {
             this.AuthoringState = cloudRunbook.Properties.State;
+            this.localFileInfo = null;
             this.Parameters = cloudRunbook.Properties.Parameters;
         }
 
@@ -46,6 +64,7 @@ namespace AutomationISE.Model
             : base(localFile.Name, localFile.LastWriteTime, null)
         {
             this.AuthoringState = AutomationRunbook.AuthoringStates.New;
+            this.localFileInfo = localFile;
             this.Parameters = null;
         }
 
@@ -54,6 +73,7 @@ namespace AutomationISE.Model
             : base(cloudRunbook.Name, localFile.LastWriteTime, cloudRunbook.Properties.LastModifiedTime.DateTime)
         {
             this.AuthoringState = cloudRunbook.Properties.State;
+            this.localFileInfo = localFile;
             this.Parameters = cloudRunbook.Properties.Parameters;
         }
         

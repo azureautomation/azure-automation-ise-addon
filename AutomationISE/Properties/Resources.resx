@@ -133,7 +133,7 @@
     <value>No subscriptions found for this user account. Please create one in the portal</value>
   </data>
   <data name="RetrieveAutomationAccounts" xml:space="preserve">
-    <value>Retrieving any automation accounts. Please wait...</value>
+    <value>Retrieving automation accounts. Please wait...</value>
   </data>
   <data name="RetrieveSubscriptions" xml:space="preserve">
     <value>Retrieving subscriptions for this user account. Please wait...</value>
