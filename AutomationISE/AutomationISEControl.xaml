@@ -47,7 +47,8 @@
                         <RowDefinition Height="35"/>
                         <RowDefinition Height="5"/>
                     </Grid.RowDefinitions>
-                    <ListView x:Name="RunbooksListView" Margin="10,10,10,0" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3">
+
+                    <ListView x:Name="RunbookslistView" Margin="10,10,10,0" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" SelectionChanged="RunbooksListView_SelectionChanged">
                         <ListView.View>
                             <GridView>
                                 <GridView.ColumnHeaderContextMenu>
@@ -61,12 +62,12 @@
                             </GridView>
                         </ListView.View>
                     </ListView>
-                    <Button x:Name="DownloadRunbook" Grid.Column="0" Grid.Row="1" Margin="5,10,5,0" Content="Download" Click="DownloadRunbook_Click" IsEnabled="False"/>
-                    <Button x:Name="OpenRunbook" Grid.Column="1" Grid.Row="1" Margin="5,10,5,0" Content="Open Local Copy" IsEnabled="False"/>
-                    <Button x:Name="RefreshRunbookList" Grid.Column="2" Grid.Row="1" Margin="5,10,5,0" Content="Refresh" IsEnabled="False"/>
-                    <Button x:Name="UploadRunbook" Grid.Column="0" Grid.Row="2" Margin="5,10,5,0" Content="Upload and Test" IsEnabled="False" />
-                    <Button x:Name="PublishRunbook" Grid.Column="1" Grid.Row="2" Margin="5,10,5,0" Content="Publish" IsEnabled="False" />
-                    <Button x:Name="StartRunbook" Grid.Column="2" Grid.Row="2" Margin="5,10,5,0" Content="Start in Azure" IsEnabled="False"/>
+                    <Button x:Name="ButtonDownloadRunbook" Grid.Column="0" Grid.Row="1" Margin="5,10,5,0" Content="Download" Click="ButtonDownloadRunbook_Click"/>
+                    <Button x:Name="ButtonOpenRunbook" Grid.Column="1" Grid.Row="1" Margin="5,10,5,0" Content="Open Local Copy" />
+                    <Button x:Name="ButtonRefreshRunbookList" Grid.Column="2" Grid.Row="1" Margin="5,10,5,0" Content="Refresh" />
+                    <Button x:Name="ButtonUploadRunbook" Grid.Column="0" Grid.Row="2" Margin="5,10,5,0" Content="Upload and Test" />
+                    <Button x:Name="ButtonPublishRunbook" Grid.Column="1" Grid.Row="2" Margin="5,10,5,0" Content="Publish" />
+                    <Button x:Name="ButtonStartRunbook" Grid.Column="2" Grid.Row="2" Margin="5,10,5,0" Content="Start in Azure" />
                 </Grid>
             </TabItem>
             <TabItem x:Name="settingsTab" Header="Assets">
@@ -97,12 +98,12 @@
                             </GridView>
                         </ListView.View>
                     </ListView>
-                    <Button x:Name="NewAsset" Grid.Column="0" Grid.Row="2" Margin="5,10,5,0" Content="New" />
-                    <Button x:Name="EditAsset" Grid.Column="1" Grid.Row="2" Margin="5,10,5,0" Content="Edit Locally" />
-                    <Button x:Name="RefreshAssetList" Grid.Column="2" Grid.Row="2" Margin="5,10,5,0" Content="Refresh" Click="RefreshAssetList_Click" />
-                    <Button x:Name="DownloadAsset" Grid.Column="0" Grid.Row="3" Margin="5,10,5,0" Content="Download" Click="DownloadAsset_Click"/>
-                    <Button x:Name="UploadAsset" Grid.Column="1" Grid.Row="3" Margin="5,10,5,0" Content="Upload" />
-                    <Button x:Name="SyncAssets" Grid.Column="2" Grid.Row="3" Margin="5,10,5,0" Content="Sync" />
+                    <Button x:Name="ButttonNewAsset" Grid.Column="0" Grid.Row="2" Margin="5,10,5,0" Content="New" />
+                    <Button x:Name="ButtonEditAsset" Grid.Column="1" Grid.Row="2" Margin="5,10,5,0" Content="Edit Locally" />
+                    <Button x:Name="ButtonRefreshAssetList" Grid.Column="2" Grid.Row="2" Margin="5,10,5,0" Content="Refresh" Click="ButtonRefreshAssetList_Click" />
+                    <Button x:Name="ButtonDownloadAsset" Grid.Column="0" Grid.Row="3" Margin="5,10,5,0" Content="Download" Click="ButtonDownloadAsset_Click"/>
+                    <Button x:Name="ButtonUploadAsset" Grid.Column="1" Grid.Row="3" Margin="5,10,5,0" Content="Upload" />
+                    <Button x:Name="ButtonSyncAssets" Grid.Column="2" Grid.Row="3" Margin="5,10,5,0" Content="Sync" />
                 </Grid>
             </TabItem>
             <TabItem x:Name="feedbackTab" Header="Give Feedback">

@@ -24,7 +24,7 @@ namespace AutomationISE.Model
 {
     public class LocalAssetsStore
     {
-        public static void Set(String workspacePath, ISet<AutomationAsset> newAssets)
+        public static void Set(String workspacePath, ICollection<AutomationAsset> newAssets)
         {
             LocalAssets localAssets = LocalAssetsStore.Get(workspacePath);
 

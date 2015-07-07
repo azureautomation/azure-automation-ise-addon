@@ -25,9 +25,11 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Azure.Subscriptions.Models;
 using System.Threading;
 using System.Windows.Threading;
+using System.Linq;
 
 using System.Diagnostics;
 using System.Timers;
+using System.Collections;
 
 namespace AutomationISE
 {
@@ -67,8 +69,9 @@ namespace AutomationISE
                 //assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCertificate);
                 //assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetConnection);
 
-                RefreshRunbookList.IsEnabled = false;
-                RefreshAssetList.IsEnabled = false;
+                setRunbookAndAssetNonSelectionButtonState(false);
+                setAssetSelectionButtonState(false);
+                setRunbookSelectionButtonState(false);
 
                 startContinualGet();
             }
@@ -82,6 +85,35 @@ namespace AutomationISE
         {
             get;
             set;
+        }
+
+        public void setRunbookAndAssetNonSelectionButtonState(bool enabled) {
+            ButtonRefreshRunbookList.IsEnabled = enabled;
+            ButtonRefreshAssetList.IsEnabled = enabled;
+            ButttonNewAsset.IsEnabled = enabled;
+        }
+
+        public void setRunbookSelectionButtonState(bool enabled)
+        {
+            ButtonDownloadRunbook.IsEnabled = enabled;
+            ButtonOpenRunbook.IsEnabled = enabled;
+            ButtonPublishRunbook.IsEnabled = enabled;
+            ButtonStartRunbook.IsEnabled = enabled;
+            ButtonUploadRunbook.IsEnabled = enabled;
+        }
+
+        public void setAssetSelectionButtonState(bool enabled)
+        {
+            ButtonDownloadAsset.IsEnabled = enabled;
+            ButtonEditAsset.IsEnabled = enabled;
+            ButtonSyncAssets.IsEnabled = enabled;
+            ButtonUploadAsset.IsEnabled = enabled;
+        }
+
+        public IList<AutomationAsset> getSelectedAssets()
+        {
+            IList items = (System.Collections.IList)assetsListView.SelectedItems;
+            return items.Cast<AutomationAsset>().ToList<AutomationAsset>();
         }
 
         public void startContinualGet() {
@@ -219,9 +251,15 @@ namespace AutomationISE
                     ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbooks(iseClient.automationManagementClient, 
                         iseClient.workspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
                     /* Update UI */
+<<<<<<< HEAD
                     RunbooksListView.ItemsSource = runbooks;
                     UpdateStatusBox(configurationStatusTextBox, "Done getting runbook data");
                     RefreshAssetList.IsEnabled = true;
+=======
+                    RunbookslistView.ItemsSource = runbookStore.localRunbooks;
+                    UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
+                    setRunbookAndAssetNonSelectionButtonState(true);
+>>>>>>> 3910a6867a10a225ed2cc2152327438d7175e5fc
 
                     //TODO: what's the reasoning here?
                     if (!iseClient.AccountWorkspaceExists())
@@ -241,7 +279,15 @@ namespace AutomationISE
 
         }
 
-        private async void assetsListView_SelectionChanged(object sender, SelectionChangedEventArgs e) { } 
+        private async void RunbooksListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            setRunbookSelectionButtonState(RunbookslistView.SelectedItems.Count > 0);
+        }
+
+        private async void assetsListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            setAssetSelectionButtonState(assetsListView.SelectedItems.Count > 0);
+        } 
 
         private void assetsComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -309,13 +355,20 @@ namespace AutomationISE
 
         private void userNameTextBox_TextChanged(object sender, TextChangedEventArgs e) { }
 
-        private void RefreshRunbookList_Click(object sender, RoutedEventArgs e) { }
+        private void ButtonRefreshRunbookList_Click(object sender, RoutedEventArgs e) { }
 
-        private void DownloadRunbook_Click(object sender, RoutedEventArgs e) { }
+        private void ButtonDownloadRunbook_Click(object sender, RoutedEventArgs e)
+        {
 
-        private void DownloadAsset_Click(object sender, RoutedEventArgs e) { }
+        }
 
-        private void RefreshAssetList_Click(object sender, RoutedEventArgs e)
+        private void ButtonDownloadAsset_Click(object sender, RoutedEventArgs e)
+        {
+            iseClient.DownloadAssets(getSelectedAssets());
+            refreshAssets();
+        }
+
+        private void ButtonRefreshAssetList_Click(object sender, RoutedEventArgs e)
         {
             refreshAssets();
         }
