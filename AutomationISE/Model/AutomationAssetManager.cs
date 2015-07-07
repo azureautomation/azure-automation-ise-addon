@@ -25,7 +25,7 @@ namespace AutomationISE.Model
 {
     public class AutomationAssetManager 
     {
-        public static async void DownloadAllFromCloud(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
+        public static async Task DownloadAllFromCloud(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
         {
             var assets = await AutomationAssetManager.GetAll(null, automationApi, resourceGroupName, automationAccountName);
             AutomationAssetManager.SaveLocally(localWorkspacePath, assets);

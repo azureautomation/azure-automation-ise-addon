@@ -214,20 +214,21 @@ namespace AutomationISE
                 {
                     /* Update Status */
                     UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
-                    UpdateStatusBox(configurationStatusTextBox, "Downloading runbooks...");
+                    UpdateStatusBox(configurationStatusTextBox, "Getting runbook data...");
                     /* Update Runbooks */
                     ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbooks(iseClient.automationManagementClient, 
                         iseClient.workspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
                     /* Update UI */
                     RunbooksListView.ItemsSource = runbooks;
-                    UpdateStatusBox(configurationStatusTextBox, "Runbooks downloaded");
+                    UpdateStatusBox(configurationStatusTextBox, "Done getting runbook data");
                     RefreshAssetList.IsEnabled = true;
 
                     //TODO: what's the reasoning here?
                     if (!iseClient.AccountWorkspaceExists())
                     {
                         UpdateStatusBox(configurationStatusTextBox, "Downloading assets..."); 
-                        iseClient.DownloadAll();
+                        await iseClient.DownloadAllAssets();
+                        UpdateStatusBox(configurationStatusTextBox, "Assets downloaded"); 
                     }
                     //TODO: and here?
                     refresh(null, null);
