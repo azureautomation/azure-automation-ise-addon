@@ -76,7 +76,23 @@ namespace AutomationISE.Model
             this.localFileInfo = localFile;
             this.Parameters = cloudRunbook.Properties.Parameters;
         }
+
+        public void UpdateMetadata(Runbook cloudRunbook)
+        {
+            this.AuthoringState = cloudRunbook.Properties.State;
+            this.Parameters = cloudRunbook.Properties.Parameters;
+            this.LastModifiedCloud = cloudRunbook.Properties.LastModifiedTime.DateTime;
+            //TODO: calculate this
+            this.SyncStatus = "???";
+        }
         
+        public static class SyncStates
+        {
+            public const String InSync = "In Sync";
+            public const String LocalUpdates = "Modified Locally";
+            public const String CloudUpdates = "Modified in Cloud";
+        }
+
         public static class AuthoringStates
         {
             public const String New = "New";

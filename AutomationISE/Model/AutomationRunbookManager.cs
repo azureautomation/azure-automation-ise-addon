@@ -30,6 +30,7 @@ namespace AutomationISE.Model
                 Stream = File.ReadAllText(runbook.localFileInfo.FullName)
             };
             await automationManagementClient.RunbookDraft.UpdateAsync(resourceGroupName, accountName, draftUpdateParams);
+            UpdateRunbookMetadata(runbook, automationManagementClient, resourceGroupName, accountName);
         }
 
         public static async Task<LongRunningOperationResultResponse> PublishRunbook(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
@@ -40,7 +41,7 @@ namespace AutomationISE.Model
                 PublishedBy = "ISE User: " + System.Security.Principal.WindowsIdentity.GetCurrent().Name
             };
             LongRunningOperationResultResponse resultResponse = await automationManagementClient.RunbookDraft.PublishAsync(resourceGroupName, accountName, publishParams);
-            //TODO: update runbook object
+            UpdateRunbookMetadata(runbook, automationManagementClient, resourceGroupName, accountName);
             return resultResponse;
         }
 
@@ -49,8 +50,6 @@ namespace AutomationISE.Model
             RunbookContentResponse runbookContent = await automationManagementClient.Runbooks.ContentAsync(resourceGroupName, accountName, runbook.Name);
             String runbookFilePath = System.IO.Path.Combine(workspace, runbook.Name + ".ps1");
             File.WriteAllText(runbookFilePath, runbookContent.Stream.ToString());
-            
-            //TODO: do this with a setter, so the status update properly
             runbook.localFileInfo = new FileInfo(runbookFilePath);
         }
 
@@ -88,6 +87,12 @@ namespace AutomationISE.Model
                 }
             }
             return result;
+        }
+
+        private static void UpdateRunbookMetadata(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
+        {
+            RunbookGetResponse response = automationManagementClient.Runbooks.Get(resourceGroupName, accountName, runbook.Name);
+            runbook.UpdateMetadata(response.Runbook);
         }
 
         private static async Task<IList<Runbook>> DownloadRunbookMetadata(AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)

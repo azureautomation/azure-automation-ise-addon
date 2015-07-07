@@ -355,6 +355,7 @@ namespace AutomationISE
             if (selectedRunbook.localFileInfo != null && File.Exists(selectedRunbook.localFileInfo.FullName) && !ConfirmRunbookDownload())
             {
                 DownloadRunbook.IsEnabled = true;
+                DownloadRunbook.Content = "Download";
                 return;
             }
             //CloseRunbookInISE(selectedRunbook);
@@ -398,6 +399,7 @@ namespace AutomationISE
                         iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
             await AutomationRunbookManager.PublishRunbook(selectedRunbook, iseClient.automationManagementClient,
                         iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            RunbooksListView.Items.Refresh();
             PublishRunbook.IsEnabled = true;
             DownloadRunbook.IsEnabled = true;
             UploadRunbook.IsEnabled = true;
