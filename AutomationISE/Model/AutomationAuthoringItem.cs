@@ -77,6 +77,11 @@ namespace AutomationISE.Model
             }
         }
 
+        public bool hasSameNameAndType(AutomationAuthoringItem other)
+        {
+            return this.GetType().Equals(other.GetType()) && this.Name.Equals(other.Name);
+        }
+
         private DateTime? removeMillis(DateTime? original)
         {
             if (original != null)

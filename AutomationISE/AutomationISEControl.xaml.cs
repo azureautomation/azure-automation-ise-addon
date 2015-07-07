@@ -25,9 +25,11 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Azure.Subscriptions.Models;
 using System.Threading;
 using System.Windows.Threading;
+using System.Linq;
 
 using System.Diagnostics;
 using System.Timers;
+using System.Collections;
 
 namespace AutomationISE
 {
@@ -106,6 +108,12 @@ namespace AutomationISE
             ButtonEditAsset.IsEnabled = enabled;
             ButtonSyncAssets.IsEnabled = enabled;
             ButtonUploadAsset.IsEnabled = enabled;
+        }
+
+        public IList<AutomationAsset> getSelectedAssets()
+        {
+            IList items = (System.Collections.IList)assetsListView.SelectedItems;
+            return items.Cast<AutomationAsset>().ToList<AutomationAsset>();
         }
 
         public void startContinualGet() {
@@ -346,7 +354,8 @@ namespace AutomationISE
 
         private void ButtonDownloadAsset_Click(object sender, RoutedEventArgs e)
         {
-
+            iseClient.DownloadAssets(getSelectedAssets());
+            refreshAssets();
         }
 
         private void ButtonRefreshAssetList_Click(object sender, RoutedEventArgs e)

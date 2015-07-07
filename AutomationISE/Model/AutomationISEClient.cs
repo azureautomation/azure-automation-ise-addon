@@ -142,6 +142,11 @@ namespace AutomationISE.Model
            AutomationAssetManager.DownloadAllFromCloud(getAccountWorkspace(), automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
         }
 
+        public void DownloadAssets(ICollection<AutomationAsset> assetsToDownload)
+        {
+            AutomationAssetManager.DownloadFromCloud(assetsToDownload, getAccountWorkspace(), automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
+        }
+
         public bool AccountWorkspaceExists()
         {
             return Directory.Exists(getAccountWorkspace());

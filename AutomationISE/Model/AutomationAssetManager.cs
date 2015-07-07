@@ -31,7 +31,7 @@ namespace AutomationISE.Model
             AutomationAssetManager.SaveLocally(localWorkspacePath, assets);
         }
 
-        public static async void DownloadFromCloud(ISet<AutomationAsset> assetsToDownload, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
+        public static async void DownloadFromCloud(ICollection<AutomationAsset> assetsToDownload, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
         {
             var cloudAssets = await AutomationAssetManager.GetAll(null, automationApi, resourceGroupName, automationAccountName);
             var assetsToSaveLocally = new SortedSet<AutomationAsset>();
@@ -40,7 +40,7 @@ namespace AutomationISE.Model
             {
                 foreach (var assetToDownload in assetsToDownload)
                 {
-                    if (cloudAsset.Equals(assetToDownload))
+                    if (cloudAsset.hasSameNameAndType(assetToDownload))
                     {
                         assetsToSaveLocally.Add(cloudAsset);
                         break;
@@ -51,7 +51,7 @@ namespace AutomationISE.Model
             AutomationAssetManager.SaveLocally(localWorkspacePath, assetsToSaveLocally);
         }
 
-        public static async void UploadToCloud(ISet<AutomationAsset> assetsToUpload, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
+        public static async void UploadToCloud(ICollection<AutomationAsset> assetsToUpload, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
         {
             var jss = new JavaScriptSerializer();
             
@@ -87,12 +87,12 @@ namespace AutomationISE.Model
             }
         }
 
-        public static async void Sync(ISet<AutomationAsset> assetsToSync, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
+        public static async void Sync(ICollection<AutomationAsset> assetsToSync, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
         {
 
         }
 
-        public static void SaveLocally(String localWorkspacePath, ISet<AutomationAsset> assets)
+        public static void SaveLocally(String localWorkspacePath, ICollection<AutomationAsset> assets)
         {
             LocalAssetsStore.Set(localWorkspacePath, assets);
         }
