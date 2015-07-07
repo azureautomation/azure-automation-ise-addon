@@ -27,6 +27,7 @@ using System.Threading;
 using System.Windows.Threading;
 
 using System.Diagnostics;
+using System.Timers;
 
 namespace AutomationISE
 {
@@ -37,6 +38,7 @@ namespace AutomationISE
     {
         private AutomationISEClient iseClient;
         private LocalRunbookStore runbookStore;
+
         public AutomationISEControl()
         {
             try
@@ -66,6 +68,9 @@ namespace AutomationISE
                 //assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetConnection);
 
                 RefreshRunbookList.IsEnabled = false;
+                RefreshAssetList.IsEnabled = false;
+
+                startContinualGet();
             }
             catch (Exception exception)
             {
@@ -77,6 +82,58 @@ namespace AutomationISE
         {
             get;
             set;
+        }
+
+        public void startContinualGet() {
+            var myTimer = new System.Timers.Timer();
+
+            // Set timer interval to 30 seconds
+            myTimer.Interval = 30000;
+
+            // Set the function to run when timer fires
+            myTimer.Elapsed += new ElapsedEventHandler(refresh);
+
+            myTimer.Start();
+        }
+
+        public void refresh(object source, ElapsedEventArgs e) {
+            this.Dispatcher.Invoke((Action)(() =>
+            {
+                refreshAssets();
+            }));
+        }
+        
+        public async void refreshAssets()
+        {
+            try
+            {
+                string selectedAssetType = (string)assetsComboBox.SelectedValue;
+                if (selectedAssetType == null)
+                {
+                    selectedAssetType = "";
+                }
+
+                if (selectedAssetType == AutomationISE.Model.Constants.assetVariable)
+                {
+                    assetsListView.ItemsSource = await iseClient.GetAssetsOfType("AutomationVariable");
+                }
+                else if (selectedAssetType == AutomationISE.Model.Constants.assetCredential)
+                {
+                    assetsListView.ItemsSource = await iseClient.GetAssetsOfType("AutomationCredential");
+                }
+                else if (selectedAssetType == AutomationISE.Model.Constants.assetConnection)
+                {
+                    assetsListView.ItemsSource = await iseClient.GetAssetsOfType("AutomationConnection");
+                }
+                else if (selectedAssetType == AutomationISE.Model.Constants.assetCertificate)
+                {
+                    assetsListView.ItemsSource = await iseClient.GetAssetsOfType("AutomationCertificate");
+                }
+            }
+            catch (Exception exception)
+            {
+                var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
+            }
         }
 
         private async void loginButton_Click(object sender, RoutedEventArgs e)
@@ -163,12 +220,15 @@ namespace AutomationISE
                     RunbookslistView.ItemsSource = runbookStore.localRunbooks;
                     UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
                     RefreshRunbookList.IsEnabled = true;
+                    RefreshAssetList.IsEnabled = true;
 
                     if (!iseClient.AccountWorkspaceExists())
                     {
                         UpdateStatusBox(configurationStatusTextBox, "Downloading assets for automation account: " + account.Name); 
                         iseClient.DownloadAll();
                     }
+
+                    refresh(null, null);
                 }
             }
             catch (Exception exception)
@@ -180,32 +240,9 @@ namespace AutomationISE
 
         private async void assetsListView_SelectionChanged(object sender, SelectionChangedEventArgs e) { } 
 
-        private async void assetsComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void assetsComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            try
-            {
-                var selectedAssetType = assetsComboBox.SelectedValue;
-                if (selectedAssetType.ToString() == AutomationISE.Model.Constants.assetVariable)
-                {
-                    assetsListView.ItemsSource = await iseClient.GetAssetsOfType("AutomationVariable");
-                }
-                else if (selectedAssetType.ToString() == AutomationISE.Model.Constants.assetCredential)
-                {
-                    assetsListView.ItemsSource = await iseClient.GetAssetsOfType("AutomationCredential");
-                }
-                else if (selectedAssetType.ToString() == AutomationISE.Model.Constants.assetConnection)
-                {
-                    assetsListView.ItemsSource = await iseClient.GetAssetsOfType("AutomationConnection");
-                }
-                else if (selectedAssetType.ToString() == AutomationISE.Model.Constants.assetCertificate)
-                {
-                    assetsListView.ItemsSource = await iseClient.GetAssetsOfType("AutomationCertificate");
-                }
-            }
-            catch (Exception exception)
-            {
-                var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
-            }
+            refreshAssets();
         }
 
         private void workspaceTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -279,6 +316,11 @@ namespace AutomationISE
         private void DownloadAsset_Click(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private void RefreshAssetList_Click(object sender, RoutedEventArgs e)
+        {
+            refreshAssets();
         }
     }
 }
