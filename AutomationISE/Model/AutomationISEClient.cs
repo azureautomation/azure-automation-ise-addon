@@ -147,6 +147,16 @@ namespace AutomationISE.Model
             AutomationAssetManager.DownloadFromCloud(assetsToDownload, getAccountWorkspace(), automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
         }
 
+        public void UploadAssets(ICollection<AutomationAsset> assetsToUpload)
+        {
+            AutomationAssetManager.UploadToCloud(assetsToUpload, automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
+
+            // Since the cloud assets uploaded will have a last modified time of now, causing them to look newer than their local counterparts,
+            // download the assets after upload to force last modified time between local and cloud to be the same, showing them as in sync (which they are)
+            System.Threading.Thread.Sleep(1000); // TODO: seems to be a race condition. If we don't wait a bit first, the old asset values get downloaded instead of the just updated ones
+            this.DownloadAssets(assetsToUpload);
+        }
+
         public bool AccountWorkspaceExists()
         {
             return Directory.Exists(getAccountWorkspace());

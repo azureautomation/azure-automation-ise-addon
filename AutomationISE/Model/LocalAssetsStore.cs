@@ -36,12 +36,19 @@ namespace AutomationISE.Model
                     continue;
                 }
 
+                VariableJson assetToDelete = null;
                 foreach (var currentLocalAsset in localAssets.Variables)
                 {
                     if (newAsset.Name == currentLocalAsset.Name)
                     {
-                        localAssets.Variables.Remove(currentLocalAsset);
+                        assetToDelete = currentLocalAsset;
+                        break;
                     }
+                }
+
+                if (assetToDelete != null)
+                {
+                    localAssets.Variables.Remove(assetToDelete);
                 }
 
                 localAssets.Variables.Add(new VariableJson((AutomationVariable)newAsset));
@@ -54,13 +61,20 @@ namespace AutomationISE.Model
                 {
                     continue;
                 }
-                
+
+                CredentialJson assetToDelete = null;
                 foreach (var currentLocalAsset in localAssets.PSCredentials)
                 {
                     if (newAsset.Name == currentLocalAsset.Name)
                     {
-                        localAssets.PSCredentials.Remove(currentLocalAsset);
+                        assetToDelete = currentLocalAsset;
+                        break;
                     }
+                }
+
+                if (assetToDelete != null)
+                {
+                    localAssets.PSCredentials.Remove(assetToDelete);
                 }
 
                 localAssets.PSCredentials.Add(new CredentialJson((AutomationCredential)newAsset));
@@ -74,12 +88,19 @@ namespace AutomationISE.Model
                     continue;
                 }
 
+                ConnectionJson assetToDelete = null;
                 foreach (var currentLocalAsset in localAssets.Connections)
                 {
                     if (newAsset.Name == currentLocalAsset.Name)
                     {
-                        localAssets.Connections.Remove(currentLocalAsset);
+                        assetToDelete = currentLocalAsset;
+                        break;
                     }
+                }
+
+                if (assetToDelete != null)
+                {
+                    localAssets.Connections.Remove(assetToDelete);
                 }
 
                 localAssets.Connections.Add(new ConnectionJson((AutomationConnection)newAsset));

@@ -358,6 +358,12 @@ namespace AutomationISE
             refreshAssets();
         }
 
+        private void ButtonUploadAsset_Click(object sender, RoutedEventArgs e)
+        {
+            iseClient.UploadAssets(getSelectedAssets());
+            refreshAssets();
+        }
+
         private void ButtonRefreshAssetList_Click(object sender, RoutedEventArgs e)
         {
             refreshAssets();
