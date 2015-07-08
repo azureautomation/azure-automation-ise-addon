@@ -89,7 +89,6 @@ namespace AutomationISE
         }
 
         public void setRunbookAndAssetNonSelectionButtonState(bool enabled) {
-            ButtonRefreshRunbookList.IsEnabled = enabled;
             ButtonRefreshAssetList.IsEnabled = enabled;
             ButttonNewAsset.IsEnabled = enabled;
         }
@@ -349,13 +348,6 @@ namespace AutomationISE
 
         private void userNameTextBox_TextChanged(object sender, TextChangedEventArgs e) { }
 
-        private void ButtonRefreshRunbookList_Click(object sender, RoutedEventArgs e) { }
-
-        private void ButtonDownloadRunbook_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
         private void ButtonDownloadAsset_Click(object sender, RoutedEventArgs e)
         {
             iseClient.DownloadAssets(getSelectedAssets());
@@ -372,8 +364,6 @@ namespace AutomationISE
         {
             refreshAssets();
         }
-
-        private void RefreshRunbookList_Click(object sender, RoutedEventArgs e) { }
 
         private bool ConfirmRunbookDownload()
         {
@@ -405,7 +395,7 @@ namespace AutomationISE
             }
         }
 
-        private async void DownloadRunbook_Click(object sender, RoutedEventArgs e)
+        private async void ButtonDownloadRunbook_Click(object sender, RoutedEventArgs e)
         {
             ButtonDownloadRunbook.IsEnabled = false;
             ButtonDownloadRunbook.Content = "Downloading...";
@@ -435,16 +425,21 @@ namespace AutomationISE
                 ButtonOpenRunbook.IsEnabled = true;
                 ButtonPublishRunbook.IsEnabled = true;
             }
+            else
+            {
+                ButtonOpenRunbook.IsEnabled = false;
+                ButtonPublishRunbook.IsEnabled = false;
+            }
             ButtonDownloadRunbook.IsEnabled = true;
         }
 
-        private void OpenRunbook_Click(object sender, RoutedEventArgs e)
+        private void ButtonOpenRunbook_Click(object sender, RoutedEventArgs e)
         {
             AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
             HostObject.CurrentPowerShellTab.Files.Add(selectedRunbook.localFileInfo.FullName);
         }
 
-        private async void PublishRunbook_Click(object sender, RoutedEventArgs e)
+        private async void ButtonPublishRunbook_Click(object sender, RoutedEventArgs e)
         {
             /* Update UI */
             ButtonPublishRunbook.IsEnabled = false;
