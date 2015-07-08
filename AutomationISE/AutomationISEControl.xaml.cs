@@ -172,12 +172,12 @@ namespace AutomationISE
         {
             try {
 		        //TODO: probably refactor this a little
-                String UserName = userNameTextBox.Text;
-                Properties.Settings.Default["ADUserName"] = UserName;
-                Properties.Settings.Default.Save();
-
                 UpdateStatusBox(configurationStatusTextBox, "Launching login window");
-                iseClient.azureADAuthResult = AutomationISE.Model.AuthenticateHelper.GetInteractiveLogin(UserName);
+                iseClient.azureADAuthResult = AutomationISE.Model.AuthenticateHelper.GetInteractiveLogin(userNameTextBox.Text);
+
+                userNameTextBox.Text = iseClient.azureADAuthResult.UserInfo.DisplayableId;
+                Properties.Settings.Default["ADUserName"] = userNameTextBox.Text;
+                Properties.Settings.Default.Save();
 
                 UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveSubscriptions);
                 IList<Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription> subscriptions = await iseClient.GetSubscriptions();

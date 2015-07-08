@@ -42,7 +42,7 @@ namespace AutomationISE.Model
         {
             var ctx = new AuthenticationContext(string.Format(Constants.loginAuthority + authority, Constants.tenant));
 
-            if (Username != null)
+            if (!String.IsNullOrWhiteSpace(Username))
             {
                 UserIdentifier user = new UserIdentifier(Username, UserIdentifierType.RequiredDisplayableId);
                 return ctx.AcquireToken(Constants.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Always, user);
