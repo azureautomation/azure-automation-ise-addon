@@ -33,25 +33,30 @@ namespace AutomationISE.Model
         /* Azure Clients */
         public AutomationManagementClient automationManagementClient { get; set; }
         private ResourceManagementClient resourceManagementClient;
-        //This seems to be to support LiveID:
         private Microsoft.WindowsAzure.Subscriptions.SubscriptionClient subscriptionClient;
 
         /* User Session Data */
         public Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription currSubscription { get; set; }
-        public AutomationAccount currAccount { get; set; }
-        public String workspace { get; set; }
+        public String baseWorkspace { get; set; }
+        public String currWorkspace { get; set; }
+        private AutomationAccount _currAccount;
+        public AutomationAccount currAccount {
+            get { return _currAccount; } 
+            set
+            {
+                _currAccount = value;
+                if (_currAccount != null)
+                {
+                    currWorkspace = getCurrentAccountWorkspace();
+                }
+            }
+        }
 
 	    public Dictionary<AutomationAccount, ResourceGroupExtended> accountResourceGroups { get; set; }
 
         public AutomationISEClient()
         {
-            /* Assign all members to null. They will only be instantiated when called upon */
-            azureADAuthResult = null;
-            cloudCredentials = null;
-            subscriptionCreds = null;
-            subscriptionClient = null;
-            currSubscription = null;
-            accountResourceGroups = null;
+            /* Placeholder. All fields null, will only be instantiated when called upon */
         }
 
         public async Task<IList<Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription>> GetSubscriptions()
@@ -120,7 +125,7 @@ namespace AutomationISE.Model
 
         private async Task<SortedSet<AutomationAsset>> GetAssetsInfo()
         {
-            return (SortedSet<AutomationAsset>)await AutomationAssetManager.GetAll(getAccountWorkspace(), automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
+            return (SortedSet<AutomationAsset>)await AutomationAssetManager.GetAll(currWorkspace, automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
         }
 
         public async Task<SortedSet<AutomationAsset>> GetAssetsOfType(String type)
@@ -141,12 +146,12 @@ namespace AutomationISE.Model
 
         public async Task DownloadAllAssets()
         {
-           await AutomationAssetManager.DownloadAllFromCloud(getAccountWorkspace(), automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
+           await AutomationAssetManager.DownloadAllFromCloud(currWorkspace, automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
         }
 
         public void DownloadAssets(ICollection<AutomationAsset> assetsToDownload)
         {
-            AutomationAssetManager.DownloadFromCloud(assetsToDownload, getAccountWorkspace(), automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
+            AutomationAssetManager.DownloadFromCloud(assetsToDownload, currWorkspace, automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
         }
 
         public void UploadAssets(ICollection<AutomationAsset> assetsToUpload)
@@ -161,13 +166,15 @@ namespace AutomationISE.Model
 
         public bool AccountWorkspaceExists()
         {
-            return Directory.Exists(getAccountWorkspace());
+            return Directory.Exists(currWorkspace);
         }
 
-        private string getAccountWorkspace()
+        private string getCurrentAccountWorkspace()
         {
-            string accountPath = subscriptionCreds.SubscriptionId + "\\" + accountResourceGroups[currAccount].Name + "\\" + currAccount.Location + "\\" + currAccount.Name;
-            return System.IO.Path.Combine(workspace, accountPath);
+            //Account must be unique within the ResourceGroup: no need to include region
+            string[] pathFolders = new string[] { this.baseWorkspace, currSubscription.SubscriptionName + " - " + currSubscription.SubscriptionId, 
+                accountResourceGroups[currAccount].Name, currAccount.Name };
+            return System.IO.Path.Combine(pathFolders);
         }
     }
 }

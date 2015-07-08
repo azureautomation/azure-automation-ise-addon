@@ -47,8 +47,7 @@
                         <RowDefinition Height="35"/>
                         <RowDefinition Height="5"/>
                     </Grid.RowDefinitions>
-
-                    <ListView x:Name="RunbookslistView" Margin="10,10,10,0" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" SelectionChanged="RunbooksListView_SelectionChanged">
+                    <ListView x:Name="RunbooksListView" Margin="10,10,10,0" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" SelectionChanged="RunbooksListView_SelectionChanged">
                         <ListView.View>
                             <GridView>
                                 <GridView.ColumnHeaderContextMenu>

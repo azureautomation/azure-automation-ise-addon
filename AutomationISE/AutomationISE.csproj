@@ -176,6 +176,7 @@
     <Compile Include="Model\AutomationRunbook.cs" />
     <Compile Include="Model\LocalRunbookStore.cs" />
     <Compile Include="Model\Constants.cs" />
+    <Compile Include="Model\PSModuleConfiguration.cs" />
     <Compile Include="Model\Requires.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>

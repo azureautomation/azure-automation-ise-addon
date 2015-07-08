@@ -23,6 +23,7 @@ using AutomationISE.Model;
 using System.Security;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Azure.Subscriptions.Models;
+using System.IO;
 using System.Threading;
 using System.Windows.Threading;
 using System.Linq;
@@ -58,10 +59,10 @@ namespace AutomationISE
                     Properties.Settings.Default["localWorkspace"] = localWorkspace;
                     Properties.Settings.Default.Save();
                 }
-                iseClient.workspace = localWorkspace;
+                iseClient.baseWorkspace = localWorkspace;
 
                 /* Update UI */
-                workspaceTextBox.Text = iseClient.workspace;
+                workspaceTextBox.Text = iseClient.baseWorkspace;
 		        userNameTextBox.Text = Properties.Settings.Default["ADUserName"].ToString();
                 
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetVariable);
@@ -246,29 +247,27 @@ namespace AutomationISE
                 {
                     /* Update Status */
                     UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
-                    UpdateStatusBox(configurationStatusTextBox, "Getting runbook data...");
-                    /* Update Runbooks */
-                    ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbooks(iseClient.automationManagementClient, 
-                        iseClient.workspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
-                    /* Update UI */
-<<<<<<< HEAD
-                    RunbooksListView.ItemsSource = runbooks;
-                    UpdateStatusBox(configurationStatusTextBox, "Done getting runbook data");
-                    RefreshAssetList.IsEnabled = true;
-=======
-                    RunbookslistView.ItemsSource = runbookStore.localRunbooks;
-                    UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
                     setRunbookAndAssetNonSelectionButtonState(true);
->>>>>>> 3910a6867a10a225ed2cc2152327438d7175e5fc
-
-                    //TODO: what's the reasoning here?
+                    /* Update Runbooks */
+                    UpdateStatusBox(configurationStatusTextBox, "Getting runbook data...");
+                    ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient, 
+                        iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                    UpdateStatusBox(configurationStatusTextBox, "Done getting runbook data");
+                    /* Update Assets */
+                    //TODO: this is not quite checking what we need it to check
                     if (!iseClient.AccountWorkspaceExists())
                     {
-                        UpdateStatusBox(configurationStatusTextBox, "Downloading assets..."); 
+                        UpdateStatusBox(configurationStatusTextBox, "Downloading assets...");
                         await iseClient.DownloadAllAssets();
-                        UpdateStatusBox(configurationStatusTextBox, "Assets downloaded"); 
+                        UpdateStatusBox(configurationStatusTextBox, "Assets downloaded");
                     }
-                    //TODO: and here?
+                    /* Update PowerShell Module */
+                    PSModuleConfiguration.UpdateModuleConfiguration(iseClient.currWorkspace);
+                    /* Update UI */
+                    RunbooksListView.ItemsSource = runbooks;
+                    ButtonRefreshAssetList.IsEnabled = true;
+
+                    //TODO: possibly rename/refactor this
                     refresh(null, null);
                 }
             }
@@ -279,12 +278,7 @@ namespace AutomationISE
 
         }
 
-        private async void RunbooksListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            setRunbookSelectionButtonState(RunbookslistView.SelectedItems.Count > 0);
-        }
-
-        private async void assetsListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void assetsListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             setAssetSelectionButtonState(assetsListView.SelectedItems.Count > 0);
         } 
@@ -297,8 +291,8 @@ namespace AutomationISE
         private void workspaceTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             //TODO: refactor this
-            iseClient.workspace = workspaceTextBox.Text;
-            Properties.Settings.Default["localWorkspace"] = iseClient.workspace;
+            iseClient.baseWorkspace = workspaceTextBox.Text;
+            Properties.Settings.Default["localWorkspace"] = iseClient.baseWorkspace;
             Properties.Settings.Default.Save();
         }
         private void workspaceButton_Click(object sender, RoutedEventArgs e)
@@ -306,13 +300,13 @@ namespace AutomationISE
             try
             {
                 var dialog = new System.Windows.Forms.FolderBrowserDialog();
-                dialog.SelectedPath = iseClient.workspace;
+                dialog.SelectedPath = iseClient.baseWorkspace;
                 System.Windows.Forms.DialogResult result = dialog.ShowDialog();
-                iseClient.workspace = dialog.SelectedPath;
-                workspaceTextBox.Text = iseClient.workspace;
+                iseClient.baseWorkspace = dialog.SelectedPath;
+                workspaceTextBox.Text = iseClient.baseWorkspace;
 
-                UpdateStatusBox(configurationStatusTextBox, "Saving workspace location: " + iseClient.workspace);
-                Properties.Settings.Default["localWorkspace"] = iseClient.workspace;
+                UpdateStatusBox(configurationStatusTextBox, "Saving workspace location: " + iseClient.baseWorkspace);
+                Properties.Settings.Default["localWorkspace"] = iseClient.baseWorkspace;
                 Properties.Settings.Default.Save();
             }
             catch (Exception exception)
@@ -377,6 +371,101 @@ namespace AutomationISE
         private void ButtonRefreshAssetList_Click(object sender, RoutedEventArgs e)
         {
             refreshAssets();
+        }
+
+        private void RefreshRunbookList_Click(object sender, RoutedEventArgs e) { }
+
+        private bool ConfirmRunbookDownload()
+        {
+            String message = "Are you sure you want to import the cloud's copy of this runbook?\nAny changes you have made to it locally will be overwritten.";
+            String header = "Download Runbook";
+            System.Windows.Forms.DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(message, header, System.Windows.Forms.MessageBoxButtons.YesNo);
+            if (dialogResult == System.Windows.Forms.DialogResult.Yes)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        /* If the user already has a local copy of that file open, then close it */
+        //TODO: BUG: this is occasionally throwing a null reference exception
+        private void CloseRunbookIfOpen(AutomationRunbook runbook)
+        {
+            ISEFileCollection currentlyOpenFiles = HostObject.CurrentPowerShellTab.Files;
+            if (currentlyOpenFiles != null)
+            {
+                for (int i = 0; i < currentlyOpenFiles.Count; i++)
+                {
+                    if (currentlyOpenFiles[i].FullPath.Equals(runbook.localFileInfo.FullName))
+                    {
+                        currentlyOpenFiles.RemoveAt(i);
+                        break; //the file can only be open once (ISE behavior)
+                    }
+                }
+            }
+        }
+
+        private async void DownloadRunbook_Click(object sender, RoutedEventArgs e)
+        {
+            ButtonDownloadRunbook.IsEnabled = false;
+            ButtonDownloadRunbook.Content = "Downloading...";
+            AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
+            if (selectedRunbook.localFileInfo != null && File.Exists(selectedRunbook.localFileInfo.FullName) && !ConfirmRunbookDownload())
+            {
+                ButtonDownloadRunbook.IsEnabled = true;
+                ButtonDownloadRunbook.Content = "Download";
+                return;
+            }
+            //CloseRunbookIfOpen(selectedRunbook);
+            await AutomationRunbookManager.DownloadRunbook(selectedRunbook, iseClient.automationManagementClient,
+                        iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            RunbooksListView.Items.Refresh(); //Proper binding might be better
+            ButtonDownloadRunbook.Content = "Download";
+            ButtonDownloadRunbook.IsEnabled = true;
+            ButtonOpenRunbook.IsEnabled = true;
+            ButtonPublishRunbook.IsEnabled = true;
+        }
+
+        private void RunbooksListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            //TODO: factor into setRunbookSelectionButtonState()
+            AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
+            if (selectedRunbook != null && selectedRunbook.localFileInfo != null && File.Exists(selectedRunbook.localFileInfo.FullName))
+            {
+                ButtonOpenRunbook.IsEnabled = true;
+                ButtonPublishRunbook.IsEnabled = true;
+            }
+            ButtonDownloadRunbook.IsEnabled = true;
+        }
+
+        private void OpenRunbook_Click(object sender, RoutedEventArgs e)
+        {
+            AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
+            HostObject.CurrentPowerShellTab.Files.Add(selectedRunbook.localFileInfo.FullName);
+        }
+
+        private async void PublishRunbook_Click(object sender, RoutedEventArgs e)
+        {
+            /* Update UI */
+            ButtonPublishRunbook.IsEnabled = false;
+            ButtonDownloadRunbook.IsEnabled = false;
+            ButtonUploadRunbook.IsEnabled = false;
+            ButtonStartRunbook.IsEnabled = false;
+            ButtonPublishRunbook.Content = "Publishing...";
+            /* Do the uploading */
+            //TODO (?): Check if you are overwriting draft content in the cloud
+            AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
+            await AutomationRunbookManager.UploadRunbookAsDraft(selectedRunbook, iseClient.automationManagementClient,
+                        iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            await AutomationRunbookManager.PublishRunbook(selectedRunbook, iseClient.automationManagementClient,
+                        iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            /* Update UI */
+            RunbooksListView.Items.Refresh();
+            ButtonPublishRunbook.IsEnabled = true;
+            ButtonDownloadRunbook.IsEnabled = true;
+            ButtonUploadRunbook.IsEnabled = true;
+            ButtonStartRunbook.IsEnabled = true;
+            ButtonPublishRunbook.Content = "Publish";
         }
     }
 }
