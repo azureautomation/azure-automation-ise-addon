@@ -20,6 +20,7 @@ namespace AutomationISE.Model
     using System.Threading.Tasks;
     using System.IO;
     using System.Threading;
+    using System.Net.Http.Headers;
 
     public class AutomationISEClient
     {
@@ -72,15 +73,17 @@ namespace AutomationISE.Model
         {
             if(currSubscription == null)
                 throw new Exception("Cannot get Automation Accounts until an Azure subscription has been set.");
-       //     if (automationManagementClient == null) //lazy instantiation
-       //     {
-         //       if (subscriptionCreds == null)
-          //      {
-                    var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
-                    subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, cloudtoken.AccessToken);
-          //      }
-                automationManagementClient = new AutomationManagementClient(subscriptionCreds);
-       //     }
+
+            // Get the token for the tenant on this subscription.
+            var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
+            subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, cloudtoken.AccessToken);
+
+            automationManagementClient = new AutomationManagementClient(subscriptionCreds);
+            
+            // Add user agent string to indicate this is coming from the ISE automation client.
+            ProductInfoHeaderValue ISEClientAgent = new ProductInfoHeaderValue(Constants.ISEUserAgent, Constants.ISEVersion);
+            automationManagementClient.UserAgent.Add(ISEClientAgent);
+
             //TODO: does this belong here?
             if (accountResourceGroups == null)
                 accountResourceGroups = new Dictionary<AutomationAccount, ResourceGroupExtended>();
@@ -104,15 +107,13 @@ namespace AutomationISE.Model
         {
             if (currSubscription == null)
                 throw new Exception("Cannot get Automation Accounts until an Azure subscription has been set.");
-     //       if(resourceManagementClient == null) //lazy instantiation
-      //      {
-     //           if (subscriptionCreds == null)
-     //           {
-                    var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
-                    subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, cloudtoken.AccessToken);
-      //         }
-                resourceManagementClient = new ResourceManagementClient(subscriptionCreds);
-     //       }
+
+            // Get the token for the tenant on this subscription.
+            var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
+            subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, cloudtoken.AccessToken);
+
+            resourceManagementClient = new ResourceManagementClient(subscriptionCreds);
+
             ResourceGroupListResult resourceGroupResult = await resourceManagementClient.ResourceGroups.ListAsync(null);
             return resourceGroupResult.ResourceGroups;
         }
@@ -146,6 +147,16 @@ namespace AutomationISE.Model
         public void DownloadAssets(ICollection<AutomationAsset> assetsToDownload)
         {
             AutomationAssetManager.DownloadFromCloud(assetsToDownload, getAccountWorkspace(), automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
+        }
+
+        public void UploadAssets(ICollection<AutomationAsset> assetsToUpload)
+        {
+            AutomationAssetManager.UploadToCloud(assetsToUpload, automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
+
+            // Since the cloud assets uploaded will have a last modified time of now, causing them to look newer than their local counterparts,
+            // download the assets after upload to force last modified time between local and cloud to be the same, showing them as in sync (which they are)
+            System.Threading.Thread.Sleep(1000); // TODO: seems to be a race condition. If we don't wait a bit first, the old asset values get downloaded instead of the just updated ones
+            this.DownloadAssets(assetsToUpload);
         }
 
         public bool AccountWorkspaceExists()

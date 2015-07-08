@@ -19,6 +19,9 @@ namespace AutomationISE.Model
 {
     public class Constants
     {
+        public const String ISEUserAgent = "ISEAutomationClient";
+        public const String ISEVersion = "0.5";
+
         public const String localAssetsFileName = "LocalAssets.json";
         public const String secureLocalAssetsFileName = "SecureLocalAssets.json";
 
