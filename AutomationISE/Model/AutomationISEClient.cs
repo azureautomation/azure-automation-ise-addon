@@ -20,6 +20,7 @@ namespace AutomationISE.Model
     using System.Threading.Tasks;
     using System.IO;
     using System.Threading;
+    using System.Net.Http.Headers;
 
     public class AutomationISEClient
     {
@@ -71,15 +72,17 @@ namespace AutomationISE.Model
         {
             if(currSubscription == null)
                 throw new Exception("Cannot get Automation Accounts until an Azure subscription has been set.");
-       //     if (automationManagementClient == null) //lazy instantiation
-       //     {
-         //       if (subscriptionCreds == null)
-          //      {
-                    var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
-                    subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, cloudtoken.AccessToken);
-          //      }
-                automationManagementClient = new AutomationManagementClient(subscriptionCreds);
-       //     }
+
+            // Get the token for the tenant on this subscription.
+            var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
+            subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, cloudtoken.AccessToken);
+
+            automationManagementClient = new AutomationManagementClient(subscriptionCreds);
+            
+            // Add user agent string to indicate this is coming from the ISE automation client.
+            ProductInfoHeaderValue ISEClientAgent = new ProductInfoHeaderValue(Constants.ISEUserAgent, Constants.ISEVersion);
+            automationManagementClient.UserAgent.Add(ISEClientAgent);
+
             //TODO: does this belong here?
             if (accountResourceGroups == null)
                 accountResourceGroups = new Dictionary<AutomationAccount, ResourceGroupExtended>();
@@ -103,15 +106,13 @@ namespace AutomationISE.Model
         {
             if (currSubscription == null)
                 throw new Exception("Cannot get Automation Accounts until an Azure subscription has been set.");
-     //       if(resourceManagementClient == null) //lazy instantiation
-      //      {
-     //           if (subscriptionCreds == null)
-     //           {
-                    var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
-                    subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, cloudtoken.AccessToken);
-      //         }
-                resourceManagementClient = new ResourceManagementClient(subscriptionCreds);
-     //       }
+
+            // Get the token for the tenant on this subscription.
+            var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
+            subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, cloudtoken.AccessToken);
+
+            resourceManagementClient = new ResourceManagementClient(subscriptionCreds);
+
             ResourceGroupListResult resourceGroupResult = await resourceManagementClient.ResourceGroups.ListAsync(null);
             return resourceGroupResult.ResourceGroups;
         }
