@@ -58,10 +58,10 @@ namespace AutomationISE
                     Properties.Settings.Default["localWorkspace"] = localWorkspace;
                     Properties.Settings.Default.Save();
                 }
-                iseClient.workspace = localWorkspace;
+                iseClient.baseWorkspace = localWorkspace;
 
                 /* Update UI */
-                workspaceTextBox.Text = iseClient.workspace;
+                workspaceTextBox.Text = iseClient.baseWorkspace;
 		        userNameTextBox.Text = Properties.Settings.Default["ADUserName"].ToString();
                 
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetVariable);
@@ -219,7 +219,7 @@ namespace AutomationISE
                     UpdateStatusBox(configurationStatusTextBox, "Getting runbook data...");
                     /* Update Runbooks */
                     ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient, 
-                        iseClient.workspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                        iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
                     /* Update UI */
                     RunbooksListView.ItemsSource = runbooks;
                     UpdateStatusBox(configurationStatusTextBox, "Done getting runbook data");
@@ -253,8 +253,8 @@ namespace AutomationISE
         private void workspaceTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             //TODO: refactor this
-            iseClient.workspace = workspaceTextBox.Text;
-            Properties.Settings.Default["localWorkspace"] = iseClient.workspace;
+            iseClient.baseWorkspace = workspaceTextBox.Text;
+            Properties.Settings.Default["localWorkspace"] = iseClient.baseWorkspace;
             Properties.Settings.Default.Save();
         }
         private void workspaceButton_Click(object sender, RoutedEventArgs e)
@@ -262,13 +262,13 @@ namespace AutomationISE
             try
             {
                 var dialog = new System.Windows.Forms.FolderBrowserDialog();
-                dialog.SelectedPath = iseClient.workspace;
+                dialog.SelectedPath = iseClient.baseWorkspace;
                 System.Windows.Forms.DialogResult result = dialog.ShowDialog();
-                iseClient.workspace = dialog.SelectedPath;
-                workspaceTextBox.Text = iseClient.workspace;
+                iseClient.baseWorkspace = dialog.SelectedPath;
+                workspaceTextBox.Text = iseClient.baseWorkspace;
 
-                UpdateStatusBox(configurationStatusTextBox, "Saving workspace location: " + iseClient.workspace);
-                Properties.Settings.Default["localWorkspace"] = iseClient.workspace;
+                UpdateStatusBox(configurationStatusTextBox, "Saving workspace location: " + iseClient.baseWorkspace);
+                Properties.Settings.Default["localWorkspace"] = iseClient.baseWorkspace;
                 Properties.Settings.Default.Save();
             }
             catch (Exception exception)
@@ -333,6 +333,7 @@ namespace AutomationISE
         }
 
         /* If the user already has a local copy of that file open, then close it */
+        //TODO: BUG: this is occasionally throwing a null reference exception
         private void CloseRunbookIfOpen(AutomationRunbook runbook)
         {
             ISEFileCollection currentlyOpenFiles = HostObject.CurrentPowerShellTab.Files;
@@ -360,9 +361,9 @@ namespace AutomationISE
                 DownloadRunbook.Content = "Download";
                 return;
             }
-            CloseRunbookIfOpen(selectedRunbook);
+            //CloseRunbookIfOpen(selectedRunbook);
             await AutomationRunbookManager.DownloadRunbook(selectedRunbook, iseClient.automationManagementClient,
-                        iseClient.workspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                        iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
             RunbooksListView.Items.Refresh(); //Proper binding might be better
             DownloadRunbook.Content = "Download";
             DownloadRunbook.IsEnabled = true;
