@@ -76,8 +76,6 @@ namespace AutomationISE.Model
         {
             this.LastModified = lastModified.ToString("u");
         }
-
-        public abstract void Update(AutomationAsset asset);
         
         public string Name { get; set; }
         public string LastModified { get; set; }

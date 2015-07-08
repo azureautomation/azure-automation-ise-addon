@@ -35,21 +35,16 @@ namespace AutomationISE.Model
                 {
                     continue;
                 }
-                
-                bool found = false;
+
                 foreach (var currentLocalAsset in localAssets.Variables)
                 {
                     if (newAsset.Name == currentLocalAsset.Name)
                     {
-                        found = true;
-                        currentLocalAsset.Update(newAsset);
+                        localAssets.Variables.Remove(currentLocalAsset);
                     }
                 }
 
-                if (!found)
-                {
-                    localAssets.Variables.Add(new VariableJson((AutomationVariable)newAsset));
-                }
+                localAssets.Variables.Add(new VariableJson((AutomationVariable)newAsset));
             }
 
             // add / update credentials
@@ -60,20 +55,15 @@ namespace AutomationISE.Model
                     continue;
                 }
                 
-                bool found = false;
                 foreach (var currentLocalAsset in localAssets.PSCredentials)
                 {
                     if (newAsset.Name == currentLocalAsset.Name)
                     {
-                        found = true;
-                        currentLocalAsset.Update(newAsset);
+                        localAssets.PSCredentials.Remove(currentLocalAsset);
                     }
                 }
 
-                if (!found)
-                {
-                    localAssets.PSCredentials.Add(new CredentialJson((AutomationCredential)newAsset));
-                }
+                localAssets.PSCredentials.Add(new CredentialJson((AutomationCredential)newAsset));
             }
 
             // add / update connections
@@ -84,20 +74,15 @@ namespace AutomationISE.Model
                     continue;
                 }
 
-                bool found = false;
                 foreach (var currentLocalAsset in localAssets.Connections)
                 {
                     if (newAsset.Name == currentLocalAsset.Name)
                     {
-                        found = true;
-                        currentLocalAsset.Update(newAsset);
+                        localAssets.Connections.Remove(currentLocalAsset);
                     }
                 }
 
-                if (!found)
-                {
-                    localAssets.Connections.Add(new ConnectionJson((AutomationConnection)newAsset));
-                }
+                localAssets.Connections.Add(new ConnectionJson((AutomationConnection)newAsset));
             }
 
             DirectoryInfo dir = Directory.CreateDirectory(workspacePath);

@@ -77,7 +77,7 @@ namespace AutomationISE.Model
             }
         }
 
-        public bool hasSameNameAndType(AutomationAuthoringItem other)
+        public bool Equals(AutomationAuthoringItem other)
         {
             return this.GetType().Equals(other.GetType()) && this.Name.Equals(other.Name);
         }

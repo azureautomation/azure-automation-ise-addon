@@ -81,31 +81,6 @@ namespace AutomationISE.Model
             this.ValueFields = connection.getFields();
         }
 
-        public override void Update(AutomationAsset asset)
-        {
-            var connection = (AutomationConnection)asset;
-            var hasNewInfo = false;
-            var connectionFields = connection.getFields();
-
-            foreach (var key in connectionFields.Keys)
-            {
-                Object newValue = null;
-                Object currentValue = null;
-                connectionFields.TryGetValue(key, out newValue);
-                this.ValueFields.TryGetValue(key, out currentValue);
-
-                if(!newValue.Equals(currentValue)) {
-                    hasNewInfo = true;
-                    this.ValueFields.Add(key, newValue);
-                }
-            }
-
-            if (hasNewInfo)
-            {
-                this.setLastModified(DateTime.Now);
-            }
-        }
-
         public IDictionary<string,Object> ValueFields { get; set; }
     }
 }
