@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Web.Script.Serialization;
 using Microsoft.Azure.Management.Automation.Models;
 
 namespace AutomationISE.Model
@@ -27,8 +28,17 @@ namespace AutomationISE.Model
         public AutomationVariable(Variable cloudVariable)
             : base(cloudVariable.Name, null, cloudVariable.Properties.LastModifiedTime.LocalDateTime)
         {
+            try
+            {
+                var jss = new JavaScriptSerializer();
+                this.setValue(jss.DeserializeObject(cloudVariable.Properties.Value));
+            }
+            catch (Exception e)
+            {
+                this.setValue(null);
+            }
+
             this.Encrypted = cloudVariable.Properties.IsEncrypted;
-            this.setValue(cloudVariable.Properties.Value);
         }
         
         // local only - new
