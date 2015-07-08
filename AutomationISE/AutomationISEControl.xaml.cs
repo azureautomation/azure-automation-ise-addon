@@ -216,23 +216,26 @@ namespace AutomationISE
                 {
                     /* Update Status */
                     UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
-                    UpdateStatusBox(configurationStatusTextBox, "Getting runbook data...");
                     /* Update Runbooks */
+                    UpdateStatusBox(configurationStatusTextBox, "Getting runbook data...");
                     ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient, 
                         iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
-                    /* Update UI */
-                    RunbooksListView.ItemsSource = runbooks;
                     UpdateStatusBox(configurationStatusTextBox, "Done getting runbook data");
-                    RefreshAssetList.IsEnabled = true;
-
-                    //TODO: what's the reasoning here?
+                    /* Update Assets */
+                    //TODO: this is not quite checking what we need it to check
                     if (!iseClient.AccountWorkspaceExists())
                     {
-                        UpdateStatusBox(configurationStatusTextBox, "Downloading assets..."); 
+                        UpdateStatusBox(configurationStatusTextBox, "Downloading assets...");
                         await iseClient.DownloadAllAssets();
-                        UpdateStatusBox(configurationStatusTextBox, "Assets downloaded"); 
+                        UpdateStatusBox(configurationStatusTextBox, "Assets downloaded");
                     }
-                    //TODO: and here?
+                    /* Update PowerShell Module */
+                    PSModuleConfiguration.UpdateModuleConfiguration(iseClient.currWorkspace);
+                    /* Update UI */
+                    RunbooksListView.ItemsSource = runbooks;
+                    RefreshAssetList.IsEnabled = true;
+
+                    //TODO: possibly rename/refactor this
                     refresh(null, null);
                 }
             }
@@ -374,7 +377,7 @@ namespace AutomationISE
         private void RunbooksListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
-            if (selectedRunbook.localFileInfo != null && File.Exists(selectedRunbook.localFileInfo.FullName))
+            if (selectedRunbook != null && selectedRunbook.localFileInfo != null && File.Exists(selectedRunbook.localFileInfo.FullName))
             {
                 OpenRunbook.IsEnabled = true;
                 PublishRunbook.IsEnabled = true;

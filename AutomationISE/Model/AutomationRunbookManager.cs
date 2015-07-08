@@ -58,12 +58,15 @@ namespace AutomationISE.Model
             ISet<AutomationRunbook> result = new SortedSet<AutomationRunbook>();
             IList<Runbook> cloudRunbooks = await DownloadRunbookMetadata(automationManagementClient, resourceGroupName, accountName);
             
-            /* Dictionary of (filename, filepath) tuples found on disk. This will come in handy */
-            string[] localRunbookFilePaths = Directory.GetFiles(workspace, "*.ps1");
+            /* Create a Dictionary of (filename, filepath) tuples found on disk. This will come in handy */
             Dictionary<string, string> filePathForRunbook = new Dictionary<string, string>();
-            foreach (string path in localRunbookFilePaths)
+            if (Directory.Exists(workspace))
             {
-                filePathForRunbook.Add(System.IO.Path.GetFileNameWithoutExtension(path), path);
+                string[] localRunbookFilePaths = Directory.GetFiles(workspace, "*.ps1");
+                foreach (string path in localRunbookFilePaths)
+                {
+                    filePathForRunbook.Add(System.IO.Path.GetFileNameWithoutExtension(path), path);
+                }
             }
             /* Start by checking the downloaded runbooks */
             foreach (Runbook cloudRunbook in cloudRunbooks)
