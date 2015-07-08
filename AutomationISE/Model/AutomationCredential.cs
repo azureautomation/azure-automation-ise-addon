@@ -90,22 +90,6 @@ namespace AutomationISE.Model
             this.Password = credential.getPassword();
         }
 
-        public override void Update(AutomationAsset asset)
-        {
-            var credential = (AutomationCredential)asset;
-            
-            string tempUsername, tempPassword;
-            tempUsername = credential.getUsername();
-            tempPassword = credential.getPassword();
-
-            if (this.Username != tempUsername || this.Password != tempPassword)
-            {
-                this.Username = tempUsername;
-                this.Password = tempPassword;
-                this.setLastModified(DateTime.Now);
-            }
-        }
-        
         public string Username { get; set; }
         public string Password { get; set; }
     }

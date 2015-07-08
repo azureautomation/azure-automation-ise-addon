@@ -40,7 +40,7 @@ namespace AutomationISE.Model
             {
                 foreach (var assetToDownload in assetsToDownload)
                 {
-                    if (cloudAsset.hasSameNameAndType(assetToDownload))
+                    if (cloudAsset.Equals(assetToDownload))
                     {
                         assetsToSaveLocally.Add(cloudAsset);
                         break;

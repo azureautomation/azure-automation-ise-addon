@@ -82,21 +82,6 @@ namespace AutomationISE.Model
             this.Encrypted = variable.Encrypted;
             this.Value = variable.getValue();
         }
-
-        public override void Update(AutomationAsset asset)
-        {
-            var variable = (AutomationVariable)asset;
-            this.Encrypted = variable.Encrypted;
-
-            Object tempValue = variable.getValue();
-
-            if(this.Encrypted != variable.Encrypted || this.Value != tempValue)
-            {
-                this.Value = tempValue;
-                this.Encrypted = variable.Encrypted;
-                this.setLastModified(DateTime.Now);
-            }
-        }
         
         public Object Value { get; set; }
         public bool Encrypted { get; set; }
