@@ -10,7 +10,7 @@ $script:PowerShellToLoadAzureAutomationIseAddOnGeneric = @"
 `$env:PSModulePath = `$env:PSModulePath + ";{0}"
 if(`$PSIse) {{
         Add-Type -Path {1} | Out-Null
-        `$PSIse.CurrentPowerShellTab.VerticalAddOnTools.Add('Azure Automation ISE add-on', [AzureAutomation.AzureAutomationControl], `$True) | Out-Null
+        `$PSIse.CurrentPowerShellTab.VerticalAddOnTools.Add('Azure Automation ISE add-on', [AutomationISE.AutomationISEControl], `$True) | Out-Null
 }}
 # End AzureAutomationISEAddOn snippet
 "@
