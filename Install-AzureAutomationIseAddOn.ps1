@@ -2,7 +2,7 @@
     Learn more here: http://aka.ms/azureautomationauthoringtoolkit
 #>
 
-$script:IseAddonPath = "\ISEaddon\AzureAutomation.dll"
+$script:IseAddonPath = "\ISEaddon\AutomationISE.dll"
 
 $script:PowerShellToLoadAzureAutomationIseAddOnGeneric = @"
 `n

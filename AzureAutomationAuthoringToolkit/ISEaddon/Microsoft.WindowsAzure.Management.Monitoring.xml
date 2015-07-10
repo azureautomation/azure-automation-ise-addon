@@ -1,0 +1,2787 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Microsoft.WindowsAzure.Management.Monitoring</name>
+    </assembly>
+    <members>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.IAutoscaleClient.ApiVersion">
+            <summary>
+            Gets the API version.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.IAutoscaleClient.BaseUri">
+            <summary>
+            Gets the URI used as the base for all cloud service requests.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.IAutoscaleClient.Credentials">
+            <summary>
+            Gets subscription credentials which uniquely identify Microsoft
+            Azure subscription. The subscription ID forms part of the URI for
+            every service call.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.IAutoscaleClient.LongRunningOperationInitialTimeout">
+            <summary>
+            Gets or sets the initial timeout for Long Running Operations.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.IAutoscaleClient.LongRunningOperationRetryTimeout">
+            <summary>
+            Gets or sets the retry timeout for Long Running Operations.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.IAutoscaleClient.Settings">
+            <summary>
+            Operations for managing the autoscale settings.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.AutoscaleClient.WithHandler(System.Net.Http.DelegatingHandler)">
+            <summary>
+            Get an instance of the AlertsClient class that uses the handler while initiating web requests.
+            </summary>
+            <param name="handler">the handler</param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.AutoscaleClient.#ctor">
+            <summary>
+            Initializes a new instance of the AutoscaleClient class.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.AutoscaleClient.#ctor(Microsoft.WindowsAzure.SubscriptionCloudCredentials,System.Uri)">
+            <summary>
+            Initializes a new instance of the AutoscaleClient class.
+            </summary>
+            <param name='credentials'>
+            Required. Gets subscription credentials which uniquely identify
+            Microsoft Azure subscription. The subscription ID forms part of
+            the URI for every service call.
+            </param>
+            <param name='baseUri'>
+            Required. Gets the URI used as the base for all cloud service
+            requests.
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.AutoscaleClient.#ctor(Microsoft.WindowsAzure.SubscriptionCloudCredentials)">
+            <summary>
+            Initializes a new instance of the AutoscaleClient class.
+            </summary>
+            <param name='credentials'>
+            Required. Gets subscription credentials which uniquely identify
+            Microsoft Azure subscription. The subscription ID forms part of
+            the URI for every service call.
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.AutoscaleClient.#ctor(System.Net.Http.HttpClient)">
+            <summary>
+            Initializes a new instance of the AutoscaleClient class.
+            </summary>
+            <param name='httpClient'>
+            The Http client
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.AutoscaleClient.#ctor(Microsoft.WindowsAzure.SubscriptionCloudCredentials,System.Uri,System.Net.Http.HttpClient)">
+            <summary>
+            Initializes a new instance of the AutoscaleClient class.
+            </summary>
+            <param name='credentials'>
+            Required. Gets subscription credentials which uniquely identify
+            Microsoft Azure subscription. The subscription ID forms part of
+            the URI for every service call.
+            </param>
+            <param name='baseUri'>
+            Required. Gets the URI used as the base for all cloud service
+            requests.
+            </param>
+            <param name='httpClient'>
+            The Http client
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.AutoscaleClient.#ctor(Microsoft.WindowsAzure.SubscriptionCloudCredentials,System.Net.Http.HttpClient)">
+            <summary>
+            Initializes a new instance of the AutoscaleClient class.
+            </summary>
+            <param name='credentials'>
+            Required. Gets subscription credentials which uniquely identify
+            Microsoft Azure subscription. The subscription ID forms part of
+            the URI for every service call.
+            </param>
+            <param name='httpClient'>
+            The Http client
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.AutoscaleClient.Clone(Microsoft.WindowsAzure.Common.ServiceClient{Microsoft.WindowsAzure.Management.Monitoring.Autoscale.AutoscaleClient})">
+            <summary>
+            Clones properties from current instance to another AutoscaleClient
+            instance
+            </summary>
+            <param name='client'>
+            Instance of AutoscaleClient to clone to
+            </param>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.AutoscaleClient.ApiVersion">
+            <summary>
+            Gets the API version.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.AutoscaleClient.BaseUri">
+            <summary>
+            Gets the URI used as the base for all cloud service requests.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.AutoscaleClient.Credentials">
+            <summary>
+            Gets subscription credentials which uniquely identify Microsoft
+            Azure subscription. The subscription ID forms part of the URI for
+            every service call.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.AutoscaleClient.LongRunningOperationInitialTimeout">
+            <summary>
+            Gets or sets the initial timeout for Long Running Operations.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.AutoscaleClient.LongRunningOperationRetryTimeout">
+            <summary>
+            Gets or sets the retry timeout for Long Running Operations.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.AutoscaleClient.Settings">
+            <summary>
+            Operations for managing the autoscale settings.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IAlertsClient.ApiVersion">
+            <summary>
+            Gets the API version.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IAlertsClient.BaseUri">
+            <summary>
+            Gets the URI used as the base for all cloud service requests.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IAlertsClient.Credentials">
+            <summary>
+            Gets subscription credentials which uniquely identify Microsoft
+            Azure subscription. The subscription ID forms part of the URI for
+            every service call.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IAlertsClient.LongRunningOperationInitialTimeout">
+            <summary>
+            Gets or sets the initial timeout for Long Running Operations.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IAlertsClient.LongRunningOperationRetryTimeout">
+            <summary>
+            Gets or sets the retry timeout for Long Running Operations.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IAlertsClient.Incidents">
+            <summary>
+            Operations for managing the alert incidents.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IAlertsClient.Rules">
+            <summary>
+            Operations for managing the alert rules.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient.#ctor">
+            <summary>
+            Initializes a new instance of the AlertsClient class.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient.#ctor(Microsoft.WindowsAzure.SubscriptionCloudCredentials,System.Uri)">
+            <summary>
+            Initializes a new instance of the AlertsClient class.
+            </summary>
+            <param name='credentials'>
+            Required. Gets subscription credentials which uniquely identify
+            Microsoft Azure subscription. The subscription ID forms part of
+            the URI for every service call.
+            </param>
+            <param name='baseUri'>
+            Required. Gets the URI used as the base for all cloud service
+            requests.
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient.#ctor(Microsoft.WindowsAzure.SubscriptionCloudCredentials)">
+            <summary>
+            Initializes a new instance of the AlertsClient class.
+            </summary>
+            <param name='credentials'>
+            Required. Gets subscription credentials which uniquely identify
+            Microsoft Azure subscription. The subscription ID forms part of
+            the URI for every service call.
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient.#ctor(System.Net.Http.HttpClient)">
+            <summary>
+            Initializes a new instance of the AlertsClient class.
+            </summary>
+            <param name='httpClient'>
+            The Http client
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient.#ctor(Microsoft.WindowsAzure.SubscriptionCloudCredentials,System.Uri,System.Net.Http.HttpClient)">
+            <summary>
+            Initializes a new instance of the AlertsClient class.
+            </summary>
+            <param name='credentials'>
+            Required. Gets subscription credentials which uniquely identify
+            Microsoft Azure subscription. The subscription ID forms part of
+            the URI for every service call.
+            </param>
+            <param name='baseUri'>
+            Required. Gets the URI used as the base for all cloud service
+            requests.
+            </param>
+            <param name='httpClient'>
+            The Http client
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient.#ctor(Microsoft.WindowsAzure.SubscriptionCloudCredentials,System.Net.Http.HttpClient)">
+            <summary>
+            Initializes a new instance of the AlertsClient class.
+            </summary>
+            <param name='credentials'>
+            Required. Gets subscription credentials which uniquely identify
+            Microsoft Azure subscription. The subscription ID forms part of
+            the URI for every service call.
+            </param>
+            <param name='httpClient'>
+            The Http client
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient.Clone(Microsoft.WindowsAzure.Common.ServiceClient{Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient})">
+            <summary>
+            Clones properties from current instance to another AlertsClient
+            instance
+            </summary>
+            <param name='client'>
+            Instance of AlertsClient to clone to
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient.WithHandler(System.Net.Http.DelegatingHandler)">
+            <summary>
+            Get an instance of the AlertsClient class that uses the handler while initiating web requests.
+            </summary>
+            <param name="handler">the handler</param>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient.ApiVersion">
+            <summary>
+            Gets the API version.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient.BaseUri">
+            <summary>
+            Gets the URI used as the base for all cloud service requests.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient.Credentials">
+            <summary>
+            Gets subscription credentials which uniquely identify Microsoft
+            Azure subscription. The subscription ID forms part of the URI for
+            every service call.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient.LongRunningOperationInitialTimeout">
+            <summary>
+            Gets or sets the initial timeout for Long Running Operations.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient.LongRunningOperationRetryTimeout">
+            <summary>
+            Gets or sets the retry timeout for Long Running Operations.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient.Incidents">
+            <summary>
+            Operations for managing the alert incidents.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient.Rules">
+            <summary>
+            Operations for managing the alert rules.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IIncidentOperations">
+            <summary>
+            Operations for managing the alert incidents.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IIncidentOperations.GetAsync(System.String,System.Threading.CancellationToken)">
+            <param name='incidentId'>
+            The id of the incident to retrieve.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            The Get Incident operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IIncidentOperations.ListActiveForSubscriptionAsync(System.Threading.CancellationToken)">
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            The List incidents operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IIncidentOperations.ListForRuleAsync(System.String,System.Boolean,System.Threading.CancellationToken)">
+            <param name='ruleId'>
+            The rule id.
+            </param>
+            <param name='isActive'>
+            A boolean to retrieve only active or resolved incidents.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            The List incidents operation response.
+            </returns>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IncidentOperations">
+            <summary>
+            Operations for managing the alert incidents.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IncidentOperations.#ctor(Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient)">
+            <summary>
+            Initializes a new instance of the IncidentOperations class.
+            </summary>
+            <param name='client'>
+            Reference to the service client.
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IncidentOperations.GetAsync(System.String,System.Threading.CancellationToken)">
+            <param name='incidentId'>
+            Required. The id of the incident to retrieve.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            The Get Incident operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IncidentOperations.ListActiveForSubscriptionAsync(System.Threading.CancellationToken)">
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            The List incidents operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IncidentOperations.ListForRuleAsync(System.String,System.Boolean,System.Threading.CancellationToken)">
+            <param name='ruleId'>
+            Required. The rule id.
+            </param>
+            <param name='isActive'>
+            Required. A boolean to retrieve only active or resolved incidents.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            The List incidents operation response.
+            </returns>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IncidentOperations.Client">
+            <summary>
+            Gets a reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.IncidentOperationsExtensions.Get(Microsoft.WindowsAzure.Management.Monitoring.Alerts.IIncidentOperations,System.String)">
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Alerts.IIncidentOperations.
+            </param>
+            <param name='incidentId'>
+            Required. The id of the incident to retrieve.
+            </param>
+            <returns>
+            The Get Incident operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.IncidentOperationsExtensions.GetAsync(Microsoft.WindowsAzure.Management.Monitoring.Alerts.IIncidentOperations,System.String)">
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Alerts.IIncidentOperations.
+            </param>
+            <param name='incidentId'>
+            Required. The id of the incident to retrieve.
+            </param>
+            <returns>
+            The Get Incident operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.IncidentOperationsExtensions.ListActiveForSubscription(Microsoft.WindowsAzure.Management.Monitoring.Alerts.IIncidentOperations)">
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Alerts.IIncidentOperations.
+            </param>
+            <returns>
+            The List incidents operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.IncidentOperationsExtensions.ListActiveForSubscriptionAsync(Microsoft.WindowsAzure.Management.Monitoring.Alerts.IIncidentOperations)">
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Alerts.IIncidentOperations.
+            </param>
+            <returns>
+            The List incidents operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.IncidentOperationsExtensions.ListForRule(Microsoft.WindowsAzure.Management.Monitoring.Alerts.IIncidentOperations,System.String,System.Boolean)">
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Alerts.IIncidentOperations.
+            </param>
+            <param name='ruleId'>
+            Required. The rule id.
+            </param>
+            <param name='isActive'>
+            Required. A boolean to retrieve only active or resolved incidents.
+            </param>
+            <returns>
+            The List incidents operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.IncidentOperationsExtensions.ListForRuleAsync(Microsoft.WindowsAzure.Management.Monitoring.Alerts.IIncidentOperations,System.String,System.Boolean)">
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Alerts.IIncidentOperations.
+            </param>
+            <param name='ruleId'>
+            Required. The rule id.
+            </param>
+            <param name='isActive'>
+            Required. A boolean to retrieve only active or resolved incidents.
+            </param>
+            <returns>
+            The List incidents operation response.
+            </returns>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations">
+            <summary>
+            Operations for managing the alert rules.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations.CreateOrUpdateAsync(Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleCreateOrUpdateParameters,System.Threading.CancellationToken)">
+            <param name='parameters'>
+            The rule to create or update.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations.DeleteAsync(System.String,System.Threading.CancellationToken)">
+            <param name='ruleId'>
+            The id of the rule to delete.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations.GetAsync(System.String,System.Threading.CancellationToken)">
+            <param name='ruleId'>
+            The id of the rule to retrieve.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            The Get Rule operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations.ListAsync(System.Threading.CancellationToken)">
+            <summary>
+            List the alert rules within a subscription.
+            </summary>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            The List Rules operation response.
+            </returns>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Incident">
+            <summary>
+            An alert incident indicates the activation status of an alert rule.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Incident.#ctor">
+            <summary>
+            Initializes a new instance of the Incident class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Incident.ActivatedTime">
+            <summary>
+            Optional. The time at which the incident got activated.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Incident.Id">
+            <summary>
+            Optional. Incident identifier.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Incident.IsActive">
+            <summary>
+            Optional. A boolean to indicate whether the incident is active or
+            resolved.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Incident.ResolvedTime">
+            <summary>
+            Optional. The time at which the incident got resolved. If null, it
+            means the incident is still active.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Incident.RuleId">
+            <summary>
+            Optional. Rule identifier that is associated with the incident.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.IncidentGetResponse">
+            <summary>
+            The Get Incident operation response.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.IncidentGetResponse.#ctor">
+            <summary>
+            Initializes a new instance of the IncidentGetResponse class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.IncidentGetResponse.Incident">
+            <summary>
+            Optional. The retrieved incident.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.IncidentListResponse">
+            <summary>
+            The List incidents operation response.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.IncidentListResponse.#ctor">
+            <summary>
+            Initializes a new instance of the IncidentListResponse class.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.IncidentListResponse.GetEnumerator">
+            <summary>
+            Gets the sequence of Value.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.IncidentListResponse.System#Collections#IEnumerable#GetEnumerator">
+            <summary>
+            Gets the sequence of Value.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.IncidentListResponse.Value">
+            <summary>
+            Optional. Incident collection.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Rule">
+            <summary>
+            An alert rule.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Rule.#ctor">
+            <summary>
+            Initializes a new instance of the Rule class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Rule.Actions">
+            <summary>
+            Optional. Rule actions.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Rule.Condition">
+            <summary>
+            Optional. Rule condition.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Rule.Description">
+            <summary>
+            Optional. Rule description.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Rule.Id">
+            <summary>
+            Optional. Rule identifier.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Rule.IsEnabled">
+            <summary>
+            Optional. A flag that determines whether the rule is enabled or
+            disabled.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Rule.LastUpdatedTime">
+            <summary>
+            Optional. Rule last updated time.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Rule.Name">
+            <summary>
+            Optional. Rule name.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleAction">
+            <summary>
+            A rule action.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleAction.#ctor">
+            <summary>
+            Initializes a new instance of the RuleAction class.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleCondition">
+            <summary>
+            A rule condition.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleCondition.#ctor">
+            <summary>
+            Initializes a new instance of the RuleCondition class.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleCreateOrUpdateParameters">
+            <summary>
+            Parameters supplied to the Create or Update Rule operation.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleCreateOrUpdateParameters.#ctor">
+            <summary>
+            Initializes a new instance of the RuleCreateOrUpdateParameters
+            class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleCreateOrUpdateParameters.Rule">
+            <summary>
+            Optional. The rule to create or update.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleDataSource">
+            <summary>
+            A rule data source.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleDataSource.#ctor">
+            <summary>
+            Initializes a new instance of the RuleDataSource class.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleEmailAction">
+            <summary>
+            Specifies the action to send email when the rule condition is evaluated.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleEmailAction.#ctor">
+            <summary>
+            Initializes a new instance of the RuleEmailAction class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleEmailAction.CustomEmails">
+            <summary>
+            Optional. The email address of an adminstrative user.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleEmailAction.SendToServiceOwners">
+            <summary>
+            Optional. This indicates if email is sent to sevice adminstrator
+            and co-administrators.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleGetResponse">
+            <summary>
+            The Get Rule operation response.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleGetResponse.#ctor">
+            <summary>
+            Initializes a new instance of the RuleGetResponse class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleGetResponse.Rule">
+            <summary>
+            Optional. The retrieved rule.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleListResponse">
+            <summary>
+            The List Rules operation response.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleListResponse.#ctor">
+            <summary>
+            Initializes a new instance of the RuleListResponse class.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleListResponse.GetEnumerator">
+            <summary>
+            Gets the sequence of Value.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleListResponse.System#Collections#IEnumerable#GetEnumerator">
+            <summary>
+            Gets the sequence of Value.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleListResponse.Value">
+            <summary>
+            Optional. Alert rules collection.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleMetricDataSource">
+            <summary>
+            A rule metric data source.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleMetricDataSource.#ctor">
+            <summary>
+            Initializes a new instance of the RuleMetricDataSource class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleMetricDataSource.MetricName">
+            <summary>
+            Optional. Metric name.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleMetricDataSource.MetricNamespace">
+            <summary>
+            Optional. Metric namespace. When creating a rule on endpoint
+            monitoring metrics, WindowsAzure.Availability namespace is
+            required.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleMetricDataSource.ResourceId">
+            <summary>
+            Optional. Metric resource id.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.ThresholdRuleCondition">
+            <summary>
+            A threshold rule condition.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.ThresholdRuleCondition.#ctor">
+            <summary>
+            Initializes a new instance of the ThresholdRuleCondition class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.ThresholdRuleCondition.DataSource">
+            <summary>
+            Optional. Condition data source.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.ThresholdRuleCondition.Operator">
+            <summary>
+            Optional. Condition operator.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.ThresholdRuleCondition.Threshold">
+            <summary>
+            Optional. Condition threshold.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.ThresholdRuleCondition.WindowSize">
+            <summary>
+            Optional. The time period over which the alert rule is evaluated.
+            Condition window size depends on the metric.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Alerts.RuleOperations">
+            <summary>
+            Operations for managing the alert rules.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.RuleOperations.#ctor(Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient)">
+            <summary>
+            Initializes a new instance of the RuleOperations class.
+            </summary>
+            <param name='client'>
+            Reference to the service client.
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.RuleOperations.CreateOrUpdateAsync(Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleCreateOrUpdateParameters,System.Threading.CancellationToken)">
+            <param name='parameters'>
+            Required. The rule to create or update.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.RuleOperations.DeleteAsync(System.String,System.Threading.CancellationToken)">
+            <param name='ruleId'>
+            Required. The id of the rule to delete.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.RuleOperations.GetAsync(System.String,System.Threading.CancellationToken)">
+            <param name='ruleId'>
+            Required. The id of the rule to retrieve.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            The Get Rule operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Alerts.RuleOperations.ListAsync(System.Threading.CancellationToken)">
+            <summary>
+            List the alert rules within a subscription.
+            </summary>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            The List Rules operation response.
+            </returns>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Alerts.RuleOperations.Client">
+            <summary>
+            Gets a reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Alerts.AlertsClient.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.RuleOperationsExtensions.CreateOrUpdate(Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations,Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleCreateOrUpdateParameters)">
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations.
+            </param>
+            <param name='parameters'>
+            Required. The rule to create or update.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.RuleOperationsExtensions.CreateOrUpdateAsync(Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations,Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.RuleCreateOrUpdateParameters)">
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations.
+            </param>
+            <param name='parameters'>
+            Required. The rule to create or update.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.RuleOperationsExtensions.Delete(Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations,System.String)">
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations.
+            </param>
+            <param name='ruleId'>
+            Required. The id of the rule to delete.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.RuleOperationsExtensions.DeleteAsync(Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations,System.String)">
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations.
+            </param>
+            <param name='ruleId'>
+            Required. The id of the rule to delete.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.RuleOperationsExtensions.Get(Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations,System.String)">
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations.
+            </param>
+            <param name='ruleId'>
+            Required. The id of the rule to retrieve.
+            </param>
+            <returns>
+            The Get Rule operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.RuleOperationsExtensions.GetAsync(Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations,System.String)">
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations.
+            </param>
+            <param name='ruleId'>
+            Required. The id of the rule to retrieve.
+            </param>
+            <returns>
+            The Get Rule operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.RuleOperationsExtensions.List(Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations)">
+            <summary>
+            List the alert rules within a subscription.
+            </summary>
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations.
+            </param>
+            <returns>
+            The List Rules operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.RuleOperationsExtensions.ListAsync(Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations)">
+            <summary>
+            List the alert rules within a subscription.
+            </summary>
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Alerts.IRuleOperations.
+            </param>
+            <returns>
+            The List Rules operation response.
+            </returns>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.ISettingOperations">
+            <summary>
+            Operations for managing the autoscale settings.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.ISettingOperations.CreateOrUpdateAsync(System.String,Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleSettingCreateOrUpdateParameters,System.Threading.CancellationToken)">
+            <param name='resourceId'>
+            The resource ID.
+            </param>
+            <param name='parameters'>
+            Parameters supplied to the operation.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.ISettingOperations.DeleteAsync(System.String,System.Threading.CancellationToken)">
+            <param name='resourceId'>
+            The resource ID.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.ISettingOperations.GetAsync(System.String,System.Threading.CancellationToken)">
+            <param name='resourceId'>
+            The resource ID.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleProfile">
+            <summary>
+            Autoscale profile.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleProfile.#ctor">
+            <summary>
+            Initializes a new instance of the AutoscaleProfile class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleProfile.Capacity">
+            <summary>
+            Optional. The number of instances that can be used in the scaling
+            action.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleProfile.FixedDate">
+            <summary>
+            Optional. A specific date for the scaling action. This element is
+            not used if the Recurrence element is used.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleProfile.Name">
+            <summary>
+            Optional. The name of the profile.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleProfile.Recurrence">
+            <summary>
+            Optional. The frequency and schedule for the scaling action. This
+            element is not used if the FixedDate element is used.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleProfile.Rules">
+            <summary>
+            Optional. A collection of rules that provide the triggers and
+            parameters for the scaling action.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleSetting">
+            <summary>
+            Autoscale setting.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleSetting.#ctor">
+            <summary>
+            Initializes a new instance of the AutoscaleSetting class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleSetting.Enabled">
+            <summary>
+            Optional.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleSetting.Profiles">
+            <summary>
+            Optional.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleSettingCreateOrUpdateParameters">
+            <summary>
+            Parameters supplied to the Create or Update autoscale setting operation.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleSettingCreateOrUpdateParameters.#ctor">
+            <summary>
+            Initializes a new instance of the
+            AutoscaleSettingCreateOrUpdateParameters class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleSettingCreateOrUpdateParameters.Setting">
+            <summary>
+            Optional. The setting to create or update.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleSettingGetResponse">
+            <summary>
+            A standard service response including an HTTP status code and request
+            ID.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleSettingGetResponse.#ctor">
+            <summary>
+            Initializes a new instance of the AutoscaleSettingGetResponse class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleSettingGetResponse.Setting">
+            <summary>
+            Optional.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.MetricTrigger">
+            <summary>
+            A rule that provides the triggers and parameters for the scaling action.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.MetricTrigger.#ctor">
+            <summary>
+            Initializes a new instance of the MetricTrigger class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.MetricTrigger.MetricName">
+            <summary>
+            Optional. The name of the metric.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.MetricTrigger.MetricNamespace">
+            <summary>
+            Optional. The namespace of the metric.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.MetricTrigger.MetricSource">
+            <summary>
+            Optional. The metric source.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.MetricTrigger.Operator">
+            <summary>
+            Optional. The operator that is used to evaluate the metric.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.MetricTrigger.Statistic">
+            <summary>
+            Optional. How the metrics from multiple instances are combined.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.MetricTrigger.Threshold">
+            <summary>
+            Optional. The percentage of usage that triggers the scaling
+            operation.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.MetricTrigger.TimeAggregation">
+            <summary>
+            Optional. How the data that is collected should be combined over
+            time.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.MetricTrigger.TimeGrain">
+            <summary>
+            Optional. The frequency of data collection.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.MetricTrigger.TimeWindow">
+            <summary>
+            Optional. The range of time in which instance data is collected.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.Recurrence.#ctor">
+            <summary>
+            Initializes a new instance of the Recurrence class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.Recurrence.Frequency">
+            <summary>
+            Optional.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.Recurrence.Schedule">
+            <summary>
+            Optional.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.RecurrenceFrequency.None">
+            <summary>
+            No recurrence.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.RecurrenceFrequency.Second">
+            <summary>
+            A recurrence value measured in seconds.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.RecurrenceFrequency.Minute">
+            <summary>
+            A recurrence value measured in minutes.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.RecurrenceFrequency.Hour">
+            <summary>
+            A recurrence value measured in hours.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.RecurrenceFrequency.Day">
+            <summary>
+            A recurrence value measured in days.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.RecurrenceFrequency.Week">
+            <summary>
+            A recurrence value measured in weeks.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.RecurrenceFrequency.Month">
+            <summary>
+            A recurrence value measured in months.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.RecurrenceFrequency.Year">
+            <summary>
+            A recurrence value measured in years.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.RecurrentSchedule.#ctor">
+            <summary>
+            Initializes a new instance of the RecurrentSchedule class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.RecurrentSchedule.Days">
+            <summary>
+            Optional.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.RecurrentSchedule.Hours">
+            <summary>
+            Optional.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.RecurrentSchedule.Minutes">
+            <summary>
+            Optional.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.RecurrentSchedule.TimeZone">
+            <summary>
+            Optional.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleAction">
+            <summary>
+            The action for scaling.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleAction.#ctor">
+            <summary>
+            Initializes a new instance of the ScaleAction class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleAction.Cooldown">
+            <summary>
+            Optional. The cooldown interval for scaling action.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleAction.Direction">
+            <summary>
+            Optional. The direction of scaling.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleAction.Type">
+            <summary>
+            Optional. The type of scaling.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleAction.Value">
+            <summary>
+            Optional. The rate of scaling.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleCapacity">
+            <summary>
+            The number of instances that can be used in the scaling action.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleCapacity.#ctor">
+            <summary>
+            Initializes a new instance of the ScaleCapacity class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleCapacity.Default">
+            <summary>
+            Optional. The default number of instances that are available for
+            the scaling action.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleCapacity.Maximum">
+            <summary>
+            Optional. The maximum number of instances that are available for
+            the scaling action.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleCapacity.Minimum">
+            <summary>
+            Optional. The minimum number of instances that are available for
+            the scaling action.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleDirection.None">
+            <summary>
+            Do nothing.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleDirection.Increase">
+            <summary>
+            Increase capacity.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleDirection.Decrease">
+            <summary>
+            Decrease capacity.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleRule">
+            <summary>
+            A rule that provide the triggers and parameters for the scaling action.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleRule.#ctor">
+            <summary>
+            Initializes a new instance of the ScaleRule class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleRule.MetricTrigger">
+            <summary>
+            Optional. The metrics that are used to determine when a scaling
+            action occurs.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleRule.ScaleAction">
+            <summary>
+            Optional. The parameters for the scaling action.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleType.ChangeSize">
+            <summary>
+            The change size.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleType.ChangeCount">
+            <summary>
+            The change count.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleType.PercentChangeCount">
+            <summary>
+            The percent change count.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.ScaleType.ExactCount">
+            <summary>
+            The exact count.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.TimeWindow">
+            <summary>
+            The action for scaling.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.TimeWindow.#ctor">
+            <summary>
+            Initializes a new instance of the TimeWindow class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.TimeWindow.End">
+            <summary>
+            Optional. The end of the time window.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.TimeWindow.Start">
+            <summary>
+            Optional. The start of the time window.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.TimeWindow.TimeZone">
+            <summary>
+            Optional. The time zone information.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.SettingOperations">
+            <summary>
+            Operations for managing the autoscale settings.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.SettingOperations.#ctor(Microsoft.WindowsAzure.Management.Monitoring.Autoscale.AutoscaleClient)">
+            <summary>
+            Initializes a new instance of the SettingOperations class.
+            </summary>
+            <param name='client'>
+            Reference to the service client.
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.SettingOperations.CreateOrUpdateAsync(System.String,Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleSettingCreateOrUpdateParameters,System.Threading.CancellationToken)">
+            <param name='resourceId'>
+            Required. The resource ID.
+            </param>
+            <param name='parameters'>
+            Required. Parameters supplied to the operation.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.SettingOperations.DeleteAsync(System.String,System.Threading.CancellationToken)">
+            <param name='resourceId'>
+            Required. The resource ID.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.SettingOperations.GetAsync(System.String,System.Threading.CancellationToken)">
+            <param name='resourceId'>
+            Required. The resource ID.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Autoscale.SettingOperations.Client">
+            <summary>
+            Gets a reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Autoscale.AutoscaleClient.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.SettingOperationsExtensions.CreateOrUpdate(Microsoft.WindowsAzure.Management.Monitoring.Autoscale.ISettingOperations,System.String,Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleSettingCreateOrUpdateParameters)">
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Autoscale.ISettingOperations.
+            </param>
+            <param name='resourceId'>
+            Required. The resource ID.
+            </param>
+            <param name='parameters'>
+            Required. Parameters supplied to the operation.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.SettingOperationsExtensions.CreateOrUpdateAsync(Microsoft.WindowsAzure.Management.Monitoring.Autoscale.ISettingOperations,System.String,Microsoft.WindowsAzure.Management.Monitoring.Autoscale.Models.AutoscaleSettingCreateOrUpdateParameters)">
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Autoscale.ISettingOperations.
+            </param>
+            <param name='resourceId'>
+            Required. The resource ID.
+            </param>
+            <param name='parameters'>
+            Required. Parameters supplied to the operation.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.SettingOperationsExtensions.Delete(Microsoft.WindowsAzure.Management.Monitoring.Autoscale.ISettingOperations,System.String)">
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Autoscale.ISettingOperations.
+            </param>
+            <param name='resourceId'>
+            Required. The resource ID.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.SettingOperationsExtensions.DeleteAsync(Microsoft.WindowsAzure.Management.Monitoring.Autoscale.ISettingOperations,System.String)">
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Autoscale.ISettingOperations.
+            </param>
+            <param name='resourceId'>
+            Required. The resource ID.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.SettingOperationsExtensions.Get(Microsoft.WindowsAzure.Management.Monitoring.Autoscale.ISettingOperations,System.String)">
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Autoscale.ISettingOperations.
+            </param>
+            <param name='resourceId'>
+            Required. The resource ID.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.SettingOperationsExtensions.GetAsync(Microsoft.WindowsAzure.Management.Monitoring.Autoscale.ISettingOperations,System.String)">
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Autoscale.ISettingOperations.
+            </param>
+            <param name='resourceId'>
+            Required. The resource ID.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricDefinitionOperations.ListAsync(System.String,System.Collections.Generic.IList{System.String},System.String,System.Threading.CancellationToken)">
+            <summary>
+            The List Metric Definitions operation lists the metric definitions
+            for the resource.
+            </summary>
+            <param name='resourceId'>
+            The id of the resource.The resource id can be built using the
+            resource id builder class under utilities
+            </param>
+            <param name='metricNames'>
+            The names of the metrics.
+            </param>
+            <param name='metricNamespace'>
+            The namespace of the metrics.The value is either null or
+            WindowsAzure.Availability.WindowsAzure.Availability returns the
+            metric definitions for endpoint monitoring metrics
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            The List Metric Definitions operation response.
+            </returns>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricsClient.ApiVersion">
+            <summary>
+            Gets the API version.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricsClient.BaseUri">
+            <summary>
+            Gets the URI used as the base for all cloud service requests.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricsClient.Credentials">
+            <summary>
+            Gets subscription credentials which uniquely identify Microsoft
+            Azure subscription. The subscription ID forms part of the URI for
+            every service call.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricsClient.LongRunningOperationInitialTimeout">
+            <summary>
+            Gets or sets the initial timeout for Long Running Operations.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricsClient.LongRunningOperationRetryTimeout">
+            <summary>
+            Gets or sets the retry timeout for Long Running Operations.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricSettingOperations.CreateOrUpdateAsync(Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSettingsPutParameters,System.Threading.CancellationToken)">
+            <summary>
+            The Put Metric Settings operation creates or updates the metric
+            settings for the resource.
+            </summary>
+            <param name='parameters'>
+            Metric settings to be created or updated.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricSettingOperations.ListAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            The List Metric Settings operation lists the metric settings for
+            the resource.
+            </summary>
+            <param name='resourceId'>
+            The id of the resource.
+            </param>
+            <param name='metricNamespace'>
+            The namespace of the metrics.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            The list metric settings operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricValueOperations.ListAsync(System.String,System.Collections.Generic.IList{System.String},System.String,System.TimeSpan,System.DateTime,System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            The List Metric Value operation lists the metric value sets for the
+            resource metrics.
+            </summary>
+            <param name='resourceId'>
+            The id of the resource.
+            </param>
+            <param name='metricNames'>
+            The names of the metrics.
+            </param>
+            <param name='metricNamespace'>
+            The namespace of the metrics.
+            </param>
+            <param name='timeGrain'>
+            The time grain of the metrics.
+            </param>
+            <param name='startTime'>
+            The start time (in UTC) of the metrics.
+            </param>
+            <param name='endTime'>
+            The end time (in UTC) of the metrics.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            The List Metric values operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricDefinitionOperations.#ctor(Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient)">
+            <summary>
+            Initializes a new instance of the MetricDefinitionOperations class.
+            </summary>
+            <param name='client'>
+            Reference to the service client.
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricDefinitionOperations.ListAsync(System.String,System.Collections.Generic.IList{System.String},System.String,System.Threading.CancellationToken)">
+            <summary>
+            The List Metric Definitions operation lists the metric definitions
+            for the resource.
+            </summary>
+            <param name='resourceId'>
+            Required. The id of the resource.The resource id can be built using
+            the resource id builder class under utilities
+            </param>
+            <param name='metricNames'>
+            Optional. The names of the metrics.
+            </param>
+            <param name='metricNamespace'>
+            Optional. The namespace of the metrics.The value is either null or
+            WindowsAzure.Availability.WindowsAzure.Availability returns the
+            metric definitions for endpoint monitoring metrics
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            The List Metric Definitions operation response.
+            </returns>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricDefinitionOperations.Client">
+            <summary>
+            Gets a reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.MetricDefinitionOperationsExtensions.List(Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricDefinitionOperations,System.String,System.Collections.Generic.IList{System.String},System.String)">
+            <summary>
+            The List Metric Definitions operation lists the metric definitions
+            for the resource.
+            </summary>
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricDefinitionOperations.
+            </param>
+            <param name='resourceId'>
+            Required. The id of the resource.The resource id can be built using
+            the resource id builder class under utilities
+            </param>
+            <param name='metricNames'>
+            Optional. The names of the metrics.
+            </param>
+            <param name='metricNamespace'>
+            Optional. The namespace of the metrics.The value is either null or
+            WindowsAzure.Availability.WindowsAzure.Availability returns the
+            metric definitions for endpoint monitoring metrics
+            </param>
+            <returns>
+            The List Metric Definitions operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.MetricDefinitionOperationsExtensions.ListAsync(Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricDefinitionOperations,System.String,System.Collections.Generic.IList{System.String},System.String)">
+            <summary>
+            The List Metric Definitions operation lists the metric definitions
+            for the resource.
+            </summary>
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricDefinitionOperations.
+            </param>
+            <param name='resourceId'>
+            Required. The id of the resource.The resource id can be built using
+            the resource id builder class under utilities
+            </param>
+            <param name='metricNames'>
+            Optional. The names of the metrics.
+            </param>
+            <param name='metricNamespace'>
+            Optional. The namespace of the metrics.The value is either null or
+            WindowsAzure.Availability.WindowsAzure.Availability returns the
+            metric definitions for endpoint monitoring metrics
+            </param>
+            <returns>
+            The List Metric Definitions operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient.#ctor">
+            <summary>
+            Initializes a new instance of the MetricsClient class.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient.#ctor(Microsoft.WindowsAzure.SubscriptionCloudCredentials,System.Uri)">
+            <summary>
+            Initializes a new instance of the MetricsClient class.
+            </summary>
+            <param name='credentials'>
+            Required. Gets subscription credentials which uniquely identify
+            Microsoft Azure subscription. The subscription ID forms part of
+            the URI for every service call.
+            </param>
+            <param name='baseUri'>
+            Required. Gets the URI used as the base for all cloud service
+            requests.
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient.#ctor(Microsoft.WindowsAzure.SubscriptionCloudCredentials)">
+            <summary>
+            Initializes a new instance of the MetricsClient class.
+            </summary>
+            <param name='credentials'>
+            Required. Gets subscription credentials which uniquely identify
+            Microsoft Azure subscription. The subscription ID forms part of
+            the URI for every service call.
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient.#ctor(System.Net.Http.HttpClient)">
+            <summary>
+            Initializes a new instance of the MetricsClient class.
+            </summary>
+            <param name='httpClient'>
+            The Http client
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient.#ctor(Microsoft.WindowsAzure.SubscriptionCloudCredentials,System.Uri,System.Net.Http.HttpClient)">
+            <summary>
+            Initializes a new instance of the MetricsClient class.
+            </summary>
+            <param name='credentials'>
+            Required. Gets subscription credentials which uniquely identify
+            Microsoft Azure subscription. The subscription ID forms part of
+            the URI for every service call.
+            </param>
+            <param name='baseUri'>
+            Required. Gets the URI used as the base for all cloud service
+            requests.
+            </param>
+            <param name='httpClient'>
+            The Http client
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient.#ctor(Microsoft.WindowsAzure.SubscriptionCloudCredentials,System.Net.Http.HttpClient)">
+            <summary>
+            Initializes a new instance of the MetricsClient class.
+            </summary>
+            <param name='credentials'>
+            Required. Gets subscription credentials which uniquely identify
+            Microsoft Azure subscription. The subscription ID forms part of
+            the URI for every service call.
+            </param>
+            <param name='httpClient'>
+            The Http client
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient.Clone(Microsoft.WindowsAzure.Common.ServiceClient{Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient})">
+            <summary>
+            Clones properties from current instance to another MetricsClient
+            instance
+            </summary>
+            <param name='client'>
+            Instance of MetricsClient to clone to
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient.WithHandler(System.Net.Http.DelegatingHandler)">
+            <summary>
+            Get an instance of the MetricClient class that uses the handler while initiating web requests.
+            </summary>
+            <param name="handler">the handler</param>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient.ApiVersion">
+            <summary>
+            Gets the API version.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient.BaseUri">
+            <summary>
+            Gets the URI used as the base for all cloud service requests.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient.Credentials">
+            <summary>
+            Gets subscription credentials which uniquely identify Microsoft
+            Azure subscription. The subscription ID forms part of the URI for
+            every service call.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient.LongRunningOperationInitialTimeout">
+            <summary>
+            Gets or sets the initial timeout for Long Running Operations.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient.LongRunningOperationRetryTimeout">
+            <summary>
+            Gets or sets the retry timeout for Long Running Operations.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricSettingOperations.#ctor(Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient)">
+            <summary>
+            Initializes a new instance of the MetricSettingOperations class.
+            </summary>
+            <param name='client'>
+            Reference to the service client.
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricSettingOperations.CreateOrUpdateAsync(Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSettingsPutParameters,System.Threading.CancellationToken)">
+            <summary>
+            The Put Metric Settings operation creates or updates the metric
+            settings for the resource.
+            </summary>
+            <param name='parameters'>
+            Required. Metric settings to be created or updated.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricSettingOperations.ListAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            The List Metric Settings operation lists the metric settings for
+            the resource.
+            </summary>
+            <param name='resourceId'>
+            Required. The id of the resource.
+            </param>
+            <param name='metricNamespace'>
+            Required. The namespace of the metrics.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            The list metric settings operation response.
+            </returns>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricSettingOperations.Client">
+            <summary>
+            Gets a reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.MetricSettingOperationsExtensions.CreateOrUpdate(Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricSettingOperations,Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSettingsPutParameters)">
+            <summary>
+            The Put Metric Settings operation creates or updates the metric
+            settings for the resource.
+            </summary>
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricSettingOperations.
+            </param>
+            <param name='parameters'>
+            Required. Metric settings to be created or updated.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.MetricSettingOperationsExtensions.CreateOrUpdateAsync(Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricSettingOperations,Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSettingsPutParameters)">
+            <summary>
+            The Put Metric Settings operation creates or updates the metric
+            settings for the resource.
+            </summary>
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricSettingOperations.
+            </param>
+            <param name='parameters'>
+            Required. Metric settings to be created or updated.
+            </param>
+            <returns>
+            A standard service response including an HTTP status code and
+            request ID.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.MetricSettingOperationsExtensions.List(Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricSettingOperations,System.String,System.String)">
+            <summary>
+            The List Metric Settings operation lists the metric settings for
+            the resource.
+            </summary>
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricSettingOperations.
+            </param>
+            <param name='resourceId'>
+            Required. The id of the resource.
+            </param>
+            <param name='metricNamespace'>
+            Required. The namespace of the metrics.
+            </param>
+            <returns>
+            The list metric settings operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.MetricSettingOperationsExtensions.ListAsync(Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricSettingOperations,System.String,System.String)">
+            <summary>
+            The List Metric Settings operation lists the metric settings for
+            the resource.
+            </summary>
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricSettingOperations.
+            </param>
+            <param name='resourceId'>
+            Required. The id of the resource.
+            </param>
+            <param name='metricNamespace'>
+            Required. The namespace of the metrics.
+            </param>
+            <returns>
+            The list metric settings operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricValueOperations.#ctor(Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient)">
+            <summary>
+            Initializes a new instance of the MetricValueOperations class.
+            </summary>
+            <param name='client'>
+            Reference to the service client.
+            </param>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricValueOperations.ListAsync(System.String,System.Collections.Generic.IList{System.String},System.String,System.TimeSpan,System.DateTime,System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            The List Metric Value operation lists the metric value sets for the
+            resource metrics.
+            </summary>
+            <param name='resourceId'>
+            Required. The id of the resource.
+            </param>
+            <param name='metricNames'>
+            Required. The names of the metrics.
+            </param>
+            <param name='metricNamespace'>
+            Optional. The namespace of the metrics.
+            </param>
+            <param name='timeGrain'>
+            Required. The time grain of the metrics.
+            </param>
+            <param name='startTime'>
+            Required. The start time (in UTC) of the metrics.
+            </param>
+            <param name='endTime'>
+            Required. The end time (in UTC) of the metrics.
+            </param>
+            <param name='cancellationToken'>
+            Cancellation token.
+            </param>
+            <returns>
+            The List Metric values operation response.
+            </returns>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricValueOperations.Client">
+            <summary>
+            Gets a reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Metrics.MetricsClient.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.MetricValueOperationsExtensions.List(Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricValueOperations,System.String,System.Collections.Generic.IList{System.String},System.String,System.TimeSpan,System.DateTime,System.DateTime)">
+            <summary>
+            The List Metric Value operation lists the metric value sets for the
+            resource metrics.
+            </summary>
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricValueOperations.
+            </param>
+            <param name='resourceId'>
+            Required. The id of the resource.
+            </param>
+            <param name='metricNames'>
+            Required. The names of the metrics.
+            </param>
+            <param name='metricNamespace'>
+            Optional. The namespace of the metrics.
+            </param>
+            <param name='timeGrain'>
+            Required. The time grain of the metrics.
+            </param>
+            <param name='startTime'>
+            Required. The start time (in UTC) of the metrics.
+            </param>
+            <param name='endTime'>
+            Required. The end time (in UTC) of the metrics.
+            </param>
+            <returns>
+            The List Metric values operation response.
+            </returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.MetricValueOperationsExtensions.ListAsync(Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricValueOperations,System.String,System.Collections.Generic.IList{System.String},System.String,System.TimeSpan,System.DateTime,System.DateTime)">
+            <summary>
+            The List Metric Value operation lists the metric value sets for the
+            resource metrics.
+            </summary>
+            <param name='operations'>
+            Reference to the
+            Microsoft.WindowsAzure.Management.Monitoring.Metrics.IMetricValueOperations.
+            </param>
+            <param name='resourceId'>
+            Required. The id of the resource.
+            </param>
+            <param name='metricNames'>
+            Required. The names of the metrics.
+            </param>
+            <param name='metricNamespace'>
+            Optional. The namespace of the metrics.
+            </param>
+            <param name='timeGrain'>
+            Required. The time grain of the metrics.
+            </param>
+            <param name='startTime'>
+            Required. The start time (in UTC) of the metrics.
+            </param>
+            <param name='endTime'>
+            Required. The end time (in UTC) of the metrics.
+            </param>
+            <returns>
+            The List Metric values operation response.
+            </returns>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.AvailabilityMetricSettingValue">
+            <summary>
+            The setting for Endpoint monitoring.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSettingValue">
+            <summary>
+            A metric setting get response.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSettingValue.#ctor">
+            <summary>
+            Initializes a new instance of the MetricSettingValue class.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.AvailabilityMetricSettingValue.#ctor">
+            <summary>
+            Initializes a new instance of the AvailabilityMetricSettingValue
+            class.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.AvailabilityMetricSettingValue.#ctor(System.Collections.Generic.IList{Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.EndpointConfig})">
+            <summary>
+            Initializes a new instance of the AvailabilityMetricSettingValue
+            class with required arguments.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.AvailabilityMetricSettingValue.AvailableLocations">
+            <summary>
+            Optional. The locations from which the Urls can be monitored.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.AvailabilityMetricSettingValue.Endpoints">
+            <summary>
+            Required. The configuration for Urls to be monitored using endpoint
+            monitoiring.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.EndpointConfig">
+            <summary>
+            The configuration to enable endpoint monitoring for a Url.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.EndpointConfig.#ctor">
+            <summary>
+            Initializes a new instance of the EndpointConfig class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.EndpointConfig.ConfigId">
+            <summary>
+            Optional. The config id for endpoint monitoring config.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.EndpointConfig.Location">
+            <summary>
+            Optional. The location from which the endpoint is monitored.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.EndpointConfig.Name">
+            <summary>
+            Optional. The friendly name for the url for which endpoint
+            monitoring is configured.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.EndpointConfig.Url">
+            <summary>
+            Optional. The Url to be monitored.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricAvailability">
+            <summary>
+            Metric availability specifies the time grain (aggregation interval) and
+            the retention period for that timegrain.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricAvailability.#ctor">
+            <summary>
+            Initializes a new instance of the MetricAvailability class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricAvailability.Retention">
+            <summary>
+            Optional. The retention period for the metric at the specified
+            timegrain.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricAvailability.TimeGrain">
+            <summary>
+            Optional. The time grain specifies the aggregation interval for the
+            metric.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricDefinition">
+            <summary>
+            Metric definition class specifies the metadata for a metric.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricDefinition.#ctor">
+            <summary>
+            Initializes a new instance of the MetricDefinition class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricDefinition.DisplayName">
+            <summary>
+            Optional. Metric display name.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricDefinition.IsAlertable">
+            <summary>
+            Optional. Specifies if the metric is alertable. Alerts can be
+            defined on a metric only if this property is true.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricDefinition.MetricAvailabilities">
+            <summary>
+            Optional. Metric availability specifies the time grain (aggregation
+            interval) and the retention period for the metric in a timegrain.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricDefinition.MinimumAlertableTimeWindow">
+            <summary>
+            Optional. Specifies the minimum alertable time window for the
+            metric.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricDefinition.Name">
+            <summary>
+            Optional. Get the metric name.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricDefinition.Namespace">
+            <summary>
+            Optional. Get the metric namespace.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricDefinition.PrimaryAggregation">
+            <summary>
+            Optional. Metric primary aggregation specifies the default type for
+            the metrics. This indicates if the metric is of type average,
+            total, minimum or maximum.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricDefinition.ResourceIdSuffix">
+            <summary>
+            Optional. Metric resource id suffix specfies the sub-resource path
+            within the the resource for the metric.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricDefinition.Unit">
+            <summary>
+            Optional. The unit for the metric.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricDefinitionCollection">
+            <summary>
+            Represents collection of metric definitions.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricDefinitionCollection.#ctor">
+            <summary>
+            Initializes a new instance of the MetricDefinitionCollection class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricDefinitionCollection.Value">
+            <summary>
+            Optional. The values for the metric definitions.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricDefinitionListResponse">
+            <summary>
+            The List Metric Definitions operation response.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricDefinitionListResponse.#ctor">
+            <summary>
+            Initializes a new instance of the MetricDefinitionListResponse
+            class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricDefinitionListResponse.MetricDefinitionCollection">
+            <summary>
+            Optional. The retrieved metric definitions.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSetting">
+            <summary>
+            A metric setting get response.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSetting.#ctor">
+            <summary>
+            Initializes a new instance of the MetricSetting class.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSetting.#ctor(System.String,Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSettingValue)">
+            <summary>
+            Initializes a new instance of the MetricSetting class with required
+            arguments.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSetting.Namespace">
+            <summary>
+            Optional. The metric settings namespace. For endpoint monitoring
+            metrics the namespace value is WindowsAzure.Availability
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSetting.ResourceId">
+            <summary>
+            Required. The resource id of the service.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSetting.Value">
+            <summary>
+            Required. The metric settings value.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSettingCollection">
+            <summary>
+            A metric setting list response collection.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSettingCollection.#ctor">
+            <summary>
+            Initializes a new instance of the MetricSettingCollection class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSettingCollection.Value">
+            <summary>
+            Optional. The collection.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSettingListResponse">
+            <summary>
+            The list metric settings operation response.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSettingListResponse.#ctor">
+            <summary>
+            Initializes a new instance of the MetricSettingListResponse class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSettingListResponse.MetricSettingCollection">
+            <summary>
+            Optional. The retrieved metric settings.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSettingsPutParameters">
+            <summary>
+            Parameters supplied to the Put Metric Settings operation.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSettingsPutParameters.#ctor">
+            <summary>
+            Initializes a new instance of the MetricSettingsPutParameters class.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSettingsPutParameters.#ctor(Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSetting)">
+            <summary>
+            Initializes a new instance of the MetricSettingsPutParameters class
+            with required arguments.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricSettingsPutParameters.MetricSetting">
+            <summary>
+            Required. The metric setting.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValue">
+            <summary>
+            Represents a metric value.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValue.#ctor">
+            <summary>
+            Initializes a new instance of the MetricValue class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValue.Annotation">
+            <summary>
+            Optional. Specifies annotation for the metric.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValue.Average">
+            <summary>
+            Optional. Specifies the average value in the time interval.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValue.Count">
+            <summary>
+            Optional. Specifies the sample count in the time interval. Can be
+            used to determine the number of values that contributed to the
+            average value.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValue.Maximum">
+            <summary>
+            Optional. Specifies the maximum value in the time interval.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValue.Minimum">
+            <summary>
+            Optional. Specifies the minimum value in the time interval.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValue.Timestamp">
+            <summary>
+            Optional. The timestamp for the metric value.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValue.Total">
+            <summary>
+            Optional. Specifies the total value in the time interval.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValueListResponse">
+            <summary>
+            The List Metric values operation response.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValueListResponse.#ctor">
+            <summary>
+            Initializes a new instance of the MetricValueListResponse class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValueListResponse.MetricValueSetCollection">
+            <summary>
+            Optional. The retrieved metric value sets.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValueSet">
+            <summary>
+            A metric value set represents a set of metric values in a time period.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValueSet.#ctor">
+            <summary>
+            Initializes a new instance of the MetricValueSet class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValueSet.DisplayName">
+            <summary>
+            Optional. Metric display name.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValueSet.EndTime">
+            <summary>
+            Optional. The end time in UTC for the metric queried.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValueSet.MetricValues">
+            <summary>
+            Optional. Metric values.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValueSet.Name">
+            <summary>
+            Optional. Metric name.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValueSet.Namespace">
+            <summary>
+            Optional. Metric namespace.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValueSet.PrimaryAggregation">
+            <summary>
+            Optional. Metric primary aggregation.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValueSet.StartTime">
+            <summary>
+            Optional. The start time in UTC for the metric queried.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValueSet.TimeGrain">
+            <summary>
+            Optional. The time grain specifies the aggregation period of the
+            metric value.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValueSet.Unit">
+            <summary>
+            Optional. Metric unit.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValueSetCollection">
+            <summary>
+            The collection of metric value sets.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValueSetCollection.#ctor">
+            <summary>
+            Initializes a new instance of the MetricValueSetCollection class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.MetricValueSetCollection.Value">
+            <summary>
+            Optional. The collection.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.NameConfig">
+            <summary>
+            An availability metric name config.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.NameConfig.#ctor">
+            <summary>
+            Initializes a new instance of the NameConfig class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.NameConfig.DisplayName">
+            <summary>
+            Optional. Availability metric name config display name.
+            </summary>
+        </member>
+        <member name="P:Microsoft.WindowsAzure.Management.Monitoring.Metrics.Models.NameConfig.Name">
+            <summary>
+            Optional. Availability metric name config name.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Models.EndpointMonitoringLocation">
+            <summary>
+            Endpoint monitoring location.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Models.EndpointMonitoringLocation.USChicagoIL">
+            <summary>
+            Location - Chicago, IL USA.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Models.EndpointMonitoringLocation.USSanAntonioTX">
+            <summary>
+            Location - San Antonio, TX USA.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Models.EndpointMonitoringLocation.USSanJoseCA">
+            <summary>
+            Location - San Jose, CA USA.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Models.EndpointMonitoringLocation.USAshburnVA">
+            <summary>
+            Location - Ashburn, VA USA.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Models.EndpointMonitoringLocation.IEDublin">
+            <summary>
+            Location - Dublin, Ireland.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Models.EndpointMonitoringLocation.NLAmsterdam">
+            <summary>
+            Location - Amsterdam, Netherlands.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Models.EndpointMonitoringLocation.HKHongkong">
+            <summary>
+            Location - Hongkong.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Models.EndpointMonitoringLocation.SGSingapore">
+            <summary>
+            Location - Singapore.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Models.MetricNamespace">
+            <summary>
+            Metric namespace value.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Models.MetricNamespace.None">
+            <summary>
+            Empty namespace.
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Models.MetricNamespace.EndpointMonitoring">
+            <summary>
+            Endpoint monitoring metric namespace.
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Utilities.AutoscaleMetricSourceBuilder">
+            <summary>
+            Use this class to build the metric source for autoscale metric trigger.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.AutoscaleMetricSourceBuilder.BuildCloudServiceMetricSource(System.String,System.String,System.Boolean)">
+            <summary>
+            Build the metric source of a cloud service role.
+            </summary>
+            <param name="cloudServiceName">The cloud service name.</param>
+            <param name="roleName">The role name</param>
+            <param name="isProductionSlot">A flag that determines whether deployment is in production or staging slot.</param>
+            <returns>The autoscale metric source.</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.AutoscaleMetricSourceBuilder.BuildCloudServiceMetricSource(System.String,System.String,System.String,System.Boolean)">
+            <summary>
+            Build the metric source of a cloud service role instance.
+            </summary>
+            <param name="cloudServiceName">The cloud service name.</param>
+            <param name="roleName">The role name</param>
+            <param name="roleInstanceName">The role instance name</param>
+            <param name="isProductionSlot">A flag that determines whether deployment is in production or staging slot.</param>
+            <returns>The autoscale metric source.</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.AutoscaleMetricSourceBuilder.BuildVirtualMachineMetricSource(System.String,System.String)">
+            <summary>
+            Build the metric source of a virtual machine resource.
+            </summary>
+            <param name="virtualMachineName">The virtual machine name.</param>
+            <param name="availabilitySetName">The availability set name.</param>
+            <returns>The metric source.</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.AutoscaleMetricSourceBuilder.BuildStorageQueueMetricSource(System.String,System.String)">
+            <summary>
+            Build the metric source of a storage queue resource.
+            </summary>
+            <param name="storageAccountName">The storage account name.</param>
+            <param name="queueName">The queue name.</param>
+            <returns>The metric source.</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.AutoscaleMetricSourceBuilder.BuildStorageServiceMetricSource(System.String,System.String)">
+            <summary>
+            Build the metric source of a storage resource.
+            </summary>
+            <param name="storageAccountName">The storage account name.</param>
+            <param name="resourceType">The resource type.</param>
+            <returns>The metric source.</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.AutoscaleMetricSourceBuilder.BuildStorageApiMetricSource(System.String,System.String,System.String)">
+            <summary>
+            Build the metric source of a storage resource.
+            </summary>
+            <param name="storageAccountName">The storage account name.</param>
+            <param name="resourceType">The resource type.</param>
+            <param name="apiName">The API name.</param>
+            <returns>The metric source.</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.AutoscaleMetricSourceBuilder.BuildMobileServiceMetricSource(System.String)">
+            <summary>
+            Build the metric source of a mobile service resource.
+            </summary>
+            <param name="mobileServiceName">The mobile service name.</param>
+            <returns>The metric source.</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.AutoscaleMetricSourceBuilder.BuildWebSiteMetricSource(System.String)">
+            <summary>
+            Build the metric source of a website resource.
+            </summary>
+            <param name="webspaceName">The web space name.</param>
+            <returns>The metric source.</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.AutoscaleMetricSourceBuilder.BuildWebSiteMetricSource(System.String,System.String)">
+            <summary>
+            Build the metric source of a website resource.
+            </summary>
+            <param name="webspaceName">The web space name.</param>
+            <param name="websiteName">The website name.</param>
+            <returns>The metric source.</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.AutoscaleMetricSourceBuilder.BuildServiceBusMetricSource(System.String,System.String,System.String)">
+            <summary>
+            Build the metric source of a servicebus resource.
+            </summary>
+            <param name="servicebusNamespace">The service bus namespace.</param>
+            <param name="resourceType">The resource type.</param>
+            <param name="resourceName">The resource name</param>
+            <returns>The metric source.</returns>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Utilities.AutoscaleResourceIdBuilder">
+            <summary>
+            Use this class to build resource id instances of various Azure resources for autoscale.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.AutoscaleResourceIdBuilder.BuildWebSiteResourceId(System.String,System.String)">
+            <summary>
+            Builds the resource id of the web site resource to use in Autoscale API.
+            </summary>
+            <param name="webspaceName">The web space name.</param>
+            <param name="serverFarmName">The server farm name.</param>
+            <returns>The resource id.</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.AutoscaleResourceIdBuilder.BuildMobileServiceResourceId(System.String)">
+            <summary>
+            Build the resource id of the mobile service resource to use in Autoscale API.
+            </summary>
+            <param name="mobileServiceName">The mobile service name.</param>
+            <returns>The resource id</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.AutoscaleResourceIdBuilder.BuildVirtualMachineResourceId(System.String,System.String)">
+            <summary>
+            Builds the resource id of the virtual machine resource.
+            </summary>
+            <param name="virtualMachineName">The virtual machine name.</param>
+            <param name="availabilitySetName">The availability set name.</param>
+            <returns>The resource id.</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.AutoscaleResourceIdBuilder.BuildCloudServiceResourceId(System.String,System.String,System.Boolean)">
+            <summary>
+            Build the resource id of the cloud service resource to use in Autoscale API.
+            </summary>
+            <param name="cloudServiceName">The cloud service name.</param>
+            <param name="roleName">The role name.</param>
+            <param name="isProductionSlot">A value indicating whether the
+            deployment slot is a production slot.</param>
+            <returns>The resource id.</returns>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Utilities.Constants.ServiceBusResourceType">
+            <summary>
+            Service bus resource types
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Utilities.Constants.ServiceBusResourceType.Topics">
+            <summary>
+            Topics resource type
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Utilities.Constants.ServiceBusResourceType.Queues">
+            <summary>
+            Queues resource type
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Utilities.Constants.ServiceBusResourceType.NotificationHubs">
+            <summary>
+            Notification Hub resource type
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Utilities.Constants.StorageServiceType">
+            <summary>
+            Storage service types
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Utilities.Constants.StorageServiceType.Blob">
+            <summary>
+            Blob service type
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Utilities.Constants.StorageServiceType.Table">
+            <summary>
+            Table service type
+            </summary>
+        </member>
+        <member name="F:Microsoft.WindowsAzure.Management.Monitoring.Utilities.Constants.StorageServiceType.Queue">
+            <summary>
+            Queue service type
+            </summary>
+        </member>
+        <member name="T:Microsoft.WindowsAzure.Management.Monitoring.Utilities.ResourceIdBuilder">
+            <summary>
+            Use this class to build resource id instances of various Azure resources.
+            </summary>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.ResourceIdBuilder.BuildCloudServiceResourceId(System.String,System.String,System.String,System.String)">
+            <summary>
+            Build the resource id of the compute resource.
+            </summary>
+            <param name="cloudServiceName">The cloud service name.</param>
+            <param name="deploymentName">The deployment name</param>
+            <param name="roleName">The role name.</param>
+            <param name="roleInstanceId">The role instance id</param>
+            <returns>The resource id.</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.ResourceIdBuilder.BuildVirtualMachineResourceId(System.String,System.String,System.String,System.String)">
+            <summary>
+            Builds the resource id of the virtual machine resource.
+            </summary>
+            <param name="cloudServiceName">The cloud service name.</param>
+            <param name="deploymentName">The deployment name.</param>
+            <param name="roleName">The role name.</param>
+            <param name="roleInstanceId">The role instance id.</param>
+            <returns>The resource id.</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.ResourceIdBuilder.BuildStorageResourceId(System.String,System.String)">
+            <summary>
+            Builds the resource id of the storage resource.
+            </summary>
+            <param name="storageAccountName">The storage account name.</param>
+            <param name="service">The storage service name. Blob, Table and Queue are the supported service names.</param>
+            <returns>The resource id.</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.ResourceIdBuilder.BuildMobileServiceResourceId(System.String)">
+            <summary>
+            Build the resource id of the mobile service resource.
+            </summary>
+            <param name="mobileServiceName">The mobile service name.</param>
+            <returns>The resource id</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.ResourceIdBuilder.BuildWebSiteResourceId(System.String,System.String)">
+            <summary>
+            Builds the resource id of the web site resource.
+            </summary>
+            <param name="webspaceName">The web space name.</param>
+            <param name="websiteName">The web site name.</param>
+            <returns>The resource id.</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.ResourceIdBuilder.BuildHdInsightResourceId(System.String,System.String)">
+            <summary>
+            Builds the resource id of the HD Insight resource.
+            </summary>
+            <param name="regionName">The resion name.</param>
+            <param name="resourceName">The resource name.</param>
+            <returns>The resource id.</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.ResourceIdBuilder.BuildServiceBusResourceId(System.String,System.String,System.String)">
+            <summary>
+            Builds the resource id of the service bus resource.
+            </summary>
+            <param name="servicebusNamespace">The service bus namespace.</param>
+            <param name="resourceType">The resource type.</param>
+            <param name="resourceName">The resource name</param>
+            <returns>The resource id.</returns>
+        </member>
+        <member name="M:Microsoft.WindowsAzure.Management.Monitoring.Utilities.ResourceIdBuilder.BuildServiceBusTopicSubscriptionResourceId(System.String,System.String,System.String)">
+            <summary>
+            Builds the resource id of the service bus topic subscription.
+            </summary>
+            <param name="servicebusNamespace">The service bus namespace.</param>
+            <param name="topicName">The topic name.</param>
+            <param name="subscriptionName">The subscription name.</param>
+            <returns>The resource id.</returns>
+        </member>
+    </members>
+</doc>
