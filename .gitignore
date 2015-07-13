@@ -3,4 +3,8 @@ AutomationISE/bin/
 AutomationISE/obj/
 AutomationISE/packages/
 AutomationISE/AutomationISE.csproj.user
+# exclude backup files
 *~
+# exclude binaries from the PS module
+AzureAutomationAuthoringToolkit/ISEaddon/*
+!AzureAutomationAuthoringToolkit/ISEaddon/*.txt
