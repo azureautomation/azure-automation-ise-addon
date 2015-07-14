@@ -14,13 +14,13 @@ The Azure Automation PowerShell ISE add on makes it easy to author runbook in yo
 
 
 ## Installation
-To install the latest build of the add-on, follow the instructions for our [initial release](https://github.com/azureautomation/azure-automation-ise-addon/releases/tag/v0.1.0)
+To install the latest build of the add-on, follow the instructions for our [initial release](https://github.com/azureautomation/azure-automation-ise-addon/releases/tag/v0.1.0).
 
 To build from source:
 * [Download](https://github.com/azureautomation/azure-automation-ise-addon/archive/master.zip) or clone this repository, and extract from zip if necessary
-* Open AutomationISE/AutomationISE.sln in Visual Studio
+* Open `AutomationISE/AutomationISE.sln` in Visual Studio
 * Build the solution. NuGet will pull the required packages.
-* Put the resulting binaries in the AzureAutomationAuthoringToolkit/ISEaddon directory
+* Put the resulting binaries in the `AzureAutomationAuthoringToolkit/ISEaddon` directory
 * Open the PowerShell ISE, and run the `Install-AzureAutomationIseAddOn.ps1` PowerShell script
 * The Azure Automation ISE add-on should appear on the right side of the PowerShell ISE:
 ![alt text](https://github.com/azureautomation/azure-automation-ise-addon/blob/master/Screenshots/Automation-Add-On.png " Azure Automation Add-On")
