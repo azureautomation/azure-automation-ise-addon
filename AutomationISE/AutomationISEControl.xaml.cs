@@ -106,7 +106,7 @@ namespace AutomationISE
         {
             ButtonDownloadAsset.IsEnabled = enabled;
             ButtonEditAsset.IsEnabled = enabled;
-            ButtonSyncAssets.IsEnabled = enabled;
+            ButtonDeleteAssets.IsEnabled = enabled;
             ButtonUploadAsset.IsEnabled = enabled;
         }
 
@@ -114,6 +114,52 @@ namespace AutomationISE
         {
             IList items = (System.Collections.IList)assetsListView.SelectedItems;
             return items.Cast<AutomationAsset>().ToList<AutomationAsset>();
+        }
+
+        public async Task<SortedSet<AutomationAsset>> getAssetsInfo()
+        {
+            return (SortedSet<AutomationAsset>)await AutomationAssetManager.GetAll(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+        }
+
+        public async Task<SortedSet<AutomationAsset>> getAssetsOfType(String type)
+        {
+            var assets = await getAssetsInfo();
+
+            var assetsOfType = new SortedSet<AutomationAsset>();
+            foreach (var asset in assets)
+            {
+                if (asset.GetType().Name == type)
+                {
+                    assetsOfType.Add(asset);
+                }
+            }
+
+            return assetsOfType;
+        }
+
+        public async Task downloadAllAssets()
+        {
+            await AutomationAssetManager.DownloadAllFromCloud(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+        }
+
+        public void downloadAssets(ICollection<AutomationAsset> assetsToDownload)
+        {
+            AutomationAssetManager.DownloadFromCloud(assetsToDownload, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+        }
+
+        public void uploadAssets(ICollection<AutomationAsset> assetsToUpload)
+        {
+            AutomationAssetManager.UploadToCloud(assetsToUpload, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+
+            // Since the cloud assets uploaded will have a last modified time of now, causing them to look newer than their local counterparts,
+            // download the assets after upload to force last modified time between local and cloud to be the same, showing them as in sync (which they are)
+            System.Threading.Thread.Sleep(1000); // TODO: seems to be a race condition. If we don't wait a bit first, the old asset values get downloaded instead of the just updated ones
+            downloadAssets(assetsToUpload);
+        }
+
+        public void deleteAssets(ICollection<AutomationAsset> assetsToDelete)
+        {
+            AutomationAssetManager.Delete(assetsToDelete, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
         }
 
         public void startContinualGet() {
@@ -147,19 +193,19 @@ namespace AutomationISE
 
                 if (selectedAssetType == AutomationISE.Model.Constants.assetVariable)
                 {
-                    assetsListView.ItemsSource = await iseClient.GetAssetsOfType("AutomationVariable");
+                    assetsListView.ItemsSource = await getAssetsOfType("AutomationVariable");
                 }
                 else if (selectedAssetType == AutomationISE.Model.Constants.assetCredential)
                 {
-                    assetsListView.ItemsSource = await iseClient.GetAssetsOfType("AutomationCredential");
+                    assetsListView.ItemsSource = await getAssetsOfType("AutomationCredential");
                 }
                 else if (selectedAssetType == AutomationISE.Model.Constants.assetConnection)
                 {
-                    assetsListView.ItemsSource = await iseClient.GetAssetsOfType("AutomationConnection");
+                    assetsListView.ItemsSource = await getAssetsOfType("AutomationConnection");
                 }
                 else if (selectedAssetType == AutomationISE.Model.Constants.assetCertificate)
                 {
-                    assetsListView.ItemsSource = await iseClient.GetAssetsOfType("AutomationCertificate");
+                    assetsListView.ItemsSource = await getAssetsOfType("AutomationCertificate");
                 }
             }
             catch (Exception exception)
@@ -257,7 +303,7 @@ namespace AutomationISE
                     if (!iseClient.AccountWorkspaceExists())
                     {
                         UpdateStatusBox(configurationStatusTextBox, "Downloading assets...");
-                        await iseClient.DownloadAllAssets();
+                        await downloadAllAssets();
                         UpdateStatusBox(configurationStatusTextBox, "Assets downloaded");
                     }
                     /* Update PowerShell Module */
@@ -350,13 +396,19 @@ namespace AutomationISE
 
         private void ButtonDownloadAsset_Click(object sender, RoutedEventArgs e)
         {
-            iseClient.DownloadAssets(getSelectedAssets());
+            downloadAssets(getSelectedAssets());
             refreshAssets();
         }
 
         private void ButtonUploadAsset_Click(object sender, RoutedEventArgs e)
         {
-            iseClient.UploadAssets(getSelectedAssets());
+            uploadAssets(getSelectedAssets());
+            refreshAssets();
+        }
+
+        private void ButtonDeleteAsset_Click(object sender, RoutedEventArgs e)
+        {
+            deleteAssets(getSelectedAssets());
             refreshAssets();
         }
 

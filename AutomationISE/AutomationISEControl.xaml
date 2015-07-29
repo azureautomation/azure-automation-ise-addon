@@ -102,7 +102,7 @@
                     <Button x:Name="ButtonRefreshAssetList" Grid.Column="2" Grid.Row="2" Margin="5,10,5,0" Content="Refresh" Click="ButtonRefreshAssetList_Click" />
                     <Button x:Name="ButtonDownloadAsset" Grid.Column="0" Grid.Row="3" Margin="5,10,5,0" Content="Download" Click="ButtonDownloadAsset_Click" />
                     <Button x:Name="ButtonUploadAsset" Grid.Column="1" Grid.Row="3" Margin="5,10,5,0" Content="Upload" Click="ButtonUploadAsset_Click" />
-                    <Button x:Name="ButtonSyncAssets" Grid.Column="2" Grid.Row="3" Margin="5,10,5,0" Content="Sync" />
+                    <Button x:Name="ButtonDeleteAssets" Grid.Column="2" Grid.Row="3" Margin="5,10,5,0" Content="Delete" Click="ButtonDeleteAsset_Click" />
                 </Grid>
             </TabItem>
             <TabItem x:Name="feedbackTab" Header="Give Feedback">

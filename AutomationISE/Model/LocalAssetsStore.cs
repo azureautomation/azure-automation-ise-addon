@@ -24,91 +24,96 @@ namespace AutomationISE.Model
 {
     public class LocalAssetsStore
     {
-        public static void Set(String workspacePath, ICollection<AutomationAsset> newAssets)
+        private static AssetJson FindMatchingLocalAsset(LocalAssets localAssets, AutomationAsset asset)
+        {
+            List<AssetJson> assetJsonList = new List<AssetJson>();
+            
+            if (asset is AutomationVariable)
+            {
+                assetJsonList.AddRange(localAssets.Variables);
+            }
+            else if (asset is AutomationCredential)
+            {
+                assetJsonList.AddRange(localAssets.PSCredentials);
+            }
+            else if (asset is AutomationConnection)
+            {
+                assetJsonList.AddRange(localAssets.Connections);
+            }
+
+            foreach (var currentLocalAsset in assetJsonList)
+            {
+                if (asset.Name == currentLocalAsset.Name)
+                {
+                    return currentLocalAsset;
+                }
+            }
+
+            return null;
+        }
+
+        // updates the local assets, either removing (if replace = false) or adding/replacing (if replace = true) the specified assets
+        private static void Set(String workspacePath, ICollection<AutomationAsset> assetsToAffect, bool replace)
         {
             LocalAssets localAssets = LocalAssetsStore.Get(workspacePath);
 
-            // add / update variables
-            foreach (var newAsset in newAssets)
+            foreach (var assetToAffect in assetsToAffect)
             {
-                if (!(newAsset is AutomationVariable))
-                {
-                    continue;
-                }
+                AssetJson assetToDelete = LocalAssetsStore.FindMatchingLocalAsset(localAssets, assetToAffect);
 
-                VariableJson assetToDelete = null;
-                foreach (var currentLocalAsset in localAssets.Variables)
+                if (assetToAffect is AutomationVariable)
                 {
-                    if (newAsset.Name == currentLocalAsset.Name)
+                    if (assetToDelete != null)
                     {
-                        assetToDelete = currentLocalAsset;
-                        break;
+                        localAssets.Variables.Remove((VariableJson)assetToDelete);
+                    }
+
+                    if (replace)
+                    {
+                        localAssets.Variables.Add(new VariableJson((AutomationVariable)assetToAffect));
                     }
                 }
 
-                if (assetToDelete != null)
+                else if (assetToAffect is AutomationCredential)
                 {
-                    localAssets.Variables.Remove(assetToDelete);
-                }
-
-                localAssets.Variables.Add(new VariableJson((AutomationVariable)newAsset));
-            }
-
-            // add / update credentials
-            foreach (var newAsset in newAssets)
-            {
-                if (!(newAsset is AutomationCredential))
-                {
-                    continue;
-                }
-
-                CredentialJson assetToDelete = null;
-                foreach (var currentLocalAsset in localAssets.PSCredentials)
-                {
-                    if (newAsset.Name == currentLocalAsset.Name)
+                    if (assetToDelete != null)
                     {
-                        assetToDelete = currentLocalAsset;
-                        break;
+                        localAssets.PSCredentials.Remove((CredentialJson)assetToDelete);
+                    }
+
+                    if (replace)
+                    {
+                        localAssets.PSCredentials.Add(new CredentialJson((AutomationCredential)assetToAffect));
                     }
                 }
 
-                if (assetToDelete != null)
+                else if (assetToAffect is AutomationConnection)
                 {
-                    localAssets.PSCredentials.Remove(assetToDelete);
-                }
-
-                localAssets.PSCredentials.Add(new CredentialJson((AutomationCredential)newAsset));
-            }
-
-            // add / update connections
-            foreach (var newAsset in newAssets)
-            {
-                if (!(newAsset is AutomationConnection))
-                {
-                    continue;
-                }
-
-                ConnectionJson assetToDelete = null;
-                foreach (var currentLocalAsset in localAssets.Connections)
-                {
-                    if (newAsset.Name == currentLocalAsset.Name)
+                    if (assetToDelete != null)
                     {
-                        assetToDelete = currentLocalAsset;
-                        break;
+                        localAssets.Connections.Remove((ConnectionJson)assetToDelete);
+                    }
+
+                    if (replace)
+                    {
+                        localAssets.Connections.Add(new ConnectionJson((AutomationConnection)assetToAffect));
                     }
                 }
-
-                if (assetToDelete != null)
-                {
-                    localAssets.Connections.Remove(assetToDelete);
-                }
-
-                localAssets.Connections.Add(new ConnectionJson((AutomationConnection)newAsset));
             }
 
             DirectoryInfo dir = Directory.CreateDirectory(workspacePath);
             UnsecureLocalAssetsContainerJson.Set(workspacePath, localAssets);
             SecureLocalAssetsContainerJson.Set(workspacePath, localAssets); 
+        }
+
+        public static void Add(String workspacePath, ICollection<AutomationAsset> newAssets)
+        {
+            LocalAssetsStore.Set(workspacePath, newAssets, true);
+        }
+
+        public static void Delete(String workspacePath, ICollection<AutomationAsset> assetsToDelete)
+        {
+            LocalAssetsStore.Set(workspacePath, assetsToDelete, false);
         }
         
         public static LocalAssets Get(String workspacePath)

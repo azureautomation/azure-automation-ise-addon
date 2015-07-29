@@ -123,47 +123,6 @@ namespace AutomationISE.Model
             return resourceGroupResult.ResourceGroups;
         }
 
-        private async Task<SortedSet<AutomationAsset>> GetAssetsInfo()
-        {
-            return (SortedSet<AutomationAsset>)await AutomationAssetManager.GetAll(currWorkspace, automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
-        }
-
-        public async Task<SortedSet<AutomationAsset>> GetAssetsOfType(String type)
-        {
-            var assets = await GetAssetsInfo();
-
-            var assetsOfType = new SortedSet<AutomationAsset>();
-            foreach (var asset in assets)
-            {
-                if (asset.GetType().Name == type)
-                {
-                    assetsOfType.Add(asset);
-                }
-            }
-
-            return assetsOfType;
-        }
-
-        public async Task DownloadAllAssets()
-        {
-           await AutomationAssetManager.DownloadAllFromCloud(currWorkspace, automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
-        }
-
-        public void DownloadAssets(ICollection<AutomationAsset> assetsToDownload)
-        {
-            AutomationAssetManager.DownloadFromCloud(assetsToDownload, currWorkspace, automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
-        }
-
-        public void UploadAssets(ICollection<AutomationAsset> assetsToUpload)
-        {
-            AutomationAssetManager.UploadToCloud(assetsToUpload, automationManagementClient, accountResourceGroups[currAccount].Name, currAccount.Name);
-
-            // Since the cloud assets uploaded will have a last modified time of now, causing them to look newer than their local counterparts,
-            // download the assets after upload to force last modified time between local and cloud to be the same, showing them as in sync (which they are)
-            System.Threading.Thread.Sleep(1000); // TODO: seems to be a race condition. If we don't wait a bit first, the old asset values get downloaded instead of the just updated ones
-            this.DownloadAssets(assetsToUpload);
-        }
-
         public bool AccountWorkspaceExists()
         {
             return Directory.Exists(currWorkspace);

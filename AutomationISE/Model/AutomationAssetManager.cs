@@ -87,14 +87,34 @@ namespace AutomationISE.Model
             }
         }
 
-        public static async void Sync(ICollection<AutomationAsset> assetsToSync, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
-        {
-
-        }
-
         public static void SaveLocally(String localWorkspacePath, ICollection<AutomationAsset> assets)
         {
-            LocalAssetsStore.Set(localWorkspacePath, assets);
+            LocalAssetsStore.Add(localWorkspacePath, assets);
+        }
+
+        public static void Delete(ICollection<AutomationAsset> assetsToDelete, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
+        {
+            // delete locally
+            LocalAssetsStore.Delete(localWorkspacePath, assetsToDelete);
+
+            // delete from cloud
+            foreach (var assetToDelete in assetsToDelete)
+            {
+                if (assetToDelete.LastModifiedCloud == null)
+                {
+                    // asset is local only, no need to delete it from cloud
+                    continue;
+                }
+                
+                if (assetToDelete is AutomationVariable)
+                {
+                    automationApi.Variables.Delete(resourceGroupName, automationAccountName, assetToDelete.Name); 
+                }
+                else if (assetToDelete is AutomationCredential)
+                {
+                    automationApi.PsCredentials.Delete(resourceGroupName, automationAccountName, assetToDelete.Name);
+                }
+            }
         }
 
         public static async Task<ISet<AutomationAsset>> GetAll(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
