@@ -272,12 +272,14 @@ function Set-AutomationVariable {
         $LocalAssets.Variable | ForEach-Object {
             if($_.Name -eq $Name) {
                 $_.Value = $Value
+                $_.LastModified = Get-Date -Format u
             }
         }
 
         $SecureLocalAssets.Variable | ForEach-Object {
             if($_.Name -eq $Name) {
                 $_.Value = $Value
+                $_.LastModified = Get-Date -Format u
             }
         }
 
