@@ -147,13 +147,12 @@ namespace AutomationISE
             AutomationAssetManager.DownloadFromCloud(assetsToDownload, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
         }
 
-        public void uploadAssets(ICollection<AutomationAsset> assetsToUpload)
+        public async Task uploadAssets(ICollection<AutomationAsset> assetsToUpload)
         {
-            AutomationAssetManager.UploadToCloud(assetsToUpload, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            await AutomationAssetManager.UploadToCloud(assetsToUpload, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
 
             // Since the cloud assets uploaded will have a last modified time of now, causing them to look newer than their local counterparts,
             // download the assets after upload to force last modified time between local and cloud to be the same, showing them as in sync (which they are)
-            System.Threading.Thread.Sleep(1000); // TODO: seems to be a race condition. If we don't wait a bit first, the old asset values get downloaded instead of the just updated ones
             downloadAssets(assetsToUpload);
         }
 
@@ -400,9 +399,9 @@ namespace AutomationISE
             refreshAssets();
         }
 
-        private void ButtonUploadAsset_Click(object sender, RoutedEventArgs e)
+        private async void ButtonUploadAsset_Click(object sender, RoutedEventArgs e)
         {
-            uploadAssets(getSelectedAssets());
+            await uploadAssets(getSelectedAssets());
             refreshAssets();
         }
 

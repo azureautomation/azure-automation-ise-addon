@@ -51,7 +51,7 @@ namespace AutomationISE.Model
             AutomationAssetManager.SaveLocally(localWorkspacePath, assetsToSaveLocally);
         }
 
-        public static async void UploadToCloud(ICollection<AutomationAsset> assetsToUpload, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
+        public static async Task UploadToCloud(ICollection<AutomationAsset> assetsToUpload, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
         {
             var jss = new JavaScriptSerializer();
             
