@@ -307,7 +307,17 @@ namespace AutomationISE
                         UpdateStatusBox(configurationStatusTextBox, "Assets downloaded");
                     }
                     /* Update PowerShell Module */
-                    PSModuleConfiguration.UpdateModuleConfiguration(iseClient.currWorkspace);
+                    try
+                    {
+                        PSModuleConfiguration.UpdateModuleConfiguration(iseClient.currWorkspace);
+                    }
+                    catch
+                    {
+                        string message = "Could not configure the " + PSModuleConfiguration.ModuleData.ModuleName + " module.\r\n";
+                        message += "This module is required for your runbooks to run locally.\r\n";
+                        message += "Make sure it exists in your module path (env:PSModulePath).";
+                        MessageBox.Show(message);
+                    }
                     /* Update UI */
                     RunbooksListView.ItemsSource = runbooks;
                     ButtonRefreshAssetList.IsEnabled = true;
@@ -318,7 +328,7 @@ namespace AutomationISE
             }
             catch (Exception exception)
             {
-                var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
+                var detailsDialog = MessageBox.Show(exception.Message);
             }
 
         }
@@ -538,20 +548,24 @@ namespace AutomationISE
             AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
             RunbookDraft draft = await AutomationRunbookManager.GetRunbookDraft(selectedRunbook.Name, iseClient.automationManagementClient,
                     iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
-            IDictionary<string, RunbookParameter> draftParams = draft.Parameters;
-            if (draftParams.Count > 0)
+            //Job creation parameters
+            JobCreateParameters jobCreationParams = new JobCreateParameters();
+            jobCreationParams.Properties = new JobCreateProperties();
+            jobCreationParams.Properties.Runbook = new RunbookAssociationProperty();
+            jobCreationParams.Properties.Runbook.Name = selectedRunbook.Name;
+            if (draft.Parameters.Count > 0)
             {
                 /* User needs to specify values for them */
-                RunbookParamDialog paramDialog = new RunbookParamDialog(draftParams);
+                RunbookParamDialog paramDialog = new RunbookParamDialog(draft.Parameters);
                 if (paramDialog.ShowDialog() == true)
-                {
-                    /* start the test job with the specified params */
-                }
+                    jobCreationParams.Properties.Parameters = paramDialog.paramValues;
+                else
+                    return;
             }
-            else
-            {
-                /* start the test job */
-            }
+            /* start the test job */
+            JobCreateResponse jobResponse = await iseClient.automationManagementClient.Jobs.CreateAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name, 
+                iseClient.currAccount.Name, jobCreationParams, new CancellationToken());
+            MessageBox.Show("Started Job with ID: " + jobResponse.Job.Properties.JobId);
         }
     }
 }

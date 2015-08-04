@@ -21,17 +21,17 @@ namespace AutomationISE
     /// </summary>
     public partial class RunbookParamDialog : Window
     {
-        public string ExampleResult
-        {
-            get { return "something from UI element"; }
-        }
+        private IDictionary<string, RunbookParameter> parameterDict;
+        private IDictionary<string, string> _paramValues;
+        public IDictionary<string, string> paramValues { get { return _paramValues; } }
 
         public RunbookParamDialog(IDictionary<string, RunbookParameter> parameterDict)
         {
             InitializeComponent();
-            AddParamForms(parameterDict);
+            this.parameterDict = parameterDict;
+            AddParamForms();
         }
-        private void AddParamForms(IDictionary<string, RunbookParameter> parameterDict)
+        private void AddParamForms()
         {
             /* Update the UI Grid to fit everything */
             for (int i = 0; i < parameterDict.Count * 2; i++)
@@ -56,6 +56,7 @@ namespace AutomationISE
                 Grid.SetColumn(parameterTypeLabel, 1);
                 /* Input field */
                 TextBox parameterValueBox = new TextBox();
+                parameterValueBox.Name = paramName;
                 parameterValueBox.MinWidth = 200;
                 parameterValueBox.Margin = new System.Windows.Thickness(0,5,5,5);
                 Grid.SetColumn(parameterValueBox, 0);
@@ -69,9 +70,33 @@ namespace AutomationISE
             }
         }
 
+        /* 
+         * This method assumes that:
+         *   1. The window has already been populated with the parameter fields
+         *   2. Each input field (text box) has the same name as the parameter it is for
+         * 
+         */
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
             /* Validate parameters and return */
+            _paramValues = new Dictionary<string, string>();
+            string validationErrors = null;
+            foreach (UIElement element in ParametersGrid.Children)
+            {
+                try
+                {
+                    TextBox inputField = (TextBox)element;
+                    if (String.IsNullOrEmpty(inputField.Text) && parameterDict[inputField.Name].IsMandatory == true)
+                        validationErrors += "A value was not provided for the required parameter:  " + inputField.Name + "\r\n";
+                    if (!String.IsNullOrEmpty(inputField.Text))
+                        _paramValues.Add(inputField.Name, inputField.Text);
+                }
+                catch { /* not an input field */ }
+            }
+            if (String.IsNullOrEmpty(validationErrors))
+                this.DialogResult = true;
+            else
+                System.Windows.Forms.MessageBox.Show("Could not submit test job. The following errors were found:\r\n\r\n" + validationErrors);
         }
     }
 }
