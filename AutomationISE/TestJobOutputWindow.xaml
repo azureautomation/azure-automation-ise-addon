@@ -1,7 +1,7 @@
 ﻿<Window x:Class="AutomationISE.TestJobOutputWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Test Job Output" Height="300" Width="300">
+        Title="Test Job" Height="300" Width="Auto">
     <Grid Margin="15,15,15,15">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -13,8 +13,8 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBox Name="OutputTextBox" Grid.Row="1" Grid.Column="0" Grid.RowSpan="4" Margin="0,0,0,0" TextWrapping="Wrap" BorderThickness="2"/>
-        <Label Grid.Row="0">Test Job Output</Label>
+        <Label Grid.Row="0">Test Job:</Label>
+        <TextBlock Name="OutputTextBlock" Grid.Row="1" Grid.Column="0" Grid.RowSpan="4" Margin="0,0,0,0" Padding="5" Width="Auto" Background="#FF012456" Foreground="White" FontFamily="Lucida Console"/>
         <Button Name="RefreshButton_Click" Grid.Column="1" Grid.Row="1" Margin="5,10,5,0" Click="RefreshJobButton_Click">Refresh</Button>
     </Grid>
 </Window>
