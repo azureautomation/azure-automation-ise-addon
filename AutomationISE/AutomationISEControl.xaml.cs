@@ -549,23 +549,31 @@ namespace AutomationISE
             RunbookDraft draft = await AutomationRunbookManager.GetRunbookDraft(selectedRunbook.Name, iseClient.automationManagementClient,
                     iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
             //Job creation parameters
-            JobCreateParameters jobCreationParams = new JobCreateParameters();
-            jobCreationParams.Properties = new JobCreateProperties();
-            jobCreationParams.Properties.Runbook = new RunbookAssociationProperty();
-            jobCreationParams.Properties.Runbook.Name = selectedRunbook.Name;
+            TestJobCreateParameters jobCreationParams = new TestJobCreateParameters();
+            jobCreationParams.RunbookName = selectedRunbook.Name;
             if (draft.Parameters.Count > 0)
             {
                 /* User needs to specify values for them */
                 RunbookParamDialog paramDialog = new RunbookParamDialog(draft.Parameters);
                 if (paramDialog.ShowDialog() == true)
-                    jobCreationParams.Properties.Parameters = paramDialog.paramValues;
+                    jobCreationParams.Parameters = paramDialog.paramValues;
                 else
                     return;
             }
             /* start the test job */
-            JobCreateResponse jobResponse = await iseClient.automationManagementClient.Jobs.CreateAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name, 
+            TestJobCreateResponse jobResponse = await iseClient.automationManagementClient.TestJobs.CreateAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name, 
                 iseClient.currAccount.Name, jobCreationParams, new CancellationToken());
-            MessageBox.Show("Started Job with ID: " + jobResponse.Job.Properties.JobId);
+            Debug.WriteLine(jobResponse.StatusCode);
+            if (jobResponse.StatusCode != System.Net.HttpStatusCode.Created)
+            {
+                //jobResponse.Properties.Status for more information?
+                MessageBox.Show("Error: job could not be started.");
+            }
+            else
+            {
+                TestJobOutputWindow jobWindow = new TestJobOutputWindow(jobCreationParams.RunbookName, jobResponse, iseClient);
+                jobWindow.Show();
+            }
         }
     }
 }

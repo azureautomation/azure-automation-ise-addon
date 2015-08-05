@@ -124,6 +124,9 @@
     <Compile Include="RunbookParamDialog.xaml.cs">
       <DependentUpon>RunbookParamDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="TestJobOutputWindow.xaml.cs">
+      <DependentUpon>TestJobOutputWindow.xaml</DependentUpon>
+    </Compile>
     <Page Include="AutomationISEControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -133,6 +136,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="RunbookParamDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="TestJobOutputWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
