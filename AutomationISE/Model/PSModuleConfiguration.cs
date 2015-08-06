@@ -17,13 +17,16 @@ namespace AutomationISE.Model
         {
             string modulePath = findModulePath();
             string configFilePath = System.IO.Path.Combine(modulePath, ModuleData.ConfigFileName);
+
             if (!File.Exists(configFilePath))
             {
                 Debug.WriteLine("Warning: a config file wasn't found in the module, so a new one will be created");
             }
+
             JavaScriptSerializer jss = new JavaScriptSerializer();
-            List<PathConfiguration> config = jss.Deserialize<List<PathConfiguration>>((File.ReadAllText(configFilePath)));
-            foreach (PathConfiguration pc in config)
+            List<PSModuleConfigurationItem> config = jss.Deserialize<List<PSModuleConfigurationItem>>((File.ReadAllText(configFilePath)));
+
+            foreach (PSModuleConfigurationItem pc in config)
             {
                 if (pc.Name.Equals(ModuleData.LocalAssetsPath_FieldName))
                 {
@@ -33,12 +36,17 @@ namespace AutomationISE.Model
                 {
                     pc.Value = System.IO.Path.Combine(workspace, ModuleData.SecureLocalAssetsFileName);
                 }
+                else if (pc.Name.Equals(ModuleData.EncryptionCertificateThumbprint_FieldName))
+                {
+                    pc.Value = "none";
+                }
                 else
                 {
                     Debug.WriteLine("Unknown configuration found: " + pc.Name);
                 }
             }
-            File.WriteAllText(configFilePath, jss.Serialize(config));
+
+            File.WriteAllText(configFilePath, jss.Serialize(config)); // TODO: use a friendly JSON formatter for serialization
         }
 
         private static string findModulePath()
@@ -54,8 +62,8 @@ namespace AutomationISE.Model
             }
             return null;
         }
-        
-        public class PathConfiguration
+
+        public class PSModuleConfigurationItem
         {
             public string Name { get; set; }
             public string Value { get; set; }
@@ -67,6 +75,7 @@ namespace AutomationISE.Model
             public const string ConfigFileName = "Config.json";
             public const string LocalAssetsPath_FieldName = "LocalAssetsPath";
             public const string SecureLocalAssetsPath_FieldName = "SecureLocalAssetsPath";
+            public const string EncryptionCertificateThumbprint_FieldName = "EncryptionCertificateThumbprint";
             public const string LocalAssetsFileName = "LocalAssets.json";
             public const string SecureLocalAssetsFileName = "SecureLocalAssets.json";
             public const string EnvPSModulePath = "PSModulePath";
