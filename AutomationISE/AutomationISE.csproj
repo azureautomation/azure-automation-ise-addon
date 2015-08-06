@@ -90,6 +90,7 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Net" />
     <Reference Include="System.Net.Http.Extensions, Version=2.2.22.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.Net.Http.2.2.22\lib\net45\System.Net.Http.Extensions.dll</HintPath>
@@ -120,6 +121,12 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RunbookParamDialog.xaml.cs">
+      <DependentUpon>RunbookParamDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="TestJobOutputWindow.xaml.cs">
+      <DependentUpon>TestJobOutputWindow.xaml</DependentUpon>
+    </Compile>
     <Page Include="AutomationISEControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -128,6 +135,14 @@
       <DependentUpon>AutomationISEControl.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="RunbookParamDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="TestJobOutputWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Model\AuthenticateHelper.cs" />

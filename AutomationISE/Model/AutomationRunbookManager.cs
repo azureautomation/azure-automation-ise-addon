@@ -91,6 +91,12 @@ namespace AutomationISE.Model
             }
             return result;
         }
+        
+        public static async Task<RunbookDraft> GetRunbookDraft(string runbookName, AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
+        {
+            RunbookDraftGetResponse response = await automationManagementClient.RunbookDraft.GetAsync(resourceGroupName, accountName, runbookName);
+            return response.RunbookDraft;
+        }
 
         private static void UpdateRunbookMetadata(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
         {
