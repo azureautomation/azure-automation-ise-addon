@@ -20,6 +20,89 @@ function _findObjectByName {
     }
 }
 
+function _DecryptValue {
+    param(
+        [object] $Value
+    )
+
+    $Configuration = Get-AzureAutomationAuthoringToolkitConfiguration
+
+    if($Value -isnot [string]) {
+        ## the local assets files store all encrypted values as strings, so if value is not a string, it is not an encrypted value.
+        ## in this case, return the raw value
+    
+        Write-Verbose "AzureAutomationAuthoringToolkit: Value is not encrypted. Returning raw value without decrypting"
+        return $Value
+    }
+    elseif($Configuration.EncryptionCertificateThumbprint -eq "none") {
+        Write-Verbose "AzureAutomationAuthoringToolkit: No encryption certificate specified. Returning raw value without decrypting"
+        return $Value
+    }
+    else {
+        $Thumbprint = $Configuration.EncryptionCertificateThumbprint
+        
+        Write-Verbose "AzureAutomationAuthoringToolkit: Decrypting encrypted value '$Value' using encryption certificate with thumbprint '$Thumbprint'"
+
+        if (Test-Path -Path Cert:\CurrentUser\My\$Thumbprint) {
+            $Cert = Get-Item -Path Cert:\CurrentUser\My\$Thumbprint
+            $Encrypted = [Convert]::FromBase64String($Value)
+            
+            try {
+                $Bytes = $Cert.PrivateKey.Decrypt($Encrypted, $True)
+                $EncryptedValue = [Text.Encoding]::UTF8.GetString($Bytes)
+
+                # the encrypted value is a JSON string (so that we can encrypt non-string types), so convert it back to a proper object
+                $EncryptedValue = ConvertFrom-Json -InputObject $EncryptedValue
+
+                return $EncryptedValue
+            }
+            catch {
+                Write-Warning "AzureAutomationAuthoringToolkit: Warning - Could not decrypt value '$Value' using encryption certificate with thumbprint '$Thumbprint'.
+                Returning raw value instead. Are you sure the value was encrypted with this certificate?"
+
+                return $Value 
+            }
+        }
+        else { 
+            throw "Encryption certificate with thumbprint '$Thumbprint' is not installed in the user cert store"
+        }
+    }
+}
+
+function _EncryptValue {
+    param(
+        [object] $Value
+    )
+
+    $Configuration = Get-AzureAutomationAuthoringToolkitConfiguration
+
+    if($Configuration.EncryptionCertificateThumbprint -eq "none") {
+        Write-Verbose "AzureAutomationAuthoringToolkit: No encryption certificate specified. Not encrypting value"
+        return $Value
+    }
+    else {
+        $Thumbprint = $Configuration.EncryptionCertificateThumbprint
+        
+        Write-Verbose "AzureAutomationAuthoringToolkit: Encrypting value using encryption certificate with thumbprint '$Thumbprint'"
+
+        if (Test-Path -Path Cert:\CurrentUser\My\$Thumbprint) {
+                       
+            # convert the value to a JSON string so that we don't lost type info when decrypting
+            $JsonValue = ConvertTo-Json -InputObject $Value -Depth 999
+
+            $Cert = Get-Item -Path Cert:\CurrentUser\My\$Thumbprint
+            $Bytes = [Text.Encoding]::UTF8.GetBytes($JsonValue)
+            $Encrypted = $Cert.PublicKey.Key.Encrypt($Bytes, $True)
+            $Value = [Convert]::ToBase64String($Encrypted)
+
+            return $Value
+        }
+        else { 
+            throw "Encryption certificate with thumbprint '$Thumbprint' is not installed in the user cert store"
+        }
+    }
+}
+
 <#
     .SYNOPSIS
         Removes the Azure Automation ISE add-on from the PowerShell ISE.
@@ -123,15 +206,18 @@ function Get-AzureAutomationAuthoringToolkitLocalAsset {
     }
 
     $Asset = _findObjectByName -ObjectArray $LocalAssets.$Type -Name $Name
+    $AssetWasInSecureLocalAssets = $False
 
     if($Asset) {
         Write-Verbose "AzureAutomationAuthoringToolkit: Found local value for $Type asset '$Name.'"
+        $AssetWasInSecureLocalAssets = $False
     }
     else {
         $Asset = _findObjectByName -ObjectArray $SecureLocalAssets.$Type -Name $Name
 
         if($Asset) {
             Write-Verbose "AzureAutomationAuthoringToolkit: Found secure local value for $Type asset '$Name.'"
+            $AssetWasInSecureLocalAssets = $True
         }
     }
 
@@ -140,7 +226,19 @@ function Get-AzureAutomationAuthoringToolkitLocalAsset {
             $AssetValue = Get-AzureAutomationAuthoringToolkitLocalCertificate -Name $Name -Thumbprint $Asset.Thumbprint
         }
         elseif($Type -eq "Variable") {
-            $AssetValue = $Asset.Value
+            
+            if($Asset.Value -eq $Null) {
+                Write-Warning "AzureAutomationAuthoringToolkit: Warning - Local Variable asset '$Name' has a value of null.
+                If this was not intended, update its value in your local assets. "
+            }
+            
+            if($AssetWasInSecureLocalAssets) {
+                $AssetValue = (_DecryptValue -Value $Asset.Value)
+            }
+            else {
+                $AssetValue = $Asset.Value
+            }
+
         }
         elseif($Type -eq "Connection") {
              # Convert PSCustomObject to Hashtable
@@ -155,10 +253,17 @@ function Get-AzureAutomationAuthoringToolkitLocalAsset {
             $AssetValue = $Temp
         }
         elseif($Type -eq "PSCredential") {
+            
+            if($Asset.Password -eq $Null) {
+                Write-Warning "AzureAutomationAuthoringToolkit: Warning - Local PSCredential asset '$Name' has a password value of null.
+                If this was not intended, update its password value in your local assets. "
+            }
+            
             $AssetValue = @{
                 Username = $Asset.Username
-                Password = $Asset.Password
+                Password = (_DecryptValue -Value $Asset.Password)
             }
+
         }
 
         Write-Output $AssetValue
@@ -175,8 +280,8 @@ function Get-AzureAutomationAuthoringToolkitLocalAsset {
 #>
 function Get-AzureAutomationAuthoringToolkitConfiguration {       
     $ConfigurationError = "AzureAutomationAuthoringToolkit: AzureAutomationAuthoringToolkit configuration defined in 
-    '$script:ConfigurationPath' is incorrect. Make sure the file exists, contains valid JSON, and contains 'LocalAssetsPath'
-    and 'SecureLocalAssetsPath' settings."
+    '$script:ConfigurationPath' is incorrect. Make sure the file exists, contains valid JSON, and contains 'LocalAssetsPath', 
+    'SecureLocalAssetsPath', and 'EncryptionCertificateThumbprint' settings."
 
     Write-Verbose "AzureAutomationAuthoringToolkit: Grabbing AzureAutomationAuthoringToolkit configuration."
 
@@ -196,7 +301,7 @@ function Get-AzureAutomationAuthoringToolkitConfiguration {
         $Configuration.$Key = $Value
     }
 
-    if(!($Configuration.LocalAssetsPath -and $Configuration.SecureLocalAssetsPath)) {
+    if(!($Configuration.LocalAssetsPath -and $Configuration.SecureLocalAssetsPath -and $Configuration.EncryptionCertificateThumbprint)) {
         throw $ConfigurationError
     }
 
@@ -278,7 +383,7 @@ function Set-AutomationVariable {
 
         $SecureLocalAssets.Variable | ForEach-Object {
             if($_.Name -eq $Name) {
-                $_.Value = $Value
+                $_.Value = (_EncryptValue -Value $Value)
                 $_.LastModified = Get-Date -Format u
             }
         }

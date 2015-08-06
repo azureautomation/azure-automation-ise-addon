@@ -6,5 +6,9 @@
     {
     	"Name": "SecureLocalAssetsPath",
     	"Value": "default"
+    },
+    {
+    	"Name": "EncryptionCertificateThumbprint",
+    	"Value": "none"
     }
 ]
