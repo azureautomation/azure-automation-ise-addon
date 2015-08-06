@@ -159,7 +159,36 @@ namespace AutomationISE
 
         public void deleteAssets(ICollection<AutomationAsset> assetsToDelete)
         {
-            AutomationAssetManager.Delete(assetsToDelete, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            bool deleteLocally = true;
+            bool deleteFromCloud = true;
+            
+            // when asset is only local or only in cloud, we know where they want to delete it from. But when asset is both local and cloud,
+            // they may not have meant to delete it from cloud, so ask them 
+            foreach (var assetToDelete in assetsToDelete)
+            {
+                if (assetToDelete.LastModifiedCloud != null && assetToDelete.LastModifiedLocal != null)
+                {
+                    var messageBoxResult = System.Windows.MessageBox.Show(
+                        "At least some of the selected assets have both local and cloud versions. Do you want to also delete the cloud versions of these assets?",
+                        "Delete Confirmation",
+                        System.Windows.MessageBoxButton.YesNo
+                    );
+
+                    if (messageBoxResult == MessageBoxResult.No)
+                    {
+                        deleteFromCloud = false;
+                    }
+                    else if (messageBoxResult == MessageBoxResult.Cancel)
+                    {
+                        deleteFromCloud = false;
+                        deleteLocally = false;
+                    }
+                        
+                    break;
+                }
+            }
+            
+            AutomationAssetManager.Delete(assetsToDelete, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, deleteLocally, deleteFromCloud);
         }
 
         public void startContinualGet() {

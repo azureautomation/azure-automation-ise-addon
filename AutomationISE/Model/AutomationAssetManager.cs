@@ -92,27 +92,31 @@ namespace AutomationISE.Model
             LocalAssetsStore.Add(localWorkspacePath, assets);
         }
 
-        public static void Delete(ICollection<AutomationAsset> assetsToDelete, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
+        public static void Delete(ICollection<AutomationAsset> assetsToDelete, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, bool deleteLocally, bool deleteFromCloud)
         {
-            // delete locally
-            LocalAssetsStore.Delete(localWorkspacePath, assetsToDelete);
-
-            // delete from cloud
-            foreach (var assetToDelete in assetsToDelete)
+            if (deleteLocally)
             {
-                if (assetToDelete.LastModifiedCloud == null)
+                LocalAssetsStore.Delete(localWorkspacePath, assetsToDelete);
+            }
+
+            if (deleteFromCloud)
+            {
+                foreach (var assetToDelete in assetsToDelete)
                 {
-                    // asset is local only, no need to delete it from cloud
-                    continue;
-                }
-                
-                if (assetToDelete is AutomationVariable)
-                {
-                    automationApi.Variables.Delete(resourceGroupName, automationAccountName, assetToDelete.Name); 
-                }
-                else if (assetToDelete is AutomationCredential)
-                {
-                    automationApi.PsCredentials.Delete(resourceGroupName, automationAccountName, assetToDelete.Name);
+                    if (assetToDelete.LastModifiedCloud == null)
+                    {
+                        // asset is local only, no need to delete it from cloud
+                        continue;
+                    }
+
+                    if (assetToDelete is AutomationVariable)
+                    {
+                        automationApi.Variables.Delete(resourceGroupName, automationAccountName, assetToDelete.Name);
+                    }
+                    else if (assetToDelete is AutomationCredential)
+                    {
+                        automationApi.PsCredentials.Delete(resourceGroupName, automationAccountName, assetToDelete.Name);
+                    }
                 }
             }
         }
