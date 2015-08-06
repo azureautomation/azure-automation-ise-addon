@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Management.Automation;
 using Microsoft.Azure.Management.Automation.Models;
 
+using System.Diagnostics;
+
 namespace AutomationISE.Model
 {
     /*
@@ -21,7 +23,6 @@ namespace AutomationISE.Model
             draftParams.Name = runbook.Name;
             //TODO: Read this from account location
             draftParams.Location = "East US 2";
-
             automationManagementClient.Runbooks.CreateOrUpdateWithDraft(resourceGroupName, accountName, draftParams);
             /* Update the runbook content from .ps1 file */
             RunbookDraftUpdateParameters draftUpdateParams = new RunbookDraftUpdateParameters()
@@ -47,10 +48,19 @@ namespace AutomationISE.Model
 
         public static async Task DownloadRunbook(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string workspace, string resourceGroupName, string accountName)
         {
-            RunbookContentResponse runbookContent = await automationManagementClient.Runbooks.ContentAsync(resourceGroupName, accountName, runbook.Name);
+            RunbookGetResponse response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, accountName, runbook.Name);
+            RunbookContentResponse runbookContentResponse = null;
+            if (response.Runbook.Properties.State == "Published")
+                runbookContentResponse = await automationManagementClient.Runbooks.ContentAsync(resourceGroupName, accountName, runbook.Name);
+            else
+                runbookContentResponse = await automationManagementClient.RunbookDraft.ContentAsync(resourceGroupName, accountName, runbook.Name);
             String runbookFilePath = System.IO.Path.Combine(workspace, runbook.Name + ".ps1");
-            File.WriteAllText(runbookFilePath, runbookContent.Stream.ToString());
+            File.WriteAllText(runbookFilePath, runbookContentResponse.Stream.ToString());
             runbook.localFileInfo = new FileInfo(runbookFilePath);
+            /* This is the only way I can see to "check out" the runbook using the SDK.
+             * Hopefully there's a better way but for now this works */
+            if (response.Runbook.Properties.State == "Published")
+                await UploadRunbookAsDraft(runbook, automationManagementClient, resourceGroupName, accountName);
         }
 
         public static async Task<ISet<AutomationRunbook>> GetAllRunbookMetadata(AutomationManagementClient automationManagementClient, string workspace, string resourceGroupName, string accountName)
