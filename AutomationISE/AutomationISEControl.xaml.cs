@@ -42,6 +42,8 @@ namespace AutomationISE
         private AutomationISEClient iseClient;
         private LocalRunbookStore runbookStore;
 
+        public ObjectModelRoot HostObject { get; set; }
+
         public AutomationISEControl()
         {
             try
@@ -80,12 +82,6 @@ namespace AutomationISE
             {
                 var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
             }
-        }
-
-        public ObjectModelRoot HostObject
-        {
-            get;
-            set;
         }
 
         public void setRunbookAndAssetNonSelectionButtonState(bool enabled) {
@@ -433,14 +429,13 @@ namespace AutomationISE
             String header = "Download Runbook";
             System.Windows.Forms.DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(message, header, System.Windows.Forms.MessageBoxButtons.YesNo);
             if (dialogResult == System.Windows.Forms.DialogResult.Yes)
-            {
                 return true;
-            }
             return false;
         }
 
         /* If the user already has a local copy of that file open, then close it */
         //TODO: BUG: this is occasionally throwing a null reference exception
+        //TODO: do I need this method?
         private void CloseRunbookIfOpen(AutomationRunbook runbook)
         {
             ISEFileCollection currentlyOpenFiles = HostObject.CurrentPowerShellTab.Files;
@@ -459,23 +454,38 @@ namespace AutomationISE
 
         private async void ButtonDownloadRunbook_Click(object sender, RoutedEventArgs e)
         {
-            ButtonDownloadRunbook.IsEnabled = false;
-            ButtonDownloadRunbook.Content = "Downloading...";
             AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
-            if (selectedRunbook.localFileInfo != null && File.Exists(selectedRunbook.localFileInfo.FullName) && !ConfirmRunbookDownload())
+            if (selectedRunbook == null)
             {
-                ButtonDownloadRunbook.IsEnabled = true;
-                ButtonDownloadRunbook.Content = "Download";
+                MessageBox.Show("No runbook selected.");
                 return;
             }
-            //CloseRunbookIfOpen(selectedRunbook);
-            await AutomationRunbookManager.DownloadRunbook(selectedRunbook, iseClient.automationManagementClient,
-                        iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
-            RunbooksListView.Items.Refresh(); //Proper binding might be better
-            ButtonDownloadRunbook.Content = "Download";
-            ButtonDownloadRunbook.IsEnabled = true;
-            ButtonOpenRunbook.IsEnabled = true;
-            ButtonPublishRunbook.IsEnabled = true;
+            try
+            {
+                ButtonDownloadRunbook.IsEnabled = false;
+                ButtonDownloadRunbook.Content = "Downloading...";
+                if (selectedRunbook.localFileInfo != null && File.Exists(selectedRunbook.localFileInfo.FullName) && !ConfirmRunbookDownload())
+                {
+                    ButtonDownloadRunbook.Content = "Download";
+                    ButtonDownloadRunbook.IsEnabled = true;
+                    return;
+                }
+                await AutomationRunbookManager.DownloadRunbook(selectedRunbook, iseClient.automationManagementClient,
+                            iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                //TODO: use proper binding
+                RunbooksListView.Items.Refresh();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("The runbook could not be downloaded.\r\nError details: " + ex.Message);
+            }
+            finally
+            {
+                ButtonDownloadRunbook.Content = "Download";
+                ButtonDownloadRunbook.IsEnabled = true;
+                ButtonOpenRunbook.IsEnabled = true;
+                ButtonPublishRunbook.IsEnabled = true;
+            }
         }
 
         private void RunbooksListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -498,56 +508,125 @@ namespace AutomationISE
         private void ButtonOpenRunbook_Click(object sender, RoutedEventArgs e)
         {
             AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
-            HostObject.CurrentPowerShellTab.Files.Add(selectedRunbook.localFileInfo.FullName);
+            if (selectedRunbook == null)
+            {
+                MessageBox.Show("No runbook selected.");
+                return;
+            }
+            try
+            {
+                HostObject.CurrentPowerShellTab.Files.Add(selectedRunbook.localFileInfo.FullName);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("The runbook could not be opened.\r\nError details: " + ex.Message, "Error");
+            }
         }
 
         private async void ButtonPublishRunbook_Click(object sender, RoutedEventArgs e)
         {
-            /* Update UI */
-            ButtonPublishRunbook.IsEnabled = false;
-            ButtonDownloadRunbook.IsEnabled = false;
-            ButtonUploadRunbook.IsEnabled = false;
-            ButtonPublishRunbook.Content = "Publishing...";
-            /* Do the uploading */
-            //TODO (?): Check if you are overwriting draft content in the cloud
             AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
-            await AutomationRunbookManager.UploadRunbookAsDraft(selectedRunbook, iseClient.automationManagementClient,
-                        iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
-            await AutomationRunbookManager.PublishRunbook(selectedRunbook, iseClient.automationManagementClient,
-                        iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
-            /* Update UI */
-            RunbooksListView.Items.Refresh();
-            ButtonPublishRunbook.IsEnabled = true;
-            ButtonDownloadRunbook.IsEnabled = true;
-            ButtonUploadRunbook.IsEnabled = true;
-            ButtonPublishRunbook.Content = "Publish";
+            if (selectedRunbook == null)
+            {
+                MessageBox.Show("No runbook selected.");
+                return;
+            }
+            try
+            {
+                /* Update UI */
+                ButtonPublishRunbook.IsEnabled = false;
+                ButtonDownloadRunbook.IsEnabled = false;
+                ButtonUploadRunbook.IsEnabled = false;
+                ButtonPublishRunbook.Content = "Publishing...";
+                /* Do the uploading */
+                //TODO (?): Check if you are overwriting or missing draft content in the cloud
+                await AutomationRunbookManager.PublishRunbook(selectedRunbook, iseClient.automationManagementClient,
+                            iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("The runbook could not be published.\r\nDetails: " + ex.Message, "Error");
+            }
+            finally
+            {
+                /* Update UI */
+                RunbooksListView.Items.Refresh();
+                ButtonPublishRunbook.IsEnabled = true;
+                ButtonDownloadRunbook.IsEnabled = true;
+                ButtonUploadRunbook.IsEnabled = true;
+                ButtonPublishRunbook.Content = "Publish Draft";
+            }
         }
 
         private async void ButtonRefreshRunbookList_Click(object sender, RoutedEventArgs e)
         {
             ButtonRefreshRunbookList.IsEnabled = false;
             ButtonRefreshRunbookList.Content = "Refreshing...";
-            ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient,
-                        iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
-            RunbooksListView.ItemsSource = runbooks;
-            ButtonRefreshRunbookList.IsEnabled = true;
-            ButtonRefreshRunbookList.Content = "Refresh";
+            try
+            {
+                RunbooksListView.ItemsSource = await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient,
+                            iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("The runbook list could not be refreshed.\r\nError details: " + ex.Message, "Error");
+            }
+            finally
+            {
+                ButtonRefreshRunbookList.IsEnabled = true;
+                ButtonRefreshRunbookList.Content = "Refresh";
+            }
         }
 
         private async void ButtonUploadRunbook_Click(object sender, RoutedEventArgs e)
         {
-            ButtonUploadRunbook.IsEnabled = false;
             AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
-            await AutomationRunbookManager.UploadRunbookAsDraft(selectedRunbook, iseClient.automationManagementClient,
-                    iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
-            ButtonUploadRunbook.IsEnabled = true;
+            if (selectedRunbook == null)
+            {
+                MessageBox.Show("No runbook selected.");
+                return;
+            }
+            ButtonUploadRunbook.IsEnabled = false;
+            try
+            {
+                await AutomationRunbookManager.UploadRunbookAsDraft(selectedRunbook, iseClient.automationManagementClient,
+                        iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show("The runbook could not be uploaded.\r\nError details: " + ex.Message, "Error");
+            }
+            finally
+            {
+                ButtonUploadRunbook.IsEnabled = true;
+            }
         }
 
         private async void ButtonTestRunbook_Click(object sender, RoutedEventArgs e)
         {
             AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
-            RunbookDraft draft = await AutomationRunbookManager.GetRunbookDraft(selectedRunbook.Name, iseClient.automationManagementClient,
-                    iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            if (selectedRunbook == null)
+            {
+                MessageBox.Show("No runbook selected.");
+                return;
+            }
+            RunbookDraft draft = null;
+            try
+            {
+                draft = await AutomationRunbookManager.GetRunbookDraft(selectedRunbook.Name, iseClient.automationManagementClient,
+                            iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            }
+            catch
+            {
+                MessageBox.Show("Error: couldn't connect to Azure");
+                return;
+            }
+            if (draft.InEdit == false)
+            {
+                //TODO: verify that it is indeed in the published state
+                MessageBox.Show("This runbook has no draft to test because it is in a 'Published' state.");
+                return;
+            }
             //Job creation parameters
             TestJobCreateParameters jobCreationParams = new TestJobCreateParameters();
             jobCreationParams.RunbookName = selectedRunbook.Name;
@@ -561,13 +640,17 @@ namespace AutomationISE
                     return;
             }
             /* start the test job */
-            TestJobCreateResponse jobResponse = await iseClient.automationManagementClient.TestJobs.CreateAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name, 
-                iseClient.currAccount.Name, jobCreationParams, new CancellationToken());
-            Debug.WriteLine(jobResponse.StatusCode);
-            if (jobResponse.StatusCode != System.Net.HttpStatusCode.Created)
+            TestJobCreateResponse jobResponse = null;
+            try {
+                jobResponse = await iseClient.automationManagementClient.TestJobs.CreateAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name, 
+                    iseClient.currAccount.Name, jobCreationParams, new CancellationToken());
+            } catch {
+                MessageBox.Show("The test job could not be submitted to Azure.", "Error");
+                return;
+            }
+            if (jobResponse == null || jobResponse.StatusCode != System.Net.HttpStatusCode.Created)
             {
-                //jobResponse.Properties.Status for more information?
-                MessageBox.Show("Error: job could not be started.");
+                MessageBox.Show("The test job could not be created.", "Error");
             }
             else
             {
