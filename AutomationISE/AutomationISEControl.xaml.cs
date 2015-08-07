@@ -500,7 +500,7 @@ namespace AutomationISE
                     return;
                 }
                 await AutomationRunbookManager.DownloadRunbook(selectedRunbook, iseClient.automationManagementClient,
-                            iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                            iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
                 //TODO: use proper binding
                 RunbooksListView.Items.Refresh();
             }
@@ -619,7 +619,7 @@ namespace AutomationISE
             try
             {
                 await AutomationRunbookManager.UploadRunbookAsDraft(selectedRunbook, iseClient.automationManagementClient,
-                        iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                        iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
             }
             catch(Exception ex)
             {
