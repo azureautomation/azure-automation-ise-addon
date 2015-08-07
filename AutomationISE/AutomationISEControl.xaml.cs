@@ -740,5 +740,15 @@ namespace AutomationISE
                 // TODO: implement
             }
         }
+
+        private void certificateButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void certificateTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
     }
 }
