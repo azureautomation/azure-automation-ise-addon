@@ -121,6 +121,12 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChooseNewAssetTypeDialog.xaml.cs">
+      <DependentUpon>ChooseNewAssetTypeDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="NewOrEditCredentialDialog.xaml.cs">
+      <DependentUpon>NewOrEditCredentialDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="RunbookParamDialog.xaml.cs">
       <DependentUpon>RunbookParamDialog.xaml</DependentUpon>
     </Compile>
@@ -135,6 +141,14 @@
       <DependentUpon>AutomationISEControl.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="ChooseNewAssetTypeDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="NewOrEditCredentialDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="RunbookParamDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
