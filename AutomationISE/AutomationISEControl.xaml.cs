@@ -31,6 +31,7 @@ using System.Linq;
 using System.Diagnostics;
 using System.Timers;
 using System.Collections;
+using System.Collections.Concurrent;
 
 namespace AutomationISE
 {
@@ -40,7 +41,9 @@ namespace AutomationISE
     public partial class AutomationISEControl : UserControl, IAddOnToolHostObject
     {
         private AutomationISEClient iseClient;
-        private LocalRunbookStore runbookStore;
+        private LocalRunbookStore runbookStore; //TODO: is this used?
+        private BlockingCollection<RunbookDownloadJob> downloadQueue;
+        private Task downloadWorker;
 
         public ObjectModelRoot HostObject { get; set; }
 
@@ -51,6 +54,32 @@ namespace AutomationISE
                 InitializeComponent();
                 iseClient = new AutomationISEClient();
                 runbookStore = new LocalRunbookStore();
+                downloadQueue = new BlockingCollection<RunbookDownloadJob>(new ConcurrentQueue<RunbookDownloadJob>(),50);
+                IProgress<Tuple<string, int>> progress = new Progress<Tuple<string, int>>((report) => {
+                    if (String.IsNullOrEmpty(report.Item1))
+                    {
+                        ProgressLabel.Content = "";
+                        JobsRemainingLabel.Content = "";
+                    }
+                    else
+                    {
+                        ProgressLabel.Content = "Downloading runbook '" + report.Item1 + "'...";
+                        if (downloadQueue.Count > 0)
+                            JobsRemainingLabel.Content = "(" + downloadQueue.Count + " remaining)";
+                        else
+                            JobsRemainingLabel.Content = "";
+                    }
+                });
+                downloadWorker = Task.Factory.StartNew(async () => {
+                    int completed = 0;
+                    while(true) {
+                        RunbookDownloadJob job = downloadQueue.Take(); //blocks until there is something to take
+                        progress.Report(Tuple.Create(job.Runbook.Name, ++completed));
+                        await Task.Delay(5000); //simulate doing work
+                        if (downloadQueue.Count == 0)
+                            progress.Report(Tuple.Create("", completed));
+                    }
+                }, TaskCreationOptions.LongRunning);
 
                 /* Determine working directory */
                 String localWorkspace = Properties.Settings.Default["localWorkspace"].ToString();
@@ -489,6 +518,9 @@ namespace AutomationISE
                 MessageBox.Show("No runbook selected.");
                 return;
             }
+            downloadQueue.Add(new RunbookDownloadJob(selectedRunbook)); //blocks if queue is at capacity
+            JobsRemainingLabel.Content = "(" + downloadQueue.Count + " remaining)";
+            return;
             try
             {
                 ButtonDownloadRunbook.IsEnabled = false;
@@ -686,6 +718,15 @@ namespace AutomationISE
                 TestJobOutputWindow jobWindow = new TestJobOutputWindow(jobCreationParams.RunbookName, jobResponse, iseClient);
                 jobWindow.Show();
             }
+        }
+    }
+
+    public class RunbookDownloadJob
+    {
+        public AutomationRunbook Runbook { get; set; }
+        public RunbookDownloadJob(AutomationRunbook rb)
+        {
+            this.Runbook = rb;
         }
     }
 }
