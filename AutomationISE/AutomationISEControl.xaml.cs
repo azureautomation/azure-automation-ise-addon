@@ -726,6 +726,69 @@ namespace AutomationISE
                 jobWindow.Show();
             }
         }
+
+        private void createOrUpdateCredentialAsset(string credentialAssetName, AutomationCredential credToEdit)
+        {
+            var dialog = new NewOrEditCredentialDialog(credToEdit);
+            
+            if (dialog.ShowDialog() == true)
+            {
+                var assetsToSave = new List<AutomationAsset>();
+
+                var newCred = new AutomationCredential(credentialAssetName, dialog.username, dialog.password);
+                assetsToSave.Add(newCred);
+
+                AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave);
+                refreshAssets();
+            }
+        }
+
+        private void ButttonNewAsset_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new ChooseNewAssetTypeDialog();
+                
+            if (dialog.ShowDialog() == true)
+            {
+                if (dialog.newAssetType == AutomationISE.Model.Constants.assetVariable)
+                {
+                   
+                }
+                else if (dialog.newAssetType == AutomationISE.Model.Constants.assetCredential)
+                {
+                    createOrUpdateCredentialAsset(dialog.newAssetName, null);
+                }
+                else if (dialog.newAssetType == AutomationISE.Model.Constants.assetConnection)
+                {
+                    
+                }
+                else if (dialog.newAssetType == AutomationISE.Model.Constants.assetCertificate)
+                {
+                    
+                }
+            }
+        }
+
+        private void ButtonEditAsset_Click(object sender, RoutedEventArgs e)
+        {
+            var asset = getSelectedAssets().ElementAt(0);
+            
+            if(asset is AutomationCredential) {
+                createOrUpdateCredentialAsset(asset.Name, (AutomationCredential)asset);
+            }
+            else if(asset is AutomationVariable) {
+                // TODO: implement
+            }
+        }
+
+        private void certificateButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void certificateTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
     }
 
     public class RunbookDownloadJob

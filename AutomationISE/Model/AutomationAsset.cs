@@ -68,8 +68,19 @@ namespace AutomationISE.Model
         {
             this.Name = asset.Name;
 
-            var lastModifiedDatetime = (System.DateTime)(asset.LastModifiedLocal > asset.LastModifiedCloud ? asset.LastModifiedLocal : asset.LastModifiedCloud);
-            setLastModified(lastModifiedDatetime);
+            if(asset.LastModifiedCloud == null)
+            {
+                setLastModified((System.DateTime)asset.LastModifiedLocal);
+            }
+            else if (asset.LastModifiedLocal == null)
+            {
+                setLastModified((System.DateTime)asset.LastModifiedCloud);
+            }
+            else
+            {
+                var lastModifiedDatetime = (System.DateTime)(asset.LastModifiedLocal > asset.LastModifiedCloud ? asset.LastModifiedLocal : asset.LastModifiedCloud);
+                setLastModified(lastModifiedDatetime);
+            }
         }
 
         public void setLastModified(DateTime lastModified)

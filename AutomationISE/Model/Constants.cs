@@ -37,11 +37,11 @@ namespace AutomationISE.Model
 
         public const bool encryptedTrue = true;
 
-        public const String assetCredential = "Credentials";
-        public const String assetVariable = "Variables";
-        public const String assetCertificate = "Certificates";
-        public const String assetConnection = "Connections";
-        public const String assetModule = "Modules";
+        public const String assetCredential = "Credential";
+        public const String assetVariable = "Variable";
+        public const String assetCertificate = "Certificate";
+        public const String assetConnection = "Connection";
+        public const String assetModule = "Module";
 
         public const String feedbackURI = "http://iseautomation.azurewebsites.net/FeedbackForm.aspx";
 
