@@ -58,16 +58,20 @@ namespace AutomationISE
                 IProgress<Tuple<string, int>> progress = new Progress<Tuple<string, int>>((report) => {
                     if (String.IsNullOrEmpty(report.Item1))
                     {
-                        ProgressLabel.Content = "";
-                        JobsRemainingLabel.Content = "";
+                        ProgressLabel.Text = "";
+                        JobsRemainingLabel.Text = "";
                     }
                     else
                     {
-                        ProgressLabel.Content = "Downloading runbook '" + report.Item1 + "'...";
+                        ProgressLabel.Text = "Downloading runbook '" + report.Item1 + "'...";
                         if (downloadQueue.Count > 0)
-                            JobsRemainingLabel.Content = "(" + downloadQueue.Count + " remaining)";
+                        {
+                            JobsRemainingLabel.Text = "(" + downloadQueue.Count + " remaining)";
+                        }
                         else
-                            JobsRemainingLabel.Content = "";
+                        {
+                            JobsRemainingLabel.Text = "";
+                        }
                     }
                 });
                 downloadWorker = Task.Factory.StartNew(async () => {
@@ -77,7 +81,10 @@ namespace AutomationISE
                         progress.Report(Tuple.Create(job.Runbook.Name, ++completed));
                         await Task.Delay(5000); //simulate doing work
                         if (downloadQueue.Count == 0)
+                        {
                             progress.Report(Tuple.Create("", completed));
+                            completed = 0;
+                        }
                     }
                 }, TaskCreationOptions.LongRunning);
 
@@ -519,7 +526,7 @@ namespace AutomationISE
                 return;
             }
             downloadQueue.Add(new RunbookDownloadJob(selectedRunbook)); //blocks if queue is at capacity
-            JobsRemainingLabel.Content = "(" + downloadQueue.Count + " remaining)";
+            JobsRemainingLabel.Text = "(" + downloadQueue.Count + " remaining)";
             return;
             try
             {

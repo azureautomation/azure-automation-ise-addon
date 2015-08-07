@@ -46,7 +46,6 @@
                         <RowDefinition Height="35"/>
                         <RowDefinition Height="35"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="5"/>
                     </Grid.RowDefinitions>
                     <ListView x:Name="RunbooksListView" Margin="10,10,10,0" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" SelectionChanged="RunbooksListView_SelectionChanged">
                         <ListView.View>
@@ -68,8 +67,28 @@
                     <Button x:Name="ButtonUploadRunbook" Grid.Column="0" Grid.Row="2" Margin="5,10,5,0" Content="Upload Draft" Click="ButtonUploadRunbook_Click" />
                     <Button x:Name="ButtonTestRunbook" Grid.Column="1" Grid.Row="2" Margin="5,10,5,0" Content="Test Draft" Click="ButtonTestRunbook_Click"/>
                     <Button x:Name="ButtonPublishRunbook" Grid.Column="2" Grid.Row="2" Margin="5,10,5,0" Content="Publish Draft" Click="ButtonPublishRunbook_Click" IsEnabled="False"/>
-                    <Label x:Name="ProgressLabel" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="3">Nothing Yet</Label>
-                    <Label x:Name="JobsRemainingLabel" Grid.Column="2" Grid.ColumnSpan="1" Grid.Row="3">nada</Label>
+                    <StatusBar Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="3" >
+                        <StatusBar.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                </Grid>
+                            </ItemsPanelTemplate>
+                        </StatusBar.ItemsPanel>
+                        <StatusBarItem Grid.Column="0">
+                            <TextBlock Name="ProgressLabel" />
+                        </StatusBarItem>
+                        <StatusBarItem Grid.Column="1">
+                            <TextBlock Name="JobsRemainingLabel" />
+                        </StatusBarItem>
+                    </StatusBar>
                 </Grid>
             </TabItem>
             <TabItem x:Name="settingsTab" Header="Assets">
