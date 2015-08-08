@@ -31,6 +31,7 @@ using System.Linq;
 using System.Diagnostics;
 using System.Timers;
 using System.Collections;
+using System.Security.Cryptography.X509Certificates;
 
 namespace AutomationISE
 {
@@ -51,6 +52,11 @@ namespace AutomationISE
                 InitializeComponent();
                 iseClient = new AutomationISEClient();
                 runbookStore = new LocalRunbookStore();
+
+                // Generate self signed certificate for encrypting local assets in the current user store Cert:\CurrentUser\My\
+                var certObj = new AutomationSelfSignedCertificate();
+                X509Certificate2 selfSignedCertificate = certObj.CreateSelfSignedCertificate();
+                certificateTextBox.Text = selfSignedCertificate.Thumbprint;
 
                 /* Determine working directory */
                 String localWorkspace = Properties.Settings.Default["localWorkspace"].ToString();
