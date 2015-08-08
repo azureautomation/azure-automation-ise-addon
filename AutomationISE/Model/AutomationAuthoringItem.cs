@@ -13,13 +13,14 @@
 // ----------------------------------------------------------------------------------
 
 using System;
+using System.ComponentModel;
 
 namespace AutomationISE.Model
 {
     /// <summary>
     /// The automation asset
     /// </summary>
-    public abstract class AutomationAuthoringItem : IComparable<AutomationAuthoringItem>
+    public abstract class AutomationAuthoringItem : IComparable<AutomationAuthoringItem>, INotifyPropertyChanged
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AutomationAuthoringItem"/> class.
@@ -108,12 +109,39 @@ namespace AutomationISE.Model
         /// <summary>
         /// The last modified date of the item locally
         /// </summary>
-        public DateTime? LastModifiedLocal { get; set; }
+        private DateTime? _lastModifiedLocal;
+        public new DateTime? LastModifiedLocal
+        {
+            get { return _lastModifiedLocal; }
+            set
+            {
+                _lastModifiedLocal = value;
+                NotifyPropertyChanged("LastModifiedLocal");
+            }
+        }
 
         /// <summary>
         /// The last modified date of the item in the cloud
         /// </summary>
-        public DateTime? LastModifiedCloud { get; set; }
+        private DateTime? _lastModifiedCloud;
+        public new DateTime? LastModifiedCloud
+        {
+            get { return _lastModifiedCloud; }
+            set
+            {
+                _lastModifiedCloud = value;
+                NotifyPropertyChanged("LastModifiedCloud");
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void NotifyPropertyChanged(String propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
 
         public class Constants
         {

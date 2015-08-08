@@ -22,9 +22,19 @@ using System.Diagnostics;
 
 namespace AutomationISE.Model
 {
+    /* Note that AutomationAuthoringItem implements INotifyPropertyChanged */
     public class AutomationRunbook : AutomationAuthoringItem
     {
-        public string AuthoringState { get; set; }
+        private string _authoringState;
+        public string AuthoringState
+        {
+            get { return _authoringState; }
+            set
+            {
+                _authoringState = value;
+                NotifyPropertyChanged("AuthoringState");
+            }
+        }
 
         private FileInfo _localFileInfo;
         public FileInfo localFileInfo
@@ -61,25 +71,6 @@ namespace AutomationISE.Model
             this.Parameters = cloudRunbook.Properties.Parameters;
         }
 
-        public void UpdateMetadata(Runbook cloudRunbook)
-        {
-            this.AuthoringState = cloudRunbook.Properties.State;
-            this.Parameters = cloudRunbook.Properties.Parameters;
-            this.LastModifiedCloud = cloudRunbook.Properties.LastModifiedTime.UtcDateTime;
-            //TODO: refactor
-            if (this.localFileInfo == null)
-            {
-                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.CloudOnly;
-            }
-            else if (this.localFileInfo.LastWriteTimeUtc > this.LastModifiedCloud)
-            {
-                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.UpdatedLocally;
-            }
-            else
-            {
-                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.UpdatedInCloud;
-            }
-        }
         public static class AuthoringStates
         {
             public const String New = "New";

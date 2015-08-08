@@ -32,6 +32,7 @@ using System.Diagnostics;
 using System.Timers;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 
 namespace AutomationISE
 {
@@ -41,7 +42,7 @@ namespace AutomationISE
     public partial class AutomationISEControl : UserControl, IAddOnToolHostObject
     {
         private AutomationISEClient iseClient;
-        private LocalRunbookStore runbookStore; //TODO: is this used?
+        private ObservableCollection<AutomationRunbook> runbookListViewModel;
         private BlockingCollection<RunbookDownloadJob> downloadQueue;
         private Task downloadWorker;
 
@@ -53,7 +54,6 @@ namespace AutomationISE
             {
                 InitializeComponent();
                 iseClient = new AutomationISEClient();
-                runbookStore = new LocalRunbookStore();
                 downloadQueue = new BlockingCollection<RunbookDownloadJob>(new ConcurrentQueue<RunbookDownloadJob>(),50);
                 IProgress<Tuple<string, int>> progress = new Progress<Tuple<string, int>>((report) => {
                     if (String.IsNullOrEmpty(report.Item1))
@@ -74,19 +74,7 @@ namespace AutomationISE
                         }
                     }
                 });
-                downloadWorker = Task.Factory.StartNew(async () => {
-                    int completed = 0;
-                    while(true) {
-                        RunbookDownloadJob job = downloadQueue.Take(); //blocks until there is something to take
-                        progress.Report(Tuple.Create(job.Runbook.Name, ++completed));
-                        await Task.Delay(5000); //simulate doing work
-                        if (downloadQueue.Count == 0)
-                        {
-                            progress.Report(Tuple.Create("", completed));
-                            completed = 0;
-                        }
-                    }
-                }, TaskCreationOptions.LongRunning);
+                downloadWorker = Task.Factory.StartNew(() => processJobsFromQueue(progress), TaskCreationOptions.LongRunning);
 
                 /* Determine working directory */
                 String localWorkspace = Properties.Settings.Default["localWorkspace"].ToString();
@@ -356,8 +344,8 @@ namespace AutomationISE
                     setRunbookAndAssetNonSelectionButtonState(true);
                     /* Update Runbooks */
                     UpdateStatusBox(configurationStatusTextBox, "Getting runbook data...");
-                    ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient, 
-                        iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                    runbookListViewModel = new ObservableCollection<AutomationRunbook>(await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient, 
+                          iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name));
                     UpdateStatusBox(configurationStatusTextBox, "Done getting runbook data");
                     /* Update Assets */
                     //TODO: this is not quite checking what we need it to check
@@ -380,7 +368,7 @@ namespace AutomationISE
                         MessageBox.Show(message);
                     }
                     /* Update UI */
-                    RunbooksListView.ItemsSource = runbooks;
+                    RunbooksListView.ItemsSource = runbookListViewModel;
                     ButtonRefreshAssetList.IsEnabled = true;
 
                     //TODO: possibly rename/refactor this
@@ -517,7 +505,7 @@ namespace AutomationISE
             }
         }
 
-        private async void ButtonDownloadRunbook_Click(object sender, RoutedEventArgs e)
+        private void ButtonDownloadRunbook_Click(object sender, RoutedEventArgs e)
         {
             AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
             if (selectedRunbook == null)
@@ -525,34 +513,46 @@ namespace AutomationISE
                 MessageBox.Show("No runbook selected.");
                 return;
             }
-            downloadQueue.Add(new RunbookDownloadJob(selectedRunbook)); //blocks if queue is at capacity
-            JobsRemainingLabel.Text = "(" + downloadQueue.Count + " remaining)";
-            return;
-            try
+            ButtonDownloadRunbook.IsEnabled = false;
+            if (selectedRunbook.localFileInfo != null && File.Exists(selectedRunbook.localFileInfo.FullName) && !ConfirmRunbookDownload())
             {
-                ButtonDownloadRunbook.IsEnabled = false;
-                ButtonDownloadRunbook.Content = "Downloading...";
-                if (selectedRunbook.localFileInfo != null && File.Exists(selectedRunbook.localFileInfo.FullName) && !ConfirmRunbookDownload())
-                {
-                    ButtonDownloadRunbook.Content = "Download";
-                    ButtonDownloadRunbook.IsEnabled = true;
-                    return;
-                }
-                await AutomationRunbookManager.DownloadRunbook(selectedRunbook, iseClient.automationManagementClient,
-                            iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
-                //TODO: use proper binding
-                RunbooksListView.Items.Refresh();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("The runbook could not be downloaded.\r\nError details: " + ex.Message);
-            }
-            finally
-            {
-                ButtonDownloadRunbook.Content = "Download";
                 ButtonDownloadRunbook.IsEnabled = true;
-                ButtonOpenRunbook.IsEnabled = true;
-                ButtonPublishRunbook.IsEnabled = true;
+                return;
+            }
+            //downloadQueue.Add(new RunbookDownloadJob(selectedRunbook)); //blocks if queue is at capacity
+            if (downloadQueue.TryAdd(new RunbookDownloadJob(selectedRunbook))) //TryAdd() immediately returns false if queue is at capacity
+                JobsRemainingLabel.Text = "(" + downloadQueue.Count + " remaining)";
+            ButtonDownloadRunbook.IsEnabled = true;
+            /*
+             * progress related:
+             * //TODO: use proper binding
+             *  RunbooksListView.Items.Refresh();
+             */ 
+        }
+
+        private async Task processJobsFromQueue(IProgress<Tuple<string, int>> progress)
+        {
+            int completed = 0;
+            while (true)
+            {
+                RunbookDownloadJob job = downloadQueue.Take(); //blocks until there is something to take
+                progress.Report(Tuple.Create(job.Runbook.Name, ++completed));
+                try
+                {
+                    await AutomationRunbookManager.DownloadRunbook(job.Runbook, iseClient.automationManagementClient,
+                                iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
+
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("The runbook could not be downloaded.\r\nError details: " + ex.Message);
+                }
+                await Task.Delay(5000); //simulate work taking longer, for testing
+                if (downloadQueue.Count == 0)
+                {
+                    progress.Report(Tuple.Create("", completed));
+                    completed = 0;
+                }
             }
         }
 
@@ -632,8 +632,28 @@ namespace AutomationISE
             ButtonRefreshRunbookList.Content = "Refreshing...";
             try
             {
-                RunbooksListView.ItemsSource = await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient,
-                            iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient,
+                                    iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                IDictionary<String, AutomationRunbook> runbookWithName = new Dictionary<String, AutomationRunbook>(runbooks.Count);
+                foreach (AutomationRunbook runbook in runbooks)
+                {
+                    runbookWithName.Add(runbook.Name, runbook);
+                }
+                foreach (AutomationRunbook curr in runbookListViewModel)
+                {
+                    curr.AuthoringState = runbookWithName[curr.Name].AuthoringState;
+                    Debug.WriteLine(runbookWithName[curr.Name].AuthoringState);
+                    curr.Parameters = runbookWithName[curr.Name].Parameters;
+                    curr.LastModifiedCloud = runbookWithName[curr.Name].LastModifiedCloud;
+                    curr.LastModifiedLocal = runbookWithName[curr.Name].LastModifiedLocal;
+                    //TODO: update sync status
+                    runbookWithName.Remove(curr.Name);
+                }
+                foreach (String name in runbookWithName.Keys)
+                {
+                    runbookListViewModel.Add(runbookWithName[name]);
+                    Debug.WriteLine(name);
+                }
             }
             catch (Exception ex)
             {

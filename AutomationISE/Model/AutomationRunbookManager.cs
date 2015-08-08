@@ -30,7 +30,6 @@ namespace AutomationISE.Model
                 Stream = File.ReadAllText(runbook.localFileInfo.FullName)
             };
             await automationManagementClient.RunbookDraft.UpdateAsync(resourceGroupName, account.Name, draftUpdateParams);
-            UpdateRunbookMetadata(runbook, automationManagementClient, resourceGroupName, account.Name);
         }
 
         public static async Task<LongRunningOperationResultResponse> PublishRunbook(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
@@ -41,7 +40,6 @@ namespace AutomationISE.Model
                 PublishedBy = "ISE User: " + System.Security.Principal.WindowsIdentity.GetCurrent().Name
             };
             LongRunningOperationResultResponse resultResponse = await automationManagementClient.RunbookDraft.PublishAsync(resourceGroupName, accountName, publishParams);
-            UpdateRunbookMetadata(runbook, automationManagementClient, resourceGroupName, accountName);
             return resultResponse;
         }
 
@@ -105,12 +103,6 @@ namespace AutomationISE.Model
         {
             RunbookDraftGetResponse response = await automationManagementClient.RunbookDraft.GetAsync(resourceGroupName, accountName, runbookName);
             return response.RunbookDraft;
-        }
-
-        private static void UpdateRunbookMetadata(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
-        {
-            RunbookGetResponse response = automationManagementClient.Runbooks.Get(resourceGroupName, accountName, runbook.Name);
-            runbook.UpdateMetadata(response.Runbook);
         }
 
         private static async Task<IList<Runbook>> DownloadRunbookMetadata(AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
