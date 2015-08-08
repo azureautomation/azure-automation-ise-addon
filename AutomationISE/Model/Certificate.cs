@@ -1,9 +1,23 @@
-﻿using CERTENROLLLib;
+﻿// ----------------------------------------------------------------------------------
+//
+// Copyright Microsoft Corporation
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ----------------------------------------------------------------------------------
+
+using CERTENROLLLib;
 using System;
 using System.Security.Cryptography.X509Certificates;
 
 
-namespace CertApp
+namespace AutomationISE.Model
 {
     class Certificate
     {
@@ -31,7 +45,7 @@ namespace CertApp
                 objObjectId = new CObjectId();
 
                 // Friendly name
-                this.FriendlyName = "Azure Automation ISE AddOn";
+                this.FriendlyName = "";
 
                 // Set default values. Refer to https://msdn.microsoft.com/en-us/library/windows/desktop/aa374846(v=vs.85).aspx
                 this.CryptographicProviderName = "Microsoft Enhanced Cryptographic Provider v1.0";
@@ -44,7 +58,7 @@ namespace CertApp
                 this.KeyUsage = X509PrivateKeyUsageFlags.XCN_NCRYPT_ALLOW_DECRYPT_FLAG;
 
                 // Create for machine and not user
-                this.MachineContext = true;
+                this.MachineContext = false;
 
                 // Default to expire in 1 year
                 this.ExpirationLengthInDays = 365;
@@ -53,7 +67,7 @@ namespace CertApp
                 this.ExportPolicy = X509PrivateKeyExportFlags.XCN_NCRYPT_ALLOW_PLAINTEXT_EXPORT_FLAG;
 
                 // This is intended for a computer
-                this.EnrollmentContextMachine = X509CertificateEnrollmentContext.ContextMachine;
+                this.EnrollmentContextMachine = X509CertificateEnrollmentContext.ContextUser;
 
                 // Use a hasing algorithm
                 this.ObjectIdGroupId = ObjectIdGroupId. XCN_CRYPT_HASH_ALG_OID_GROUP_ID;
