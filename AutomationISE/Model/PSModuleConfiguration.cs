@@ -13,7 +13,7 @@ namespace AutomationISE.Model
     public class PSModuleConfiguration
     {
         /* Updates the AzureAutomationAuthoringToolkit PowerShell Module to point at the specified workspace directory */
-        public static void UpdateModuleConfiguration(string workspace)
+        public static void UpdateModuleConfiguration(string workspace, string thumbprint)
         {
             string modulePath = findModulePath();
             string configFilePath = System.IO.Path.Combine(modulePath, ModuleData.ConfigFileName);
@@ -38,7 +38,7 @@ namespace AutomationISE.Model
                 }
                 else if (pc.Name.Equals(ModuleData.EncryptionCertificateThumbprint_FieldName))
                 {
-                    pc.Value = "none";
+                    pc.Value = thumbprint;
                 }
                 else
                 {
@@ -49,7 +49,7 @@ namespace AutomationISE.Model
             File.WriteAllText(configFilePath, jss.Serialize(config)); // TODO: use a friendly JSON formatter for serialization
         }
 
-        private static string findModulePath()
+        public static string findModulePath()
         {
             String[] moduleLocations = Environment.GetEnvironmentVariable(ModuleData.EnvPSModulePath).Split(';');
             foreach (String moduleLocation in moduleLocations)
