@@ -349,8 +349,10 @@ namespace AutomationISE
                         message += "Make sure it exists in your module path (env:PSModulePath).";
                         MessageBox.Show(message);
                     }
+
                     /* Update UI */
                     RunbooksListView.ItemsSource = runbooks;
+                    assetsComboBox.SelectedValue = AutomationISE.Model.Constants.assetVariable;
                     ButtonRefreshAssetList.IsEnabled = true;
 
                     //TODO: possibly rename/refactor this
@@ -734,7 +736,7 @@ namespace AutomationISE
             {
                 if (dialog.newAssetType == AutomationISE.Model.Constants.assetVariable)
                 {
-                   
+                    createOrUpdateVariableAsset(dialog.newAssetName, null);
                 }
                 else if (dialog.newAssetType == AutomationISE.Model.Constants.assetCredential)
                 {
@@ -742,7 +744,7 @@ namespace AutomationISE
                 }
                 else if (dialog.newAssetType == AutomationISE.Model.Constants.assetConnection)
                 {
-                    createOrUpdateVariableAsset(dialog.newAssetName, null);
+                    
                 }
                 else if (dialog.newAssetType == AutomationISE.Model.Constants.assetCertificate)
                 {

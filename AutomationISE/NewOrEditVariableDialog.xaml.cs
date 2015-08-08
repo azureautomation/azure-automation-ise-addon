@@ -23,23 +23,32 @@ namespace AutomationISE
 
             variableTypeComboBox.Items.Add(Constants.VariableType.String);
             variableTypeComboBox.Items.Add(Constants.VariableType.Number);
+            variableTypeComboBox.SelectedValue = Constants.VariableType.String;
 
-            variableEncryptedComboBox.Items.Add(Constants.EncryptedState.Encrypted);
             variableEncryptedComboBox.Items.Add(Constants.EncryptedState.PlainText);
-
-            // TODO: default the type, default the encrypted
+            variableEncryptedComboBox.Items.Add(Constants.EncryptedState.Encrypted);
+            variableEncryptedComboBox.SelectedValue = Constants.EncryptedState.PlainText;
 
             if (variable != null)
             {
-                // TODO: set the type and encrypted fields as well
-                
                 if(variable.Encrypted)
                 {
                     encryptedValueTextbox.Password = variable.getValue().ToString();
+                    variableEncryptedComboBox.SelectedValue = Constants.EncryptedState.Encrypted;
                 }
                 else
                 {
                     valueTextbox.Text = variable.getValue().ToString();
+                    variableEncryptedComboBox.SelectedValue = Constants.EncryptedState.PlainText;
+                }
+
+                if (variable.getValue() is String)
+                {
+                    variableTypeComboBox.SelectedValue = Constants.VariableType.String;
+                }
+                else if (IsNumber(variable.getValue()))
+                {
+                    variableTypeComboBox.SelectedValue = Constants.VariableType.Number;
                 }
 
                 setEncrypted(variable.Encrypted);
@@ -57,14 +66,14 @@ namespace AutomationISE
             // TODO: change z coordinate of which is on top
             if (encrypted)
             {
-                encryptedValueTextbox.Opacity = 100;
-                valueTextbox.Opacity = 0;
+                encryptedValueTextbox.Visibility = System.Windows.Visibility.Visible;
+                valueTextbox.Visibility = System.Windows.Visibility.Collapsed;
                 valueTextbox.Text = "";
             }
             else
             {
-                valueTextbox.Opacity = 100;
-                encryptedValueTextbox.Opacity = 0; 
+                valueTextbox.Visibility = System.Windows.Visibility.Visible; ;
+                encryptedValueTextbox.Visibility = System.Windows.Visibility.Collapsed; 
                 encryptedValueTextbox.Password = "";
             }
         }
@@ -91,17 +100,42 @@ namespace AutomationISE
                 }
                 catch
                 {
-                    System.Windows.Forms.MessageBox.Show("Error: '" + _value + "' is not a number.");
+                    var valToShow = "'" + _value + "'";
+                    
+                    if(_encrypted)
+                    {
+                        valToShow = "the entered value";
+                    }
+                        
+                    System.Windows.Forms.MessageBox.Show("Error: " + valToShow + " is not a number.");
                     done = false;
                 }
             }
 
-            this.DialogResult = done;
+            if (done)
+            {
+                this.DialogResult = true;
+            }
         }
 
         private async void VariableEncryptedComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             setEncrypted(variableEncryptedComboBox.SelectedValue == Constants.EncryptedState.Encrypted); 
+        }
+
+        private bool IsNumber(object value)
+        {
+            return value is sbyte
+                    || value is byte
+                    || value is short
+                    || value is ushort
+                    || value is int
+                    || value is uint
+                    || value is long
+                    || value is ulong
+                    || value is float
+                    || value is double
+                    || value is decimal;
         }
 
         private class Constants
