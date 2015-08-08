@@ -14,8 +14,12 @@
 
 using CERTENROLLLib;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
+using System.Web.Script.Serialization;
 
 namespace AutomationISE.Model
 {
@@ -37,14 +41,20 @@ namespace AutomationISE.Model
             }
         }
 
-        public X509Certificate2 CreateSelfSignedCertificate()
+        public String CreateSelfSignedCertificate()
         {
             try
             {
                 // TODO Need to read and set these values in the config file
                 // Should not create a new certificate if one already exists
-                certObj.CreateCertificateRequest(Properties.Settings.Default.certName);
-                return certObj.InstallCertficate();
+                String thumbprint = GetCertificateInConfigFile();
+                if (thumbprint == null)
+                {
+                    certObj.CreateCertificateRequest(Properties.Settings.Default.certName);
+                    var selfSignedCert= certObj.InstallCertficate();
+                    thumbprint = selfSignedCert.Thumbprint;
+                }
+                return thumbprint;
             }
             catch (Exception ex)
             {
@@ -52,5 +62,28 @@ namespace AutomationISE.Model
             }
         }
 
+        private static String GetCertificateInConfigFile()
+        {
+            string modulePath = PSModuleConfiguration.findModulePath();
+            string configFilePath = System.IO.Path.Combine(modulePath, PSModuleConfiguration.ModuleData.ConfigFileName);
+
+            if (!File.Exists(configFilePath))
+            {
+                Debug.WriteLine("Warning: a config file wasn't found in the module, so a new one will be created");
+                return null;
+            }
+
+            JavaScriptSerializer jss = new JavaScriptSerializer();
+            List<PSModuleConfiguration.PSModuleConfigurationItem> config = jss.Deserialize<List<PSModuleConfiguration.PSModuleConfigurationItem>>((File.ReadAllText(configFilePath)));
+
+            foreach (PSModuleConfiguration.PSModuleConfigurationItem pc in config)
+            {
+                if (pc.Name.Equals(PSModuleConfiguration.ModuleData.EncryptionCertificateThumbprint_FieldName))
+                {
+                    return pc.Value;
+                }
+            }
+            return null;
+        }
     }
 }

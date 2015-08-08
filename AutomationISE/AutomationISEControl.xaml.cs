@@ -55,8 +55,8 @@ namespace AutomationISE
 
                 // Generate self signed certificate for encrypting local assets in the current user store Cert:\CurrentUser\My\
                 var certObj = new AutomationSelfSignedCertificate();
-                X509Certificate2 selfSignedCertificate = certObj.CreateSelfSignedCertificate();
-                certificateTextBox.Text = selfSignedCertificate.Thumbprint;
+                String selfSignedThumbprint = certObj.CreateSelfSignedCertificate();
+                certificateTextBox.Text = selfSignedThumbprint;
 
                 /* Determine working directory */
                 String localWorkspace = Properties.Settings.Default["localWorkspace"].ToString();
@@ -340,7 +340,7 @@ namespace AutomationISE
                     /* Update PowerShell Module */
                     try
                     {
-                        PSModuleConfiguration.UpdateModuleConfiguration(iseClient.currWorkspace);
+                        PSModuleConfiguration.UpdateModuleConfiguration(iseClient.currWorkspace, certificateTextBox.Text);
                     }
                     catch
                     {
@@ -765,7 +765,14 @@ namespace AutomationISE
 
         private void certificateButton_Click(object sender, RoutedEventArgs e)
         {
-
+            try
+            {
+                PSModuleConfiguration.UpdateModuleConfiguration(workspaceTextBox.Text, certificateTextBox.Text);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("The thumbprint could not be updated " + ex.Message, "Error");
+            }
         }
 
         private void certificateTextBox_TextChanged(object sender, TextChangedEventArgs e)
