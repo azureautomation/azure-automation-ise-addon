@@ -704,6 +704,22 @@ namespace AutomationISE
             }
         }
 
+        private void createOrUpdateVariableAsset(string variableAssetName, AutomationVariable variableToEdit)
+        {
+            var dialog = new NewOrEditVariableDialog(variableToEdit);
+
+            if (dialog.ShowDialog() == true)
+            {
+                var assetsToSave = new List<AutomationAsset>();
+
+                var newVariable = new AutomationVariable(variableAssetName, dialog.value, dialog.encrypted);
+                assetsToSave.Add(newVariable);
+
+                AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave);
+                refreshAssets();
+            }
+        }
+
         private void ButttonNewAsset_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new ChooseNewAssetTypeDialog();
@@ -720,7 +736,7 @@ namespace AutomationISE
                 }
                 else if (dialog.newAssetType == AutomationISE.Model.Constants.assetConnection)
                 {
-                    
+                    createOrUpdateVariableAsset(dialog.newAssetName, null);
                 }
                 else if (dialog.newAssetType == AutomationISE.Model.Constants.assetCertificate)
                 {
@@ -737,7 +753,7 @@ namespace AutomationISE
                 createOrUpdateCredentialAsset(asset.Name, (AutomationCredential)asset);
             }
             else if(asset is AutomationVariable) {
-                // TODO: implement
+                createOrUpdateVariableAsset(asset.Name, (AutomationVariable)asset);
             }
         }
 

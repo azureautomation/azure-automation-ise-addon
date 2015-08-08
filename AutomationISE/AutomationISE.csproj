@@ -124,6 +124,9 @@
     <Compile Include="ChooseNewAssetTypeDialog.xaml.cs">
       <DependentUpon>ChooseNewAssetTypeDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="NewOrEditVariableDialog.xaml.cs">
+      <DependentUpon>NewOrEditVariableDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="NewOrEditCredentialDialog.xaml.cs">
       <DependentUpon>NewOrEditCredentialDialog.xaml</DependentUpon>
     </Compile>
@@ -142,6 +145,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="ChooseNewAssetTypeDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="NewOrEditVariableDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
