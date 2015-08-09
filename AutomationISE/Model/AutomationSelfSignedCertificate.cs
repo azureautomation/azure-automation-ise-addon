@@ -45,8 +45,6 @@ namespace AutomationISE.Model
         {
             try
             {
-                // TODO Need to read and set these values in the config file
-                // Should not create a new certificate if one already exists
                 String thumbprint = GetCertificateInConfigFile();
                 if (thumbprint == null)
                 {

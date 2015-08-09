@@ -693,8 +693,14 @@ namespace AutomationISE
             }
             else
             {
-                TestJobOutputWindow jobWindow = new TestJobOutputWindow(jobCreationParams.RunbookName, jobResponse, iseClient);
-                jobWindow.Show();
+                try {
+                    TestJobOutputWindow jobWindow = new TestJobOutputWindow(jobCreationParams.RunbookName, jobResponse, iseClient);
+                    jobWindow.Show();
+                } catch (Exception exception)
+                {
+                    MessageBox.Show(exception.Message, "Error");
+                    return;
+                }
             }
         }
 

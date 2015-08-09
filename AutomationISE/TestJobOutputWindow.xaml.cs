@@ -108,11 +108,19 @@ namespace AutomationISE
 
         private async void RefreshJobButton_Click(object sender, RoutedEventArgs e)
         {
-            RefreshJobButton.IsEnabled = false;
-            RefreshJobButton.Content = "Refreshing...";
-            await checkJob();
-            RefreshJobButton.IsEnabled = true;
-            RefreshJobButton.Content = "Refresh";
+            try
+            {
+                RefreshJobButton.IsEnabled = false;
+                RefreshJobButton.Content = "Refreshing...";
+                await checkJob();
+                RefreshJobButton.IsEnabled = true;
+                RefreshJobButton.Content = "Refresh";
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Error");
+                return;
+            }
         }
     }
 }
