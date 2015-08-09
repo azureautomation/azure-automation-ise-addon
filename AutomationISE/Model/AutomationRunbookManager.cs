@@ -80,13 +80,17 @@ namespace AutomationISE.Model
             /* Start by checking the downloaded runbooks */
             foreach (Runbook cloudRunbook in cloudRunbooks)
             {
-                if (filePathForRunbook.ContainsKey(cloudRunbook.Name))
+                // Only download script runbooks
+                if (cloudRunbook.Properties.RunbookType == Constants.RunbookType.Script)
                 {
-                    result.Add(new AutomationRunbook(new FileInfo(filePathForRunbook[cloudRunbook.Name]), cloudRunbook));
-                }
-                else
-                {
-                    result.Add(new AutomationRunbook(cloudRunbook));
+                    if (filePathForRunbook.ContainsKey(cloudRunbook.Name))
+                    {
+                        result.Add(new AutomationRunbook(new FileInfo(filePathForRunbook[cloudRunbook.Name]), cloudRunbook));
+                    }
+                    else
+                    {
+                        result.Add(new AutomationRunbook(cloudRunbook));
+                    }
                 }
             }
             /* Now find runbooks on disk that aren't yet accounted for */
