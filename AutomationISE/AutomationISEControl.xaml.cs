@@ -81,6 +81,7 @@ namespace AutomationISE
                 setRunbookAndAssetNonSelectionButtonState(false);
                 setAssetSelectionButtonState(false);
                 setRunbookSelectionButtonState(false);
+
                 startContinualGet();
             }
             catch (Exception exception)
@@ -294,7 +295,6 @@ namespace AutomationISE
                 iseClient.currSubscription = (Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription)subscriptionComboBox.SelectedValue;
                 if (iseClient.currSubscription != null)
                 {
-                    accountsComboBox.IsEnabled = false;
                     UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveAutomationAccounts);
                     IList<AutomationAccount> automationAccounts = await iseClient.GetAutomationAccounts();
                     accountsComboBox.ItemsSource = automationAccounts;
@@ -303,7 +303,6 @@ namespace AutomationISE
                     {
                         UpdateStatusBox(configurationStatusTextBox, Properties.Resources.FoundAutomationAccounts);
                         accountsComboBox.SelectedItem = accountsComboBox.Items[0];
-                        accountsComboBox.IsEnabled = true;
                     }
                     else UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoAutomationAccounts);
                 }
@@ -752,8 +751,7 @@ namespace AutomationISE
         {
             try
             {
-                PSModuleConfiguration.UpdateModuleConfiguration(iseClient.currWorkspace, certificateTextBox.Text);
-                UpdateStatusBox(configurationStatusTextBox, "Updated certificate thumbprint to use for encryption / decryption of assets");
+                PSModuleConfiguration.UpdateModuleConfiguration(workspaceTextBox.Text, certificateTextBox.Text);
             }
             catch (Exception ex)
             {
