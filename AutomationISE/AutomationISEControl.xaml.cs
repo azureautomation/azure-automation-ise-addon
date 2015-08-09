@@ -292,6 +292,7 @@ namespace AutomationISE
         {
             try
             {
+                accountsComboBox.IsEnabled = false;
                 iseClient.currSubscription = (Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription)subscriptionComboBox.SelectedValue;
                 if (iseClient.currSubscription != null)
                 {
@@ -303,6 +304,7 @@ namespace AutomationISE
                     {
                         UpdateStatusBox(configurationStatusTextBox, Properties.Resources.FoundAutomationAccounts);
                         accountsComboBox.SelectedItem = accountsComboBox.Items[0];
+                        accountsComboBox.IsEnabled = true;
                     }
                     else UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoAutomationAccounts);
                 }
@@ -769,7 +771,8 @@ namespace AutomationISE
         {
             try
             {
-                PSModuleConfiguration.UpdateModuleConfiguration(workspaceTextBox.Text, certificateTextBox.Text);
+                PSModuleConfiguration.UpdateModuleConfiguration(iseClient.currWorkspace, certificateTextBox.Text);
+                UpdateStatusBox(configurationStatusTextBox, "Updated certificate thumbprint to use for encryption / decryption of assets");
             }
             catch (Exception ex)
             {
