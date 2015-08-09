@@ -88,8 +88,7 @@
                         <RowDefinition Height="35"/>
                         <RowDefinition Height="5"/>
                     </Grid.RowDefinitions>
-                    <Label Margin="10,10,10,0" Grid.Row="0" Grid.Column="0">Asset Type:</Label>
-                    <ComboBox x:Name="assetsComboBox" Margin="10,10,10,0" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" SelectionChanged="assetsComboBox_SelectionChanged"/>
+                    <ComboBox x:Name="assetsComboBox" Margin="10,10,10,0" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" SelectionChanged="assetsComboBox_SelectionChanged"/>
                     <ListView x:Name="assetsListView" Margin="10,10,10,0" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" SelectionChanged="assetsListView_SelectionChanged">
                         <ListView.View>
                             <GridView>

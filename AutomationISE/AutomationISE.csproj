@@ -126,6 +126,12 @@
     </Compile>
     <Compile Include="Model\AutomationSelfSignedCertificate.cs" />
     <Compile Include="Model\Certificate.cs" />
+<<<<<<< HEAD
+=======
+    <Compile Include="NewOrEditVariableDialog.xaml.cs">
+      <DependentUpon>NewOrEditVariableDialog.xaml</DependentUpon>
+    </Compile>
+>>>>>>> origin/master
     <Compile Include="NewOrEditCredentialDialog.xaml.cs">
       <DependentUpon>NewOrEditCredentialDialog.xaml</DependentUpon>
     </Compile>
@@ -144,6 +150,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="ChooseNewAssetTypeDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="NewOrEditVariableDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -205,6 +215,36 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
+<<<<<<< HEAD
+=======
+    <COMReference Include="CERTCLILib">
+      <Guid>{372FCE32-4324-11D0-8810-00A0C903B83C}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="CertCOMLib">
+      <Guid>{179B730B-9F8B-4E78-92AF-5F788A047EBD}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="CERTENCODELib">
+      <Guid>{13199C00-7494-11D0-8816-00A0C903B83C}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+>>>>>>> origin/master
     <COMReference Include="CERTENROLLLib">
       <Guid>{728AB348-217D-11DA-B2A4-000E7BBB2B09}</Guid>
       <VersionMajor>1</VersionMajor>
@@ -214,6 +254,18 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
+<<<<<<< HEAD
+=======
+    <COMReference Include="CertEnrollProviderLib">
+      <Guid>{B63F6D78-DD60-49D7-AD69-349DA00B092F}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+>>>>>>> origin/master
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" />
