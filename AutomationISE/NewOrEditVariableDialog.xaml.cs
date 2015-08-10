@@ -33,7 +33,9 @@ namespace AutomationISE
             {
                 if(variable.Encrypted)
                 {
-                    encryptedValueTextbox.Password = variable.getValue().ToString();
+                    if(variable.getValue() != null) {
+                        encryptedValueTextbox.Password = variable.getValue().ToString();
+                    }
                     variableEncryptedComboBox.SelectedValue = Constants.EncryptedState.Encrypted;
                 }
                 else
@@ -52,6 +54,12 @@ namespace AutomationISE
                 }
 
                 setEncrypted(variable.Encrypted);
+                variableEncryptedComboBox.SelectionChanged += VariableEncryptedComboBox_SelectionChanged;
+
+                // don't allow user to change encrypted status of an existing variable asset
+                variableEncryptedComboBox.IsEditable = false;
+                variableEncryptedComboBox.IsHitTestVisible = false;
+                variableEncryptedComboBox.Focusable = false;
                 
                 this.Title = "Edit Variable Asset";
             }
