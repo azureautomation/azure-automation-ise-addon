@@ -63,12 +63,10 @@ namespace AutomationISE.Model
         {
             if (azureADAuthResult == null)
                 throw new Exception("An Azure AD Authentication Result is needed to query Azure for subscriptions.");
-            if (subscriptionClient == null)  //lazy instantiation
-            {
-                if (cloudCredentials == null)
-                    subscriptionCredentials = new Microsoft.WindowsAzure.TokenCloudCredentials(azureADAuthResult.AccessToken);
-                subscriptionClient = new Microsoft.WindowsAzure.Subscriptions.SubscriptionClient(subscriptionCredentials);
-            }
+            if (cloudCredentials == null)
+                subscriptionCredentials = new Microsoft.WindowsAzure.TokenCloudCredentials(azureADAuthResult.AccessToken);
+            subscriptionClient = new Microsoft.WindowsAzure.Subscriptions.SubscriptionClient(subscriptionCredentials);
+           
             var cancelToken = new CancellationToken();
             Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse subscriptionsResult = await subscriptionClient.Subscriptions.ListAsync(cancelToken);
             return subscriptionsResult.Subscriptions;
