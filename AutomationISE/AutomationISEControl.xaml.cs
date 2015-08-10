@@ -241,7 +241,14 @@ namespace AutomationISE
             }
             catch (Exception exception)
             {
-                var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
+                // If the message is not token expired, then show a dialog.
+                // TODO. Should probably just check if the token is still valid and stop trying to refresh assets
+                // if it isn't
+                if (exception.HResult != -2146233088)
+                {
+                    var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
+                }
+
             }
         }
 
