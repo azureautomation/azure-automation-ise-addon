@@ -63,7 +63,6 @@ namespace AutomationISE
 
         private void setEncrypted(bool encrypted)
         {
-            // TODO: change z coordinate of which is on top
             if (encrypted)
             {
                 encryptedValueTextbox.Visibility = System.Windows.Visibility.Visible;

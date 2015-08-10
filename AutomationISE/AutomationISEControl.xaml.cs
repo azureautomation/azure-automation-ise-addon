@@ -42,6 +42,7 @@ namespace AutomationISE
     {
         private AutomationISEClient iseClient;
         private LocalRunbookStore runbookStore;
+        private bool tokenExpired = false;
 
         public ObjectModelRoot HostObject { get; set; }
 
@@ -209,6 +210,7 @@ namespace AutomationISE
             this.Dispatcher.Invoke((Action)(() =>
             {
                 refreshAssets();
+                // TODO: add refresh runbooks
             }));
         }
         
@@ -238,17 +240,29 @@ namespace AutomationISE
                 {
                     assetsListView.ItemsSource = await getAssetsOfType("AutomationCertificate");
                 }
+
+                tokenExpired = false;
             }
             catch (Exception exception)
             {
-                // If the message is not token expired, then show a dialog.
-                // TODO. Should probably just check if the token is still valid and stop trying to refresh assets
-                // if it isn't
-                if (exception.HResult != -2146233088)
+                var showError = true;
+                
+                // If the message is not token expired, or if this is the first time we'd show token expired message
+                // since previously being connected, show a dialog
+                if (exception.HResult == -2146233088)
+                {
+                    if (tokenExpired)
+                    {
+                        showError = false;
+                    }
+
+                    tokenExpired = true;
+                }
+
+                if (showError)
                 {
                     var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
                 }
-
             }
         }
 
