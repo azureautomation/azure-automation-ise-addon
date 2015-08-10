@@ -9,10 +9,6 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-
-using System.Timers;
 using System.Diagnostics;
 using Microsoft.Azure.Management.Automation.Models;
 using AutomationISE.Model;
@@ -48,61 +44,62 @@ namespace AutomationISE
 
         private async Task checkJob()
         {
-            TestJobGetResponse response = await iseClient.automationManagementClient.TestJobs.GetAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name, 
-                iseClient.currAccount.Name, runbookName, new System.Threading.CancellationToken());
+            TestJobGetResponse response = await iseClient.automationManagementClient.TestJobs.GetAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
+                                                iseClient.currAccount.Name, runbookName, new System.Threading.CancellationToken());
+
+            OutputTextBlock.Inlines.Add("\r\nStatus: " + response.TestJob.Status);
+
             JobStreamListResponse jslResponse = await iseClient.automationManagementClient.JobStreams.ListTestJobStreamsAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
                 iseClient.currAccount.Name, runbookName, null, new System.Threading.CancellationToken());
-            updateJobOutputTextBlock(response, jslResponse);
-        }
 
-        private void updateJobOutputTextBlock(TestJobGetResponse response, JobStreamListResponse jslResponse)
-        {
-            OutputTextBlock.Inlines.Add("\r\nStatus: " + response.TestJob.Status);
-            if (response.TestJob.StatusDetails != "None")
-                OutputTextBlock.Inlines.Add("\r\n\tDetails: " + response.TestJob.StatusDetails);
+            // Write out each stream output
             foreach (JobStream stream in jslResponse.JobStreams)
             {
-                /* Form of the 'summary' string, which is really the text we're interested in: [guid]:[hostname in brackets]:[text entered by user] */
-                /* Strip this down to just the text entered by the user: */
-                int secondColonIndex = stream.Properties.Summary.IndexOf(':', stream.Properties.Summary.IndexOf(':') + 1);
-                String streamText = stream.Properties.Summary.Substring(secondColonIndex + 1);
-                OutputTextBlock.Inlines.Add("\r\n");
-                if (stream.Properties.StreamType == "Output")
+                var jslStream = await iseClient.automationManagementClient.JobStreams.GetTestJobStreamAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
+                        iseClient.currAccount.Name, runbookName, stream.Properties.JobStreamId, new System.Threading.CancellationToken());
+                updateJobOutputTextBlock(response, jslStream);
+            }
+        }
+
+        private void updateJobOutputTextBlock(TestJobGetResponse response, JobStreamGetResponse stream)
+        {
+            String streamText = stream.JobStream.Properties.StreamText;
+            OutputTextBlock.Inlines.Add("\r\n");
+            if (stream.JobStream.Properties.StreamType == "Output")
+            {
+                OutputTextBlock.Inlines.Add(streamText);
+            }
+            else if (stream.JobStream.Properties.StreamType == "Verbose")
+            {
+                streamText = "VERBOSE: " + streamText;
+                OutputTextBlock.Inlines.Add(new Run(streamText)
                 {
-                    OutputTextBlock.Inlines.Add(streamText);
-                }
-                else if (stream.Properties.StreamType == "Verbose")
+                    Foreground = (SolidColorBrush)(new BrushConverter().ConvertFrom(VerboseForegroundColorCode)),
+                    Background = (SolidColorBrush)(new BrushConverter().ConvertFrom(VerboseBackgroundColorCode))
+                });
+            }
+            else if (stream.JobStream.Properties.StreamType == "Error")
+            {
+                streamText = "ERROR: " + streamText;
+                OutputTextBlock.Inlines.Add(new Run(streamText)
                 {
-                    streamText = "VERBOSE: " + streamText;
-                    OutputTextBlock.Inlines.Add(new Run(streamText)
-                    {
-                        Foreground = (SolidColorBrush)(new BrushConverter().ConvertFrom(VerboseForegroundColorCode)),
-                        Background = (SolidColorBrush)(new BrushConverter().ConvertFrom(VerboseBackgroundColorCode))
-                    });
-                }
-                else if (stream.Properties.StreamType == "Error")
+                    Foreground = (SolidColorBrush)(new BrushConverter().ConvertFrom(ErrorForegroundColorCode)),
+                    Background = (SolidColorBrush)(new BrushConverter().ConvertFrom(ErrorBackgroundColorCode))
+                });
+            }
+            else if (stream.JobStream.Properties.StreamType == "Warning")
+            {
+                streamText = "WARNING: " + streamText;
+                OutputTextBlock.Inlines.Add(new Run(streamText)
                 {
-                    streamText = "ERROR: " + streamText;
-                    OutputTextBlock.Inlines.Add(new Run(streamText)
-                    {
-                        Foreground = (SolidColorBrush)(new BrushConverter().ConvertFrom(ErrorForegroundColorCode)),
-                        Background = (SolidColorBrush)(new BrushConverter().ConvertFrom(ErrorBackgroundColorCode))
-                    });
-                }
-                else if (stream.Properties.StreamType == "Warning")
-                {
-                    streamText = "WARNING: " + streamText;
-                    OutputTextBlock.Inlines.Add(new Run(streamText)
-                    {
-                        Foreground = (SolidColorBrush)(new BrushConverter().ConvertFrom(WarningForegroundColorCode)),
-                        Background = (SolidColorBrush)(new BrushConverter().ConvertFrom(WarningBackgroundColorCode))
-                    });
-                }
-                else
-                {
-                    Debug.WriteLine("Unknown stream type couldn't be colored properly: " + stream.Properties.StreamType);
-                    OutputTextBlock.Inlines.Add(stream.Properties.StreamType.ToUpper() + ":  " + streamText);
-                }
+                    Foreground = (SolidColorBrush)(new BrushConverter().ConvertFrom(WarningForegroundColorCode)),
+                    Background = (SolidColorBrush)(new BrushConverter().ConvertFrom(WarningBackgroundColorCode))
+                });
+            }
+            else
+            {
+                Debug.WriteLine("Unknown stream type couldn't be colored properly: " + stream.JobStream.Properties.StreamType);
+                OutputTextBlock.Inlines.Add(stream.JobStream.Properties.StreamType.ToUpper() + ":  " + streamText);
             }
         }
 
