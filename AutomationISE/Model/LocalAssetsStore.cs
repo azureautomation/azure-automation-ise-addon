@@ -191,58 +191,76 @@ namespace AutomationISE.Model
         {
             public static String Encrypt(Object Value, String Thumbprint)
             {
-                X509Store CertStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
-                try
+                if (Value == null)
                 {
-                    CertStore.Open(OpenFlags.ReadOnly);
+                    return null;
                 }
-                catch (Exception ex)
+                else
                 {
-                    throw new Exception("Error reading certificate store", ex);
+                    X509Store CertStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+                    try
+                    {
+                        CertStore.Open(OpenFlags.ReadOnly);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception("Error reading certificate store", ex);
+                    }
+
+                    var CertCollection = CertStore.Certificates;
+                    var EncryptCert = CertCollection.Find(X509FindType.FindByThumbprint, Thumbprint, false);
+                    CertStore.Close();
+
+                    if (EncryptCert.Count == 0)
+                    {
+                        throw new Exception("Certificate:" + Thumbprint + " does not exist in HKLM\\Root");
+                    }
+
+                    RSACryptoServiceProvider rsaEncryptor = (RSACryptoServiceProvider)EncryptCert[0].PublicKey.Key;
+                    var valueJson = JsonConvert.SerializeObject(Value);
+                    var EncryptedBytes = System.Text.Encoding.Default.GetBytes(valueJson);
+                    byte[] EncryptedData = rsaEncryptor.Encrypt(EncryptedBytes, true);
+                    return Convert.ToBase64String(EncryptedData);
                 }
-
-                var CertCollection = CertStore.Certificates;
-                var EncryptCert = CertCollection.Find(X509FindType.FindByThumbprint, Thumbprint, false);
-                CertStore.Close();
-
-                if (EncryptCert.Count == 0)
-                {
-                    throw new Exception("Certificate:" + Thumbprint + " does not exist in HKLM\\Root");
-                }
-
-                RSACryptoServiceProvider rsaEncryptor = (RSACryptoServiceProvider)EncryptCert[0].PublicKey.Key;
-                var valueJson = JsonConvert.SerializeObject(Value);
-                var EncryptedBytes = System.Text.Encoding.Default.GetBytes(valueJson);
-                byte[] EncryptedData = rsaEncryptor.Encrypt(EncryptedBytes, true);
-                return Convert.ToBase64String(EncryptedData);
             }
 
-            public static Object Decrypt(String EncryptedValue, String Thumbprint)
+            public static Object Decrypt(Object EncryptedValue, String Thumbprint)
             {
-                X509Store CertStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
-                try
+                if (EncryptedValue == null)
                 {
-                    CertStore.Open(OpenFlags.ReadOnly);
+                    return null;
                 }
-                catch (Exception ex)
+                else if (!(EncryptedValue is string))
                 {
-                    throw new Exception("Error reading certificate store", ex);
+                    throw new Exception("Cannot decrypt value. Value to decrypt was not a string.");
                 }
-
-                var CertCollection = CertStore.Certificates;
-                var EncryptCert = CertCollection.Find(X509FindType.FindByThumbprint, Thumbprint, false);
-                CertStore.Close();
-
-                if (EncryptCert.Count == 0)
+                else
                 {
-                    throw new Exception("Certificate:" + Thumbprint + " does not exist in HKLM\\My");
-                }
+                    X509Store CertStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+                    try
+                    {
+                        CertStore.Open(OpenFlags.ReadOnly);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception("Error reading certificate store", ex);
+                    }
 
-                Byte[] EncryptedString = Convert.FromBase64String(EncryptedValue);
-                RSACryptoServiceProvider rsaEncryptor = (RSACryptoServiceProvider)EncryptCert[0].PrivateKey;
-                byte[] EncryptedData = rsaEncryptor.Decrypt(EncryptedString, true);
-                var valueJson = System.Text.Encoding.Default.GetString(EncryptedData);
-                return JsonConvert.DeserializeObject(valueJson);
+                    var CertCollection = CertStore.Certificates;
+                    var EncryptCert = CertCollection.Find(X509FindType.FindByThumbprint, Thumbprint, false);
+                    CertStore.Close();
+
+                    if (EncryptCert.Count == 0)
+                    {
+                        throw new Exception("Certificate:" + Thumbprint + " does not exist in HKLM\\My");
+                    }
+
+                    Byte[] EncryptedString = Convert.FromBase64String((string)EncryptedValue);
+                    RSACryptoServiceProvider rsaEncryptor = (RSACryptoServiceProvider)EncryptCert[0].PrivateKey;
+                    byte[] EncryptedData = rsaEncryptor.Decrypt(EncryptedString, true);
+                    var valueJson = System.Text.Encoding.Default.GetString(EncryptedData);
+                    return JsonConvert.DeserializeObject(valueJson);
+                }
             }
             
             public static SecureLocalAssetsContainerJson Get(string workspacePath, String encryptionCertThumbprint)
@@ -256,7 +274,7 @@ namespace AutomationISE.Model
                     {
                         foreach (var localVariableAsset in localAssetsSecure.Variable)
                         {
-                            localVariableAsset.Value = Decrypt((string)localVariableAsset.Value, encryptionCertThumbprint);
+                            localVariableAsset.Value = Decrypt(localVariableAsset.Value, encryptionCertThumbprint);
                         }
 
                         foreach (var localCredAsset in localAssetsSecure.PSCredential)
