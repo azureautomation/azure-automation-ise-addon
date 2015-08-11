@@ -1,6 +1,0 @@
-﻿input[type="text"]
- {
-  font-family: verdana, Arial,'sans serif'; 
-  color:Blue;
-  background-color:Gray; 
- }
