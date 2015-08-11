@@ -359,6 +359,8 @@ namespace AutomationISE
                     /* Update Status */
                     UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
                     setRunbookAndAssetNonSelectionButtonState(true);
+                    UpdateStatusBox(configurationStatusTextBox,"Workspace location is: " + iseClient.currWorkspace);
+                    UpdateStatusBox(configurationStatusTextBox, "Save new runbooks you wish to upload to Azure Automation in this folder");
                     /* Update Runbooks */
                     UpdateStatusBox(configurationStatusTextBox, "Getting runbook data...");
                     ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient, 
