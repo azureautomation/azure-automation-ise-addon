@@ -17,7 +17,7 @@
         <Label>Type:</Label>
         <ComboBox x:Name="variableTypeComboBox" Margin="0,0,0,10" Grid.Column="1" />
         <Label Grid.Row="1">Encrypted:</Label>
-        <ComboBox x:Name="variableEncryptedComboBox" Margin="0,0,0,10" Grid.Row="1" Grid.Column="1" />
+        <ComboBox x:Name="variableEncryptedComboBox" Margin="0,0,0,10" Grid.Row="1" Grid.Column="1" SelectionChanged="VariableEncryptedComboBox_SelectionChanged" />
         <Label Grid.Row="2">Value:</Label>
         <TextBox Name="valueTextbox" Grid.Row="2" Grid.Column="1" Margin="0,0,0,10" />
         <PasswordBox Name="encryptedValueTextbox" Grid.Row="2" Grid.Column="1" Margin="0,0,0,10" Visibility="Collapsed" />

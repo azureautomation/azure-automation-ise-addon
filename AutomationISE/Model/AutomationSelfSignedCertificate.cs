@@ -46,7 +46,7 @@ namespace AutomationISE.Model
             try
             {
                 String thumbprint = GetCertificateInConfigFile();
-                if (thumbprint == null)
+                if (thumbprint == null || thumbprint == "none")
                 {
                     certObj.CreateCertificateRequest(Properties.Settings.Default.certName);
                     var selfSignedCert= certObj.InstallCertficate();

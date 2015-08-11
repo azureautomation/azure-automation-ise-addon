@@ -25,15 +25,15 @@ namespace AutomationISE.Model
 {
     public class AutomationAssetManager 
     {
-        public static async Task DownloadAllFromCloud(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
+        public static async Task DownloadAllFromCloud(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, String encryptionCertThumbprint)
         {
-            var assets = await AutomationAssetManager.GetAll(null, automationApi, resourceGroupName, automationAccountName);
-            AutomationAssetManager.SaveLocally(localWorkspacePath, assets);
+            var assets = await AutomationAssetManager.GetAll(null, automationApi, resourceGroupName, automationAccountName, encryptionCertThumbprint);
+            AutomationAssetManager.SaveLocally(localWorkspacePath, assets, encryptionCertThumbprint);
         }
 
-        public static async void DownloadFromCloud(ICollection<AutomationAsset> assetsToDownload, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
+        public static async void DownloadFromCloud(ICollection<AutomationAsset> assetsToDownload, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, String encryptionCertThumbprint)
         {
-            var cloudAssets = await AutomationAssetManager.GetAll(null, automationApi, resourceGroupName, automationAccountName);
+            var cloudAssets = await AutomationAssetManager.GetAll(null, automationApi, resourceGroupName, automationAccountName, encryptionCertThumbprint);
             var assetsToSaveLocally = new SortedSet<AutomationAsset>();
 
             foreach (var cloudAsset in cloudAssets)
@@ -48,7 +48,7 @@ namespace AutomationISE.Model
                 }
             }
 
-            AutomationAssetManager.SaveLocally(localWorkspacePath, assetsToSaveLocally);
+            AutomationAssetManager.SaveLocally(localWorkspacePath, assetsToSaveLocally, encryptionCertThumbprint);
         }
 
         public static async Task UploadToCloud(ICollection<AutomationAsset> assetsToUpload, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
@@ -87,16 +87,16 @@ namespace AutomationISE.Model
             }
         }
 
-        public static void SaveLocally(String localWorkspacePath, ICollection<AutomationAsset> assets)
+        public static void SaveLocally(String localWorkspacePath, ICollection<AutomationAsset> assets, String encryptionCertThumbprint)
         {
-            LocalAssetsStore.Add(localWorkspacePath, assets);
+            LocalAssetsStore.Add(localWorkspacePath, assets, encryptionCertThumbprint);
         }
 
-        public static void Delete(ICollection<AutomationAsset> assetsToDelete, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, bool deleteLocally, bool deleteFromCloud)
+        public static void Delete(ICollection<AutomationAsset> assetsToDelete, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, bool deleteLocally, bool deleteFromCloud, String encryptionCertThumbprint)
         {
             if (deleteLocally)
             {
-                LocalAssetsStore.Delete(localWorkspacePath, assetsToDelete);
+                LocalAssetsStore.Delete(localWorkspacePath, assetsToDelete, encryptionCertThumbprint);
             }
 
             if (deleteFromCloud)
@@ -121,7 +121,7 @@ namespace AutomationISE.Model
             }
         }
 
-        public static async Task<ISet<AutomationAsset>> GetAll(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
+        public static async Task<ISet<AutomationAsset>> GetAll(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, string encryptionCertThumbprint)
         {
             VariableListResponse cloudVariables = await automationApi.Variables.ListAsync(resourceGroupName, automationAccountName);
             CredentialListResponse cloudCredentials = await automationApi.PsCredentials.ListAsync(resourceGroupName, automationAccountName);
@@ -129,7 +129,7 @@ namespace AutomationISE.Model
             // TODO: need to get one at a time to get values. values currently comes back as empty
             //ConnectionListResponse cloudConnections = await automationApi.Connections.ListAsync(resourceGroupName, automationAccountName);
 
-            LocalAssets localAssets = LocalAssetsStore.Get(localWorkspacePath);
+            LocalAssets localAssets = LocalAssetsStore.Get(localWorkspacePath, encryptionCertThumbprint);
 
             var automationAssets = new SortedSet<AutomationAsset>();
 

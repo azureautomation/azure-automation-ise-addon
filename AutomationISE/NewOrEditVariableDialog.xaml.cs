@@ -13,6 +13,7 @@ namespace AutomationISE
     {
         private Object _value;
         private bool _encrypted;
+        private bool initialized = false;
 
         public Object value { get { return _value; } }
         public bool encrypted { get { return _encrypted; } }
@@ -53,10 +54,11 @@ namespace AutomationISE
                     variableTypeComboBox.SelectedValue = Constants.VariableType.Number;
                 }
 
+                initialized = true;
                 setEncrypted(variable.Encrypted);
-                variableEncryptedComboBox.SelectionChanged += VariableEncryptedComboBox_SelectionChanged;
 
                 // don't allow user to change encrypted status of an existing variable asset
+                variableEncryptedComboBox.IsEnabled = false; 
                 variableEncryptedComboBox.IsEditable = false;
                 variableEncryptedComboBox.IsHitTestVisible = false;
                 variableEncryptedComboBox.Focusable = false;
@@ -65,23 +67,27 @@ namespace AutomationISE
             }
             else
             {
+                initialized = true;
                 this.Title = "New Variable Asset";
             }
         }
 
         private void setEncrypted(bool encrypted)
         {
-            if (encrypted)
+            if (initialized)
             {
-                encryptedValueTextbox.Visibility = System.Windows.Visibility.Visible;
-                valueTextbox.Visibility = System.Windows.Visibility.Collapsed;
-                valueTextbox.Text = "";
-            }
-            else
-            {
-                valueTextbox.Visibility = System.Windows.Visibility.Visible; ;
-                encryptedValueTextbox.Visibility = System.Windows.Visibility.Collapsed; 
-                encryptedValueTextbox.Password = "";
+                if (encrypted)
+                {
+                    encryptedValueTextbox.Visibility = System.Windows.Visibility.Visible;
+                    valueTextbox.Visibility = System.Windows.Visibility.Collapsed;
+                    valueTextbox.Text = "";
+                }
+                else
+                {
+                    valueTextbox.Visibility = System.Windows.Visibility.Visible; ;
+                    encryptedValueTextbox.Visibility = System.Windows.Visibility.Collapsed;
+                    encryptedValueTextbox.Password = "";
+                }
             }
         }
 

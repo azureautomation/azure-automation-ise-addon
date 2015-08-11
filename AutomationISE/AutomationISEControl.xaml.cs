@@ -91,6 +91,18 @@ namespace AutomationISE
             }
         }
 
+        public String getEncryptionCertificateThumbprint()
+        {
+            if (!(certificateTextBox.Text == "" || certificateTextBox.Text == "none"))
+            {
+                return certificateTextBox.Text;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         public void setRunbookAndAssetNonSelectionButtonState(bool enabled) {
             ButtonRefreshAssetList.IsEnabled = enabled;
             ButttonNewAsset.IsEnabled = enabled;
@@ -122,7 +134,7 @@ namespace AutomationISE
 
         public async Task<SortedSet<AutomationAsset>> getAssetsInfo()
         {
-            return (SortedSet<AutomationAsset>)await AutomationAssetManager.GetAll(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            return (SortedSet<AutomationAsset>)await AutomationAssetManager.GetAll(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
         }
 
         public async Task<SortedSet<AutomationAsset>> getAssetsOfType(String type)
@@ -143,12 +155,12 @@ namespace AutomationISE
 
         public async Task downloadAllAssets()
         {
-            await AutomationAssetManager.DownloadAllFromCloud(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            await AutomationAssetManager.DownloadAllFromCloud(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
         }
 
         public void downloadAssets(ICollection<AutomationAsset> assetsToDownload)
         {
-            AutomationAssetManager.DownloadFromCloud(assetsToDownload, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            AutomationAssetManager.DownloadFromCloud(assetsToDownload, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
         }
 
         public async Task uploadAssets(ICollection<AutomationAsset> assetsToUpload)
@@ -191,7 +203,7 @@ namespace AutomationISE
                 }
             }
             
-            AutomationAssetManager.Delete(assetsToDelete, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, deleteLocally, deleteFromCloud);
+            AutomationAssetManager.Delete(assetsToDelete, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, deleteLocally, deleteFromCloud, getEncryptionCertificateThumbprint());
         }
 
         public void startContinualGet() {
@@ -736,7 +748,7 @@ namespace AutomationISE
                 var newCred = new AutomationCredential(credentialAssetName, dialog.username, dialog.password);
                 assetsToSave.Add(newCred);
 
-                AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave);
+                AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint());
                 refreshAssets();
             }
         }
@@ -752,7 +764,7 @@ namespace AutomationISE
                 var newVariable = new AutomationVariable(variableAssetName, dialog.value, dialog.encrypted);
                 assetsToSave.Add(newVariable);
 
-                AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave);
+                AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint());
                 refreshAssets();
             }
         }
