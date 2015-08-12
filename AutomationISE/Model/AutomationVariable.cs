@@ -74,6 +74,7 @@ namespace AutomationISE.Model
 
         public void setValue(Object value)
         {
+            this.ValueFields.Remove("Value"); 
             this.ValueFields.Add("Value", value);
         }
 

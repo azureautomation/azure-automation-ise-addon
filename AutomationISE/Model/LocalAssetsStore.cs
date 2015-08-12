@@ -65,32 +65,55 @@ namespace AutomationISE.Model
 
                 if (assetToAffect is AutomationVariable)
                 {
+                    var variableToAffect = (AutomationVariable)assetToAffect;
+                    
                     if (assetToDelete != null)
                     {
-                        localAssets.Variables.Remove((VariableJson)assetToDelete);
+                        var variableToDelete = (VariableJson)assetToDelete;
+                        
+                        // Encrypted variable assets returned from the cloud have their values removed,
+                        // so keep the old local asset value instead of overwriting the local asset value with null
+                        if(variableToAffect.Encrypted && variableToAffect.getValue() == null) {
+                            variableToAffect.setValue(variableToDelete.Value);
+                        }
+
+                        localAssets.Variables.Remove(variableToDelete);
                     }
 
                     if (replace)
                     {
-                        localAssets.Variables.Add(new VariableJson((AutomationVariable)assetToAffect));
+                        localAssets.Variables.Add(new VariableJson(variableToAffect));
                     }
                 }
 
                 else if (assetToAffect is AutomationCredential)
                 {
+                    var credToAffect = (AutomationCredential)assetToAffect;
+                    
                     if (assetToDelete != null)
                     {
-                        localAssets.PSCredentials.Remove((CredentialJson)assetToDelete);
+                        var credToDelete = (CredentialJson)assetToDelete;
+
+                        // PSCredential assets returned from the cloud have their passwords removed,
+                        // so keep the old local asset password instead of overwriting the local asset password with null
+                        if (credToAffect.getPassword() == null)
+                        {
+                            credToAffect.setPassword(credToDelete.Password);
+                        }
+                        
+                        localAssets.PSCredentials.Remove(credToDelete);
                     }
 
                     if (replace)
                     {
-                        localAssets.PSCredentials.Add(new CredentialJson((AutomationCredential)assetToAffect));
+                        localAssets.PSCredentials.Add(new CredentialJson(credToAffect));
                     }
                 }
 
                 else if (assetToAffect is AutomationConnection)
                 {
+                    // TODO: support carry over of null fields from previous local asset
+
                     if (assetToDelete != null)
                     {
                         localAssets.Connections.Remove((ConnectionJson)assetToDelete);
