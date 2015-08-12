@@ -26,6 +26,8 @@ namespace AutomationISE.Model
     {
         public string AuthoringState { get; set; }
 
+        public string Description { get; set; }
+
         private FileInfo _localFileInfo;
         public FileInfo localFileInfo
         {
@@ -65,6 +67,8 @@ namespace AutomationISE.Model
         {
             this.AuthoringState = cloudRunbook.Properties.State;
             this.Parameters = cloudRunbook.Properties.Parameters;
+            this.Description = cloudRunbook.Properties.Description;
+            
             this.LastModifiedCloud = cloudRunbook.Properties.LastModifiedTime.UtcDateTime;
             //TODO: refactor
             if (this.localFileInfo == null)

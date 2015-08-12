@@ -19,10 +19,12 @@ namespace AutomationISE.Model
         public static async Task UploadRunbookAsDraft(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, AutomationAccount account)
         {
             RunbookCreateOrUpdateDraftProperties draftProperties = new RunbookCreateOrUpdateDraftProperties("Script", new RunbookDraft());
+            draftProperties.Description = runbook.Description;
+
             RunbookCreateOrUpdateDraftParameters draftParams = new RunbookCreateOrUpdateDraftParameters(draftProperties);
             draftParams.Name = runbook.Name;
             draftParams.Location = account.Location;
-            automationManagementClient.Runbooks.CreateOrUpdateWithDraft(resourceGroupName, account.Name, draftParams);
+            await automationManagementClient.Runbooks.CreateOrUpdateWithDraftAsync(resourceGroupName, account.Name, draftParams);
             /* Update the runbook content from .ps1 file */
             RunbookDraftUpdateParameters draftUpdateParams = new RunbookDraftUpdateParameters()
             {
