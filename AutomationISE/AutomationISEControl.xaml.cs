@@ -54,11 +54,6 @@ namespace AutomationISE
                 iseClient = new AutomationISEClient();
                 runbookStore = new LocalRunbookStore();
 
-                // Generate self signed certificate for encrypting local assets in the current user store Cert:\CurrentUser\My\
-                var certObj = new AutomationSelfSignedCertificate();
-                String selfSignedThumbprint = certObj.CreateSelfSignedCertificate();
-                certificateTextBox.Text = selfSignedThumbprint;
-
                 /* Determine working directory */
                 String localWorkspace = Properties.Settings.Default["localWorkspace"].ToString();
                 if (localWorkspace == "")
@@ -82,6 +77,13 @@ namespace AutomationISE
                 setRunbookAndAssetNonSelectionButtonState(false);
                 setAssetSelectionButtonState(false);
                 setRunbookSelectionButtonState(false);
+
+                // Generate self signed certificate for encrypting local assets in the current user store Cert:\CurrentUser\My\
+                var certObj = new AutomationSelfSignedCertificate();
+                String selfSignedThumbprint = certObj.CreateSelfSignedCertificate();
+                certificateTextBox.Text = selfSignedThumbprint;
+                UpdateStatusBox(configurationStatusTextBox, "Certificate to use for encrypting local assets is " + selfSignedThumbprint);
+
 
                 startContinualGet();
             }
@@ -377,7 +379,7 @@ namespace AutomationISE
                     /* Update PowerShell Module */
                     try
                     {
-                        PSModuleConfiguration.UpdateModuleConfiguration(iseClient.currWorkspace, certificateTextBox.Text);
+                        PSModuleConfiguration.UpdateModuleConfiguration(iseClient.currWorkspace);
                     }
                     catch
                     {
@@ -812,7 +814,7 @@ namespace AutomationISE
         {
             try
             {
-                PSModuleConfiguration.UpdateModuleConfiguration(iseClient.currWorkspace, certificateTextBox.Text);
+                AutomationSelfSignedCertificate.SetCertificateInConfigFile(certificateTextBox.Text);
                 UpdateStatusBox(configurationStatusTextBox, "Updated certificate thumbprint to use for encryption / decryption of assets");
             }
             catch (Exception ex)

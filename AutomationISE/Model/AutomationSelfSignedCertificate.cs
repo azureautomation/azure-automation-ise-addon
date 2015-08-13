@@ -51,6 +51,8 @@ namespace AutomationISE.Model
                     certObj.CreateCertificateRequest(Properties.Settings.Default.certName);
                     var selfSignedCert= certObj.InstallCertficate();
                     thumbprint = selfSignedCert.Thumbprint;
+                    // Set thumbprint in configuration file.
+                    SetCertificateInConfigFile(thumbprint);
                 }
                 return thumbprint;
             }
@@ -62,17 +64,7 @@ namespace AutomationISE.Model
 
         private static String GetCertificateInConfigFile()
         {
-            string modulePath = PSModuleConfiguration.findModulePath();
-            string configFilePath = System.IO.Path.Combine(modulePath, PSModuleConfiguration.ModuleData.ConfigFileName);
-
-            if (!File.Exists(configFilePath))
-            {
-                Debug.WriteLine("Warning: a config file wasn't found in the module, so a new one will be created");
-                return null;
-            }
-
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            List<PSModuleConfiguration.PSModuleConfigurationItem> config = jss.Deserialize<List<PSModuleConfiguration.PSModuleConfigurationItem>>((File.ReadAllText(configFilePath)));
+            List<PSModuleConfiguration.PSModuleConfigurationItem> config = getConfigFileItems();
 
             foreach (PSModuleConfiguration.PSModuleConfigurationItem pc in config)
             {
@@ -82,6 +74,43 @@ namespace AutomationISE.Model
                 }
             }
             return null;
+        }
+
+        public static void SetCertificateInConfigFile(String thumbprint)
+        {
+            List<PSModuleConfiguration.PSModuleConfigurationItem> config = getConfigFileItems();
+            foreach (PSModuleConfiguration.PSModuleConfigurationItem pc in config)
+            {
+                if (pc.Name.Equals(PSModuleConfiguration.ModuleData.EncryptionCertificateThumbprint_FieldName))
+                {
+                    pc.Value = thumbprint;
+                }
+            }
+
+            JavaScriptSerializer jss = new JavaScriptSerializer();
+            File.WriteAllText(GetConfigPath(), jss.Serialize(config));
+
+        }
+
+        private static List<PSModuleConfiguration.PSModuleConfigurationItem> getConfigFileItems()
+        {
+            string configFilePath = GetConfigPath();
+
+            if (!File.Exists(configFilePath))
+            {
+                Debug.WriteLine("Warning: a config file wasn't found, so a new one will be created");
+            }
+
+            JavaScriptSerializer jss = new JavaScriptSerializer();
+            return jss.Deserialize<List<PSModuleConfiguration.PSModuleConfigurationItem>>((File.ReadAllText(configFilePath)));
+        }
+
+        private static String GetConfigPath()
+        {
+            string modulePath = PSModuleConfiguration.findModulePath();
+            string configFilePath = System.IO.Path.Combine(modulePath, PSModuleConfiguration.ModuleData.ConfigFileName);
+
+            return configFilePath;
         }
     }
 }

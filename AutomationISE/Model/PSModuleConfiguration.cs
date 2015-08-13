@@ -13,7 +13,7 @@ namespace AutomationISE.Model
     public class PSModuleConfiguration
     {
         /* Updates the AzureAutomationAuthoringToolkit PowerShell Module to point at the specified workspace directory */
-        public static void UpdateModuleConfiguration(string workspace, string thumbprint)
+        public static void UpdateModuleConfiguration(string workspace)
         {
             string modulePath = findModulePath();
             string configFilePath = System.IO.Path.Combine(modulePath, ModuleData.ConfigFileName);
@@ -38,7 +38,7 @@ namespace AutomationISE.Model
                 }
                 else if (pc.Name.Equals(ModuleData.EncryptionCertificateThumbprint_FieldName))
                 {
-                    pc.Value = thumbprint;
+                    //   not setting thumbprint
                 }
                 else
                 {
