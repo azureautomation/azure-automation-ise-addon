@@ -53,7 +53,7 @@ namespace AutomationISE.Model
         public static AuthenticationResult RefreshTokenByAuthority(String authority)
         {
             var ctx = new AuthenticationContext(string.Format(Constants.loginAuthority + authority, Constants.tenant));
-             return ctx.AcquireToken(Constants.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Auto);
+             return ctx.AcquireToken(Constants.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Never);
         }
     }
 }
