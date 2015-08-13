@@ -40,6 +40,7 @@ namespace AutomationISE
     /// </summary>
     public partial class AutomationISEControl : UserControl, IAddOnToolHostObject
     {
+        private System.Timers.Timer refreshTimer = new System.Timers.Timer();
         private AutomationISEClient iseClient;
         private LocalRunbookStore runbookStore;
         private bool tokenExpired = false;
@@ -209,15 +210,14 @@ namespace AutomationISE
         }
 
         public void startContinualGet() {
-            var myTimer = new System.Timers.Timer();
 
             // Set timer interval to 30 seconds
-            myTimer.Interval = 30000;
+            refreshTimer.Interval = 30000;
 
             // Set the function to run when timer fires
-            myTimer.Elapsed += new ElapsedEventHandler(refresh);
+            refreshTimer.Elapsed += new ElapsedEventHandler(refresh);
 
-            myTimer.Start();
+            refreshTimer.Start();
         }
 
         public void refresh(object source, ElapsedEventArgs e) {
@@ -292,6 +292,7 @@ namespace AutomationISE
                 Properties.Settings.Default.Save();
 
                 UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveSubscriptions);
+                refreshTimer.Start();
                 IList<Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription> subscriptions = await iseClient.GetSubscriptions();
                 //TODO: what if there are no subscriptions? Does this still work?
                 if (subscriptions.Count > 0)
@@ -301,8 +302,8 @@ namespace AutomationISE
                     subscriptionComboBox.DisplayMemberPath = "SubscriptionName";
                     subscriptionComboBox.SelectedItem = subscriptionComboBox.Items[0];
                 }
-                else
-                    UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoSubscriptions);
+                else UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoSubscriptions);
+                refreshTimer.Start();
             }
             catch (Microsoft.IdentityModel.Clients.ActiveDirectory.AdalServiceException)
             {
@@ -331,6 +332,7 @@ namespace AutomationISE
                 iseClient.currSubscription = (Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription)subscriptionComboBox.SelectedValue;
                 if (iseClient.currSubscription != null)
                 {
+                    refreshTimer.Stop();
                     UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveAutomationAccounts);
                     IList<AutomationAccount> automationAccounts = await iseClient.GetAutomationAccounts();
                     accountsComboBox.ItemsSource = automationAccounts;
@@ -342,6 +344,7 @@ namespace AutomationISE
                         accountsComboBox.IsEnabled = true;
                     }
                     else UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoAutomationAccounts);
+                    refreshTimer.Start();
                 }
             }
             catch (Exception exception)
