@@ -55,6 +55,7 @@ namespace AutomationISE
                 InitializeComponent();
                 iseClient = new AutomationISEClient();
                 downloadQueue = new BlockingCollection<RunbookDownloadJob>(new ConcurrentQueue<RunbookDownloadJob>(),50);
+                //TODO: refactor
                 IProgress<Tuple<string, int>> progress = new Progress<Tuple<string, int>>((report) => {
                     if (String.IsNullOrEmpty(report.Item1))
                     {
@@ -486,25 +487,6 @@ namespace AutomationISE
             return false;
         }
 
-        /* If the user already has a local copy of that file open, then close it */
-        //TODO: BUG: this is occasionally throwing a null reference exception
-        //TODO: do I need this method?
-        private void CloseRunbookIfOpen(AutomationRunbook runbook)
-        {
-            ISEFileCollection currentlyOpenFiles = HostObject.CurrentPowerShellTab.Files;
-            if (currentlyOpenFiles != null)
-            {
-                for (int i = 0; i < currentlyOpenFiles.Count; i++)
-                {
-                    if (currentlyOpenFiles[i].FullPath.Equals(runbook.localFileInfo.FullName))
-                    {
-                        currentlyOpenFiles.RemoveAt(i);
-                        break; //the file can only be open once (ISE behavior)
-                    }
-                }
-            }
-        }
-
         private void ButtonDownloadRunbook_Click(object sender, RoutedEventArgs e)
         {
             AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
@@ -523,11 +505,6 @@ namespace AutomationISE
             if (downloadQueue.TryAdd(new RunbookDownloadJob(selectedRunbook))) //TryAdd() immediately returns false if queue is at capacity
                 JobsRemainingLabel.Text = "(" + downloadQueue.Count + " remaining)";
             ButtonDownloadRunbook.IsEnabled = true;
-            /*
-             * progress related:
-             * //TODO: use proper binding
-             *  RunbooksListView.Items.Refresh();
-             */ 
         }
 
         private async Task processJobsFromQueue(IProgress<Tuple<string, int>> progress)
@@ -541,7 +518,6 @@ namespace AutomationISE
                 {
                     await AutomationRunbookManager.DownloadRunbook(job.Runbook, iseClient.automationManagementClient,
                                 iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
-
                 }
                 catch (Exception ex)
                 {
