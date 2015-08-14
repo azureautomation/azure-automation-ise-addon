@@ -64,6 +64,7 @@ namespace AutomationISE.Model
 
         public void setUsername(string username)
         {
+            this.ValueFields.Remove("Username");
             this.ValueFields.Add("Username", username);
         }
 
@@ -76,6 +77,7 @@ namespace AutomationISE.Model
 
         public void setPassword(string password)
         {
+            this.ValueFields.Remove("Password");
             this.ValueFields.Add("Password", password);
         }
     }

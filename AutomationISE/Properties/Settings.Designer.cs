@@ -46,5 +46,29 @@ namespace AutomationISE.Properties {
                 this["localWorkspace"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Azure Automation ISE Add On")]
+        public string certFriendlyName {
+            get {
+                return ((string)(this["certFriendlyName"]));
+            }
+            set {
+                this["certFriendlyName"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("AzureAutomationISEAddOn")]
+        public string certName {
+            get {
+                return ((string)(this["certName"]));
+            }
+            set {
+                this["certName"] = value;
+            }
+        }
     }
 }

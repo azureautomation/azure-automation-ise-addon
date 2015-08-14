@@ -18,7 +18,9 @@ using System.Threading.Tasks;
 using System.IO;
 using Microsoft.Azure.Management.Automation;
 using System.Web.Script.Serialization;
+using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
+using System.Security.Cryptography;
 
 namespace AutomationISE.Model
 {
@@ -53,9 +55,9 @@ namespace AutomationISE.Model
         }
 
         // updates the local assets, either removing (if replace = false) or adding/replacing (if replace = true) the specified assets
-        private static void Set(String workspacePath, ICollection<AutomationAsset> assetsToAffect, bool replace)
+        private static void Set(String workspacePath, ICollection<AutomationAsset> assetsToAffect, bool replace, String encryptionCertThumbprint)
         {
-            LocalAssets localAssets = LocalAssetsStore.Get(workspacePath);
+            LocalAssets localAssets = LocalAssetsStore.Get(workspacePath, encryptionCertThumbprint);
 
             foreach (var assetToAffect in assetsToAffect)
             {
@@ -63,32 +65,55 @@ namespace AutomationISE.Model
 
                 if (assetToAffect is AutomationVariable)
                 {
+                    var variableToAffect = (AutomationVariable)assetToAffect;
+                    
                     if (assetToDelete != null)
                     {
-                        localAssets.Variables.Remove((VariableJson)assetToDelete);
+                        var variableToDelete = (VariableJson)assetToDelete;
+                        
+                        // Encrypted variable assets returned from the cloud have their values removed,
+                        // so keep the old local asset value instead of overwriting the local asset value with null
+                        if(variableToAffect.Encrypted && variableToAffect.getValue() == null) {
+                            variableToAffect.setValue(variableToDelete.Value);
+                        }
+
+                        localAssets.Variables.Remove(variableToDelete);
                     }
 
                     if (replace)
                     {
-                        localAssets.Variables.Add(new VariableJson((AutomationVariable)assetToAffect));
+                        localAssets.Variables.Add(new VariableJson(variableToAffect));
                     }
                 }
 
                 else if (assetToAffect is AutomationCredential)
                 {
+                    var credToAffect = (AutomationCredential)assetToAffect;
+                    
                     if (assetToDelete != null)
                     {
-                        localAssets.PSCredentials.Remove((CredentialJson)assetToDelete);
+                        var credToDelete = (CredentialJson)assetToDelete;
+
+                        // PSCredential assets returned from the cloud have their passwords removed,
+                        // so keep the old local asset password instead of overwriting the local asset password with null
+                        if (credToAffect.getPassword() == null)
+                        {
+                            credToAffect.setPassword(credToDelete.Password);
+                        }
+                        
+                        localAssets.PSCredentials.Remove(credToDelete);
                     }
 
                     if (replace)
                     {
-                        localAssets.PSCredentials.Add(new CredentialJson((AutomationCredential)assetToAffect));
+                        localAssets.PSCredentials.Add(new CredentialJson(credToAffect));
                     }
                 }
 
                 else if (assetToAffect is AutomationConnection)
                 {
+                    // TODO: support carry over of null fields from previous local asset
+
                     if (assetToDelete != null)
                     {
                         localAssets.Connections.Remove((ConnectionJson)assetToDelete);
@@ -103,25 +128,25 @@ namespace AutomationISE.Model
 
             DirectoryInfo dir = Directory.CreateDirectory(workspacePath);
             UnsecureLocalAssetsContainerJson.Set(workspacePath, localAssets);
-            SecureLocalAssetsContainerJson.Set(workspacePath, localAssets); 
+            SecureLocalAssetsContainerJson.Set(workspacePath, localAssets, encryptionCertThumbprint); 
         }
 
-        public static void Add(String workspacePath, ICollection<AutomationAsset> newAssets)
+        public static void Add(String workspacePath, ICollection<AutomationAsset> newAssets, String encryptionCertThumbprint)
         {
-            LocalAssetsStore.Set(workspacePath, newAssets, true);
+            LocalAssetsStore.Set(workspacePath, newAssets, true, encryptionCertThumbprint);
         }
 
-        public static void Delete(String workspacePath, ICollection<AutomationAsset> assetsToDelete)
+        public static void Delete(String workspacePath, ICollection<AutomationAsset> assetsToDelete, String encryptionCertThumbprint)
         {
-            LocalAssetsStore.Set(workspacePath, assetsToDelete, false);
+            LocalAssetsStore.Set(workspacePath, assetsToDelete, false, encryptionCertThumbprint);
         }
-        
-        public static LocalAssets Get(String workspacePath)
+
+        public static LocalAssets Get(String workspacePath, String encryptionCertThumbprint)
         {
             LocalAssets localAssetsContainer = new LocalAssets(); 
             
             UnsecureLocalAssetsContainerJson localAssetsJson = UnsecureLocalAssetsContainerJson.Get(workspacePath);
-            SecureLocalAssetsContainerJson secureLocalAssetsJson = SecureLocalAssetsContainerJson.Get(workspacePath);
+            SecureLocalAssetsContainerJson secureLocalAssetsJson = SecureLocalAssetsContainerJson.Get(workspacePath, encryptionCertThumbprint);
             
             // add JSON variables to the container
             localAssetsJson.Variable.ForEach(variable => variable.Encrypted = false);
@@ -144,7 +169,8 @@ namespace AutomationISE.Model
             public List<VariableJson> Variable = new List<VariableJson>();
             public static JavaScriptSerializer jss = new JavaScriptSerializer();
 
-            public static void WriteJson(string jsonFilePath, Object assets) {
+            public static void WriteJson(string jsonFilePath, Object assets)
+            {
                 var assetsSerialized = JsonConvert.SerializeObject(assets, Formatting.Indented);
                 File.WriteAllText(jsonFilePath, assetsSerialized);
             }
@@ -186,12 +212,110 @@ namespace AutomationISE.Model
         private class SecureLocalAssetsContainerJson
             : AbstractLocalAssetsContainerJson
         {
-            public static SecureLocalAssetsContainerJson Get(string workspacePath)
+            public static String Encrypt(Object Value, String Thumbprint)
+            {
+                if (Value == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    X509Store CertStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+                    try
+                    {
+                        CertStore.Open(OpenFlags.ReadOnly);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception("Error reading certificate store", ex);
+                    }
+
+                    var CertCollection = CertStore.Certificates;
+                    var EncryptCert = CertCollection.Find(X509FindType.FindByThumbprint, Thumbprint, false);
+                    CertStore.Close();
+
+                    if (EncryptCert.Count == 0)
+                    {
+                        throw new Exception("Certificate:" + Thumbprint + " does not exist in HKLM\\Root");
+                    }
+
+                    RSACryptoServiceProvider rsaEncryptor = (RSACryptoServiceProvider)EncryptCert[0].PublicKey.Key;
+                    var valueJson = JsonConvert.SerializeObject(Value);
+                    var EncryptedBytes = System.Text.Encoding.Default.GetBytes(valueJson);
+                    byte[] EncryptedData = rsaEncryptor.Encrypt(EncryptedBytes, true);
+                    return Convert.ToBase64String(EncryptedData);
+                }
+            }
+
+            public static Object Decrypt(Object EncryptedValue, String Thumbprint)
+            {
+                if (EncryptedValue == null)
+                {
+                    return null;
+                }
+                else if (!(EncryptedValue is string))
+                {
+                    throw new Exception("Cannot decrypt value. Value to decrypt was not a string.");
+                }
+                else
+                {
+                    X509Store CertStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+                    try
+                    {
+                        CertStore.Open(OpenFlags.ReadOnly);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception("Error reading certificate store", ex);
+                    }
+
+                    var CertCollection = CertStore.Certificates;
+                    var EncryptCert = CertCollection.Find(X509FindType.FindByThumbprint, Thumbprint, false);
+                    CertStore.Close();
+
+                    if (EncryptCert.Count == 0)
+                    {
+                        throw new Exception("Certificate:" + Thumbprint + " does not exist in HKLM\\My");
+                    }
+
+                    Byte[] EncryptedString = Convert.FromBase64String((string)EncryptedValue);
+                    RSACryptoServiceProvider rsaEncryptor = (RSACryptoServiceProvider)EncryptCert[0].PrivateKey;
+                    byte[] EncryptedData = rsaEncryptor.Decrypt(EncryptedString, true);
+                    var valueJson = System.Text.Encoding.Default.GetString(EncryptedData);
+                    return JsonConvert.DeserializeObject(valueJson);
+                }
+            }
+            
+            public static SecureLocalAssetsContainerJson Get(string workspacePath, String encryptionCertThumbprint)
             {
                 try
                 {
                     string secureLocalAssetsFilePath = System.IO.Path.Combine(workspacePath, AutomationISE.Model.Constants.secureLocalAssetsFileName);
-                    return jss.Deserialize<SecureLocalAssetsContainerJson>(File.ReadAllText(secureLocalAssetsFilePath));
+                    var localAssetsSecure = jss.Deserialize<SecureLocalAssetsContainerJson>(File.ReadAllText(secureLocalAssetsFilePath));
+
+                    if (encryptionCertThumbprint != null)
+                    {
+                        foreach (var localVariableAsset in localAssetsSecure.Variable)
+                        {
+                            localVariableAsset.Value = Decrypt(localVariableAsset.Value, encryptionCertThumbprint);
+                        }
+
+                        foreach (var localCredAsset in localAssetsSecure.PSCredential)
+                        {
+                            var decryptedValue = Decrypt(localCredAsset.Password, encryptionCertThumbprint);
+
+                            if(decryptedValue == null)
+                            {
+                                localCredAsset.Password = null;
+                            }
+                            else
+                            {
+                                localCredAsset.Password = (string)decryptedValue;
+                            }
+                        }
+                    }
+
+                    return localAssetsSecure;
                 }
                 catch
                 {
@@ -199,7 +323,7 @@ namespace AutomationISE.Model
                 }
             }
 
-            public static void Set(string workspacePath, LocalAssets localAssets)
+            public static void Set(string workspacePath, LocalAssets localAssets, String encryptionCertThumbprint)
             {
                 var localAssetsSecure = new SecureLocalAssetsContainerJson();
                 foreach (var localVariableAsset in localAssets.Variables)
@@ -211,8 +335,20 @@ namespace AutomationISE.Model
                 }
 
                 localAssetsSecure.PSCredential.AddRange(localAssets.PSCredentials);
-
                 localAssetsSecure.Connection.AddRange(localAssets.Connections);
+
+                if (encryptionCertThumbprint != null)
+                {
+                    foreach (var localVariableAsset in localAssetsSecure.Variable)
+                    {
+                        localVariableAsset.Value = Encrypt(localVariableAsset.Value, encryptionCertThumbprint);
+                    }
+
+                    foreach (var localCredAsset in localAssetsSecure.PSCredential)
+                    {
+                        localCredAsset.Password = Encrypt(localCredAsset.Password, encryptionCertThumbprint);
+                    }
+                }
 
                 WriteJson(System.IO.Path.Combine(workspacePath, AutomationISE.Model.Constants.secureLocalAssetsFileName), localAssetsSecure); 
             }

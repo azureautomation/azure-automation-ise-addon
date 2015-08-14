@@ -45,6 +45,8 @@ namespace AutomationISE.Model
 
         public const String feedbackURI = "http://iseautomation.azurewebsites.net/FeedbackForm.aspx";
 
+        public const int ExpirationLengthInDaysForSelfSignedCert = 365 * 2;
+
         public class RunbookType
         {
             public const String Script = "Script";

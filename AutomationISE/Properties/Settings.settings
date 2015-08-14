@@ -8,5 +8,11 @@
     <Setting Name="localWorkspace" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="certFriendlyName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Azure Automation ISE Add On</Value>
+    </Setting>
+    <Setting Name="certName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">AzureAutomationISEAddOn</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -38,7 +38,7 @@ namespace AutomationISE.Model
                 }
                 else if (pc.Name.Equals(ModuleData.EncryptionCertificateThumbprint_FieldName))
                 {
-                    pc.Value = "none";
+                    //   not setting thumbprint
                 }
                 else
                 {
@@ -49,7 +49,7 @@ namespace AutomationISE.Model
             File.WriteAllText(configFilePath, jss.Serialize(config)); // TODO: use a friendly JSON formatter for serialization
         }
 
-        private static string findModulePath()
+        public static string findModulePath()
         {
             String[] moduleLocations = Environment.GetEnvironmentVariable(ModuleData.EnvPSModulePath).Split(';');
             foreach (String moduleLocation in moduleLocations)

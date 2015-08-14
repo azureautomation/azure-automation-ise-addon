@@ -36,6 +36,8 @@ namespace AutomationISE.Model
             }
         }
 
+        public string Description { get; set; }
+
         private FileInfo _localFileInfo;
         public FileInfo localFileInfo
         {
@@ -70,7 +72,6 @@ namespace AutomationISE.Model
             this.localFileInfo = localFile;
             this.Parameters = cloudRunbook.Properties.Parameters;
         }
-
         public static class AuthoringStates
         {
             public const String New = "New";

@@ -19,10 +19,12 @@ namespace AutomationISE.Model
         public static async Task UploadRunbookAsDraft(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, AutomationAccount account)
         {
             RunbookCreateOrUpdateDraftProperties draftProperties = new RunbookCreateOrUpdateDraftProperties("Script", new RunbookDraft());
+            draftProperties.Description = runbook.Description;
+
             RunbookCreateOrUpdateDraftParameters draftParams = new RunbookCreateOrUpdateDraftParameters(draftProperties);
             draftParams.Name = runbook.Name;
             draftParams.Location = account.Location;
-            automationManagementClient.Runbooks.CreateOrUpdateWithDraft(resourceGroupName, account.Name, draftParams);
+            await automationManagementClient.Runbooks.CreateOrUpdateWithDraftAsync(resourceGroupName, account.Name, draftParams);
             /* Update the runbook content from .ps1 file */
             RunbookDraftUpdateParameters draftUpdateParams = new RunbookDraftUpdateParameters()
             {
@@ -78,13 +80,17 @@ namespace AutomationISE.Model
             /* Start by checking the downloaded runbooks */
             foreach (Runbook cloudRunbook in cloudRunbooks)
             {
-                if (filePathForRunbook.ContainsKey(cloudRunbook.Name))
+                // Only download script runbooks
+                if (cloudRunbook.Properties.RunbookType == Constants.RunbookType.Script)
                 {
-                    result.Add(new AutomationRunbook(new FileInfo(filePathForRunbook[cloudRunbook.Name]), cloudRunbook));
-                }
-                else
-                {
-                    result.Add(new AutomationRunbook(cloudRunbook));
+                    if (filePathForRunbook.ContainsKey(cloudRunbook.Name))
+                    {
+                        result.Add(new AutomationRunbook(new FileInfo(filePathForRunbook[cloudRunbook.Name]), cloudRunbook));
+                    }
+                    else
+                    {
+                        result.Add(new AutomationRunbook(cloudRunbook));
+                    }
                 }
             }
             /* Now find runbooks on disk that aren't yet accounted for */

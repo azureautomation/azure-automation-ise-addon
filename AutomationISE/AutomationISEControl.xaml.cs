@@ -33,6 +33,7 @@ using System.Timers;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Security.Cryptography.X509Certificates;
 
 namespace AutomationISE
 {
@@ -41,11 +42,12 @@ namespace AutomationISE
     /// </summary>
     public partial class AutomationISEControl : UserControl, IAddOnToolHostObject
     {
+        private System.Timers.Timer refreshTimer = new System.Timers.Timer();
         private AutomationISEClient iseClient;
         private ObservableCollection<AutomationRunbook> runbookListViewModel;
         private BlockingCollection<RunbookDownloadJob> downloadQueue;
         private Task downloadWorker;
-
+        private bool tokenExpired = false;
         public ObjectModelRoot HostObject { get; set; }
 
         public AutomationISEControl()
@@ -101,11 +103,30 @@ namespace AutomationISE
                 setAssetSelectionButtonState(false);
                 setRunbookSelectionButtonState(false);
 
+                // Generate self signed certificate for encrypting local assets in the current user store Cert:\CurrentUser\My\
+                var certObj = new AutomationSelfSignedCertificate();
+                String selfSignedThumbprint = certObj.CreateSelfSignedCertificate();
+                certificateTextBox.Text = selfSignedThumbprint;
+                UpdateStatusBox(configurationStatusTextBox, "Certificate to use for encrypting local assets is " + selfSignedThumbprint);
+
+
                 startContinualGet();
             }
             catch (Exception exception)
             {
                 var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
+            }
+        }
+
+        public String getEncryptionCertificateThumbprint()
+        {
+            if (!(certificateTextBox.Text == "" || certificateTextBox.Text == "none"))
+            {
+                return certificateTextBox.Text;
+            }
+            else
+            {
+                return null;
             }
         }
 
@@ -140,7 +161,7 @@ namespace AutomationISE
 
         public async Task<SortedSet<AutomationAsset>> getAssetsInfo()
         {
-            return (SortedSet<AutomationAsset>)await AutomationAssetManager.GetAll(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            return (SortedSet<AutomationAsset>)await AutomationAssetManager.GetAll(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
         }
 
         public async Task<SortedSet<AutomationAsset>> getAssetsOfType(String type)
@@ -161,12 +182,12 @@ namespace AutomationISE
 
         public async Task downloadAllAssets()
         {
-            await AutomationAssetManager.DownloadAllFromCloud(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            await AutomationAssetManager.DownloadAllFromCloud(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
         }
 
         public void downloadAssets(ICollection<AutomationAsset> assetsToDownload)
         {
-            AutomationAssetManager.DownloadFromCloud(assetsToDownload, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            AutomationAssetManager.DownloadFromCloud(assetsToDownload, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
         }
 
         public async Task uploadAssets(ICollection<AutomationAsset> assetsToUpload)
@@ -209,25 +230,25 @@ namespace AutomationISE
                 }
             }
             
-            AutomationAssetManager.Delete(assetsToDelete, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, deleteLocally, deleteFromCloud);
+            AutomationAssetManager.Delete(assetsToDelete, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, deleteLocally, deleteFromCloud, getEncryptionCertificateThumbprint());
         }
 
         public void startContinualGet() {
-            var myTimer = new System.Timers.Timer();
 
             // Set timer interval to 30 seconds
-            myTimer.Interval = 30000;
+            refreshTimer.Interval = 30000;
 
             // Set the function to run when timer fires
-            myTimer.Elapsed += new ElapsedEventHandler(refresh);
+            refreshTimer.Elapsed += new ElapsedEventHandler(refresh);
 
-            myTimer.Start();
+            refreshTimer.Start();
         }
 
         public void refresh(object source, ElapsedEventArgs e) {
             this.Dispatcher.Invoke((Action)(() =>
             {
                 refreshAssets();
+                // TODO: add refresh runbooks
             }));
         }
         
@@ -257,10 +278,29 @@ namespace AutomationISE
                 {
                     assetsListView.ItemsSource = await getAssetsOfType("AutomationCertificate");
                 }
+
+                tokenExpired = false;
             }
             catch (Exception exception)
             {
-                var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
+                var showError = true;
+                
+                // If the message is not token expired, or if this is the first time we'd show token expired message
+                // since previously being connected, show a dialog
+                if (exception.HResult == -2146233088)
+                {
+                    if (tokenExpired)
+                    {
+                        showError = false;
+                    }
+
+                    tokenExpired = true;
+                }
+
+                if (showError)
+                {
+                    var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
+                }
             }
         }
 
@@ -276,6 +316,7 @@ namespace AutomationISE
                 Properties.Settings.Default.Save();
 
                 UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveSubscriptions);
+                refreshTimer.Start();
                 IList<Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription> subscriptions = await iseClient.GetSubscriptions();
                 //TODO: what if there are no subscriptions? Does this still work?
                 if (subscriptions.Count > 0)
@@ -285,8 +326,8 @@ namespace AutomationISE
                     subscriptionComboBox.DisplayMemberPath = "SubscriptionName";
                     subscriptionComboBox.SelectedItem = subscriptionComboBox.Items[0];
                 }
-                else
-                    UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoSubscriptions);
+                else UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoSubscriptions);
+                refreshTimer.Start();
             }
             catch (Microsoft.IdentityModel.Clients.ActiveDirectory.AdalServiceException)
             {
@@ -311,9 +352,11 @@ namespace AutomationISE
         {
             try
             {
+                accountsComboBox.IsEnabled = false;
                 iseClient.currSubscription = (Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription)subscriptionComboBox.SelectedValue;
                 if (iseClient.currSubscription != null)
                 {
+                    refreshTimer.Stop();
                     UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveAutomationAccounts);
                     IList<AutomationAccount> automationAccounts = await iseClient.GetAutomationAccounts();
                     accountsComboBox.ItemsSource = automationAccounts;
@@ -322,8 +365,10 @@ namespace AutomationISE
                     {
                         UpdateStatusBox(configurationStatusTextBox, Properties.Resources.FoundAutomationAccounts);
                         accountsComboBox.SelectedItem = accountsComboBox.Items[0];
+                        accountsComboBox.IsEnabled = true;
                     }
                     else UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoAutomationAccounts);
+                    refreshTimer.Start();
                 }
             }
             catch (Exception exception)
@@ -343,6 +388,8 @@ namespace AutomationISE
                     /* Update Status */
                     UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
                     setRunbookAndAssetNonSelectionButtonState(true);
+                    UpdateStatusBox(configurationStatusTextBox,"Workspace location is: " + iseClient.currWorkspace);
+                    UpdateStatusBox(configurationStatusTextBox, "Save new runbooks you wish to upload to Azure Automation in this folder");
                     /* Update Runbooks */
                     UpdateStatusBox(configurationStatusTextBox, "Getting runbook data...");
                     runbookListViewModel = new ObservableCollection<AutomationRunbook>(await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient, 
@@ -368,8 +415,10 @@ namespace AutomationISE
                         message += "Make sure it exists in your module path (env:PSModulePath).";
                         MessageBox.Show(message);
                     }
+
                     /* Update UI */
                     RunbooksListView.ItemsSource = runbookListViewModel;
+                    assetsComboBox.SelectedValue = AutomationISE.Model.Constants.assetVariable;
                     ButtonRefreshAssetList.IsEnabled = true;
 
                     //TODO: possibly rename/refactor this
@@ -718,8 +767,14 @@ namespace AutomationISE
             }
             else
             {
-                TestJobOutputWindow jobWindow = new TestJobOutputWindow(jobCreationParams.RunbookName, jobResponse, iseClient);
-                jobWindow.Show();
+                try {
+                    TestJobOutputWindow jobWindow = new TestJobOutputWindow(jobCreationParams.RunbookName, jobResponse, iseClient);
+                    jobWindow.Show();
+                } catch (Exception exception)
+                {
+                    MessageBox.Show(exception.Message, "Error");
+                    return;
+                }
             }
         }
 
@@ -734,7 +789,23 @@ namespace AutomationISE
                 var newCred = new AutomationCredential(credentialAssetName, dialog.username, dialog.password);
                 assetsToSave.Add(newCred);
 
-                AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave);
+                AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint());
+                refreshAssets();
+            }
+        }
+
+        private void createOrUpdateVariableAsset(string variableAssetName, AutomationVariable variableToEdit)
+        {
+            var dialog = new NewOrEditVariableDialog(variableToEdit);
+
+            if (dialog.ShowDialog() == true)
+            {
+                var assetsToSave = new List<AutomationAsset>();
+
+                var newVariable = new AutomationVariable(variableAssetName, dialog.value, dialog.encrypted);
+                assetsToSave.Add(newVariable);
+
+                AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint());
                 refreshAssets();
             }
         }
@@ -747,7 +818,7 @@ namespace AutomationISE
             {
                 if (dialog.newAssetType == AutomationISE.Model.Constants.assetVariable)
                 {
-                   
+                    createOrUpdateVariableAsset(dialog.newAssetName, null);
                 }
                 else if (dialog.newAssetType == AutomationISE.Model.Constants.assetCredential)
                 {
@@ -772,13 +843,21 @@ namespace AutomationISE
                 createOrUpdateCredentialAsset(asset.Name, (AutomationCredential)asset);
             }
             else if(asset is AutomationVariable) {
-                // TODO: implement
+                createOrUpdateVariableAsset(asset.Name, (AutomationVariable)asset);
             }
         }
 
         private void certificateButton_Click(object sender, RoutedEventArgs e)
         {
-
+            try
+            {
+                AutomationSelfSignedCertificate.SetCertificateInConfigFile(certificateTextBox.Text);
+                UpdateStatusBox(configurationStatusTextBox, "Updated certificate thumbprint to use for encryption / decryption of assets");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("The thumbprint could not be updated " + ex.Message, "Error");
+            }
         }
 
         private void certificateTextBox_TextChanged(object sender, TextChangedEventArgs e)
