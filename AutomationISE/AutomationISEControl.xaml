@@ -61,8 +61,8 @@
                                 <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
                                 <GridViewColumn Header="Status" DisplayMemberBinding="{Binding AuthoringState}" />
                                 <GridViewColumn Header="Sync Status" DisplayMemberBinding="{Binding SyncStatus}" />
-                                <GridViewColumn Header="Last Modified (Local)" DisplayMemberBinding="{Binding LastModifiedLocal}"  />
-                                <GridViewColumn Header="Last Modified (Cloud)" DisplayMemberBinding="{Binding LastModifiedCloud}"/>
+                                <GridViewColumn Header="Last Modified (Local)" DisplayMemberBinding="{Binding LastModifiedLocal, StringFormat='{}{0:MM/dd/yy hh:mm tt}'}" />
+                                <GridViewColumn Header="Last Modified (Cloud)" DisplayMemberBinding="{Binding LastModifiedCloud, StringFormat='{}{0:MM/dd/yy hh:mm tt}'}"/>
                             </GridView>
                         </ListView.View>
                     </ListView>
@@ -119,8 +119,8 @@
                                 </GridView.ColumnHeaderContextMenu>
                                 <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
                                 <GridViewColumn Header="Sync Status" DisplayMemberBinding="{Binding SyncStatus}" />
-                                <GridViewColumn Header="Last Modified (Local)" DisplayMemberBinding="{Binding LastModifiedLocal}"  />
-                                <GridViewColumn Header="Last Modified (Cloud)" DisplayMemberBinding="{Binding LastModifiedCloud}"/>
+                                <GridViewColumn Header="Last Modified (Local)" DisplayMemberBinding="{Binding LastModifiedLocal, StringFormat='{}{0:MM/dd/yy hh:mm tt}'}"  />
+                                <GridViewColumn Header="Last Modified (Cloud)" DisplayMemberBinding="{Binding LastModifiedCloud, StringFormat='{}{0:MM/dd/yy hh:mm tt}'}"/>
                             </GridView>
                         </ListView.View>
                     </ListView>
