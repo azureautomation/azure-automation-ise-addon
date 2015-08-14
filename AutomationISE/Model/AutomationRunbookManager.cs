@@ -20,7 +20,6 @@ namespace AutomationISE.Model
         {
             RunbookCreateOrUpdateDraftProperties draftProperties = new RunbookCreateOrUpdateDraftProperties("Script", new RunbookDraft());
             draftProperties.Description = runbook.Description;
-
             RunbookCreateOrUpdateDraftParameters draftParams = new RunbookCreateOrUpdateDraftParameters(draftProperties);
             draftParams.Name = runbook.Name;
             draftParams.Location = account.Location;

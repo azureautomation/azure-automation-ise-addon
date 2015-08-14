@@ -52,6 +52,7 @@ namespace AutomationISE.Model
         {
             this.AuthoringState = cloudRunbook.Properties.State;
             this.localFileInfo = null;
+            this.Description = cloudRunbook.Properties.Description;
             this.Parameters = cloudRunbook.Properties.Parameters;
         }
 
@@ -70,6 +71,7 @@ namespace AutomationISE.Model
         {
             this.AuthoringState = cloudRunbook.Properties.State;
             this.localFileInfo = localFile;
+            this.Description = cloudRunbook.Properties.Description;
             this.Parameters = cloudRunbook.Properties.Parameters;
         }
         public static class AuthoringStates

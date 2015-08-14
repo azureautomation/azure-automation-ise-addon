@@ -667,7 +667,7 @@ namespace AutomationISE
                     curr.AuthoringState = runbookWithName[curr.Name].AuthoringState;
                     Debug.WriteLine(runbookWithName[curr.Name].AuthoringState);
                     curr.Parameters = runbookWithName[curr.Name].Parameters;
-                    curr.Description = runbookWithName[curr.Name].Description; //MAKE SURE the description thing works!! maybe revive AutomationRunbook.UpdateMetadata
+                    curr.Description = runbookWithName[curr.Name].Description;
                     curr.LastModifiedCloud = runbookWithName[curr.Name].LastModifiedCloud;
                     curr.LastModifiedLocal = runbookWithName[curr.Name].LastModifiedLocal;
                     //TODO: update sync status
