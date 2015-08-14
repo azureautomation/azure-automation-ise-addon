@@ -37,9 +37,9 @@ namespace AutomationISE
             runbookName = name;
             jobCreateResponse = response;
             iseClient = client;
-            OutputTextBlock.Inlines.Add("Test job created at " + jobCreateResponse.TestJob.CreationTime);
-            OutputTextBlock.Inlines.Add("\r\nTip: not seeing Verbose output? Add the line \"$VerbosePreference='Continue'\" to your runbook.");
-            OutputTextBlock.Inlines.Add("\r\nClick 'Refresh' to check for updates.");
+            OutputTextBlockParagraph.Inlines.Add("Test job created at " + jobCreateResponse.TestJob.CreationTime);
+            OutputTextBlockParagraph.Inlines.Add("\r\nTip: not seeing Verbose output? Add the line \"$VerbosePreference='Continue'\" to your runbook.");
+            OutputTextBlockParagraph.Inlines.Add("\r\nClick 'Refresh' to check for updates.");
         }
 
         private async Task checkJob()
@@ -47,7 +47,7 @@ namespace AutomationISE
             TestJobGetResponse response = await iseClient.automationManagementClient.TestJobs.GetAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
                                                 iseClient.currAccount.Name, runbookName, new System.Threading.CancellationToken());
 
-            OutputTextBlock.Inlines.Add("\r\nStatus: " + response.TestJob.Status);
+            OutputTextBlockParagraph.Inlines.Add("\r\nStatus: " + response.TestJob.Status);
 
             JobStreamListResponse jslResponse = await iseClient.automationManagementClient.JobStreams.ListTestJobStreamsAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
                 iseClient.currAccount.Name, runbookName, null, new System.Threading.CancellationToken());
@@ -64,15 +64,15 @@ namespace AutomationISE
         private void updateJobOutputTextBlock(TestJobGetResponse response, JobStreamGetResponse stream)
         {
             String streamText = stream.JobStream.Properties.StreamText;
-            OutputTextBlock.Inlines.Add("\r\n");
+            OutputTextBlockParagraph.Inlines.Add("\r\n");
             if (stream.JobStream.Properties.StreamType == "Output")
             {
-                OutputTextBlock.Inlines.Add(streamText);
+                OutputTextBlockParagraph.Inlines.Add(streamText);
             }
             else if (stream.JobStream.Properties.StreamType == "Verbose")
             {
                 streamText = "VERBOSE: " + streamText;
-                OutputTextBlock.Inlines.Add(new Run(streamText)
+                OutputTextBlockParagraph.Inlines.Add(new Run(streamText)
                 {
                     Foreground = (SolidColorBrush)(new BrushConverter().ConvertFrom(VerboseForegroundColorCode)),
                     Background = (SolidColorBrush)(new BrushConverter().ConvertFrom(VerboseBackgroundColorCode))
@@ -81,7 +81,7 @@ namespace AutomationISE
             else if (stream.JobStream.Properties.StreamType == "Error")
             {
                 streamText = "ERROR: " + streamText;
-                OutputTextBlock.Inlines.Add(new Run(streamText)
+                OutputTextBlockParagraph.Inlines.Add(new Run(streamText)
                 {
                     Foreground = (SolidColorBrush)(new BrushConverter().ConvertFrom(ErrorForegroundColorCode)),
                     Background = (SolidColorBrush)(new BrushConverter().ConvertFrom(ErrorBackgroundColorCode))
@@ -90,7 +90,7 @@ namespace AutomationISE
             else if (stream.JobStream.Properties.StreamType == "Warning")
             {
                 streamText = "WARNING: " + streamText;
-                OutputTextBlock.Inlines.Add(new Run(streamText)
+                OutputTextBlockParagraph.Inlines.Add(new Run(streamText)
                 {
                     Foreground = (SolidColorBrush)(new BrushConverter().ConvertFrom(WarningForegroundColorCode)),
                     Background = (SolidColorBrush)(new BrushConverter().ConvertFrom(WarningBackgroundColorCode))
@@ -99,7 +99,7 @@ namespace AutomationISE
             else
             {
                 Debug.WriteLine("Unknown stream type couldn't be colored properly: " + stream.JobStream.Properties.StreamType);
-                OutputTextBlock.Inlines.Add(stream.JobStream.Properties.StreamType.ToUpper() + ":  " + streamText);
+                OutputTextBlockParagraph.Inlines.Add(stream.JobStream.Properties.StreamType.ToUpper() + ":  " + streamText);
             }
         }
 
