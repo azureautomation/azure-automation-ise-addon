@@ -867,10 +867,5 @@ namespace AutomationISE
             }
 
         }
-
-        private void ButtonCheckinSourceControlRunbook_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
 }
