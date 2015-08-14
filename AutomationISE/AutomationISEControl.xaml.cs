@@ -445,8 +445,6 @@ namespace AutomationISE
             }
         }
 
-        private void configurationStatusTextBox_TextChanged(object sender, TextChangedEventArgs e) { }
-
         private void UpdateStatusBox(System.Windows.Controls.TextBox statusTextBox, String Message)
         {
             var dispatchMessage = Dispatcher.BeginInvoke(DispatcherPriority.Send, (SendOrPostCallback)delegate
