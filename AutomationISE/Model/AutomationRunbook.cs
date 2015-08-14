@@ -38,7 +38,7 @@ namespace AutomationISE.Model
 
         //Runbook already exists in the cloud, but not on disk.
         public AutomationRunbook(Runbook cloudRunbook) :
-            base(cloudRunbook.Name, null, cloudRunbook.Properties.LastModifiedTime.DateTime)
+            base(cloudRunbook.Name, null, cloudRunbook.Properties.LastModifiedTime.LocalDateTime)
         {
             this.AuthoringState = cloudRunbook.Properties.State;
             this.localFileInfo = null;
@@ -47,7 +47,7 @@ namespace AutomationISE.Model
 
         //Runbook exists on disk, but not in the cloud.
         public AutomationRunbook(FileInfo localFile)
-            : base(System.IO.Path.GetFileNameWithoutExtension(localFile.Name), localFile.LastWriteTimeUtc, null)
+            : base(System.IO.Path.GetFileNameWithoutExtension(localFile.Name), localFile.LastWriteTime, null)
         {
             this.AuthoringState = AutomationRunbook.AuthoringStates.New;
             this.localFileInfo = localFile;
@@ -56,7 +56,7 @@ namespace AutomationISE.Model
 
         //Runbook exists both on disk and in the cloud. But are they in sync?
         public AutomationRunbook(FileInfo localFile, Runbook cloudRunbook)
-            : base(cloudRunbook.Name, localFile.LastWriteTimeUtc, cloudRunbook.Properties.LastModifiedTime.UtcDateTime)
+            : base(cloudRunbook.Name, localFile.LastWriteTime, cloudRunbook.Properties.LastModifiedTime.LocalDateTime)
         {
             this.AuthoringState = cloudRunbook.Properties.State;
             this.localFileInfo = localFile;
