@@ -57,26 +57,7 @@ namespace AutomationISE
                 InitializeComponent();
                 iseClient = new AutomationISEClient();
                 downloadQueue = new BlockingCollection<RunbookDownloadJob>(new ConcurrentQueue<RunbookDownloadJob>(),50);
-                //TODO: refactor
-                IProgress<Tuple<string, int>> progress = new Progress<Tuple<string, int>>((report) => {
-                    if (String.IsNullOrEmpty(report.Item1))
-                    {
-                        ProgressLabel.Text = "";
-                        JobsRemainingLabel.Text = "";
-                    }
-                    else
-                    {
-                        ProgressLabel.Text = "Downloading runbook '" + report.Item1 + "'...";
-                        if (downloadQueue.Count > 0)
-                        {
-                            JobsRemainingLabel.Text = "(" + downloadQueue.Count + " remaining)";
-                        }
-                        else
-                        {
-                            JobsRemainingLabel.Text = "";
-                        }
-                    }
-                });
+                IProgress<string> progress = new Progress<string>(updateUiWithDownloadProgress);
                 downloadWorker = Task.Factory.StartNew(() => processJobsFromQueue(progress), TaskCreationOptions.LongRunning);
 
                 /* Determine working directory */
@@ -137,12 +118,11 @@ namespace AutomationISE
 
         public void setRunbookSelectionButtonState(bool enabled)
         {
-            /*
             ButtonDownloadRunbook.IsEnabled = enabled;
             ButtonOpenRunbook.IsEnabled = enabled;
-            ButtonPublishRunbook.IsEnabled = enabled;
             ButtonUploadRunbook.IsEnabled = enabled;
-             */
+            ButtonTestRunbook.IsEnabled = enabled;
+            ButtonPublishRunbook.IsEnabled = enabled;
         }
 
         public void setAssetSelectionButtonState(bool enabled)
@@ -418,6 +398,7 @@ namespace AutomationISE
 
                     /* Update UI */
                     RunbooksListView.ItemsSource = runbookListViewModel;
+                    setRunbookSelectionButtonState(false);
                     assetsComboBox.SelectedValue = AutomationISE.Model.Constants.assetVariable;
                     ButtonRefreshAssetList.IsEnabled = true;
 
@@ -554,13 +535,33 @@ namespace AutomationISE
             ButtonDownloadRunbook.IsEnabled = true;
         }
 
-        private async Task processJobsFromQueue(IProgress<Tuple<string, int>> progress)
+        private void updateUiWithDownloadProgress(string runbookName)
         {
-            int completed = 0;
+            if (String.IsNullOrEmpty(runbookName))
+            {
+                ProgressLabel.Text = "";
+                JobsRemainingLabel.Text = "";
+            }
+            else
+            {
+                ProgressLabel.Text = "Downloading runbook '" + runbookName + "'...";
+                if (downloadQueue.Count > 0)
+                {
+                    JobsRemainingLabel.Text = "(" + downloadQueue.Count + " remaining)";
+                }
+                else
+                {
+                    JobsRemainingLabel.Text = "";
+                }
+            }
+        }
+
+        private async Task processJobsFromQueue(IProgress<string> progress)
+        {
             while (true)
             {
                 RunbookDownloadJob job = downloadQueue.Take(); //blocks until there is something to take
-                progress.Report(Tuple.Create(job.Runbook.Name, ++completed));
+                progress.Report(job.Runbook.Name);
                 try
                 {
                     await AutomationRunbookManager.DownloadRunbook(job.Runbook, iseClient.automationManagementClient,
@@ -573,27 +574,46 @@ namespace AutomationISE
                 await Task.Delay(5000); //simulate work taking longer, for testing
                 if (downloadQueue.Count == 0)
                 {
-                    progress.Report(Tuple.Create("", completed));
-                    completed = 0;
+                    progress.Report(null);
                 }
             }
         }
 
         private void RunbooksListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            //TODO: factor into setRunbookSelectionButtonState()
             AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
-            if (selectedRunbook != null && selectedRunbook.localFileInfo != null && File.Exists(selectedRunbook.localFileInfo.FullName))
+            if (selectedRunbook == null)
+            {
+                setRunbookSelectionButtonState(false);
+                return;
+            }
+            /* Set Download button status */
+            if (selectedRunbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.LocalOnly)
+                ButtonDownloadRunbook.IsEnabled = false;
+            else
+                ButtonDownloadRunbook.IsEnabled = true;
+            /* Set Open and Upload button status */
+            if (selectedRunbook.localFileInfo != null && File.Exists(selectedRunbook.localFileInfo.FullName))
             {
                 ButtonOpenRunbook.IsEnabled = true;
-                ButtonPublishRunbook.IsEnabled = true;
+                ButtonUploadRunbook.IsEnabled = true;
             }
             else
             {
                 ButtonOpenRunbook.IsEnabled = false;
+                ButtonUploadRunbook.IsEnabled = false;
+            }
+            /* Set Test and Publish button status */
+            if (selectedRunbook.AuthoringState == AutomationRunbook.AuthoringStates.Published || selectedRunbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.LocalOnly)
+            {
+                ButtonTestRunbook.IsEnabled = false;
                 ButtonPublishRunbook.IsEnabled = false;
             }
-            ButtonDownloadRunbook.IsEnabled = true;
+            else
+            {
+                ButtonTestRunbook.IsEnabled = true;
+                ButtonPublishRunbook.IsEnabled = true;
+            }
         }
 
         private void ButtonOpenRunbook_Click(object sender, RoutedEventArgs e)
