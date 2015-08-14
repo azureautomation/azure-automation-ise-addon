@@ -68,10 +68,10 @@ namespace AutomationISE
 
                 /* Update UI */
                 workspaceTextBox.Text = iseClient.baseWorkspace;
-		        userNameTextBox.Text = Properties.Settings.Default["ADUserName"].ToString();
-                
+                userNameTextBox.Text = Properties.Settings.Default["ADUserName"].ToString();
+
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetVariable);
-		        assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCredential);
+                assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCredential);
                 //assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCertificate);
                 //assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetConnection);
 
@@ -106,7 +106,8 @@ namespace AutomationISE
             }
         }
 
-        public void setRunbookAndAssetNonSelectionButtonState(bool enabled) {
+        public void setRunbookAndAssetNonSelectionButtonState(bool enabled)
+        {
             ButtonRefreshAssetList.IsEnabled = enabled;
             ButttonNewAsset.IsEnabled = enabled;
         }
@@ -179,7 +180,7 @@ namespace AutomationISE
         {
             bool deleteLocally = true;
             bool deleteFromCloud = true;
-            
+
             // when asset is only local or only in cloud, we know where they want to delete it from. But when asset is both local and cloud,
             // they may not have meant to delete it from cloud, so ask them 
             foreach (var assetToDelete in assetsToDelete)
@@ -201,15 +202,16 @@ namespace AutomationISE
                         deleteFromCloud = false;
                         deleteLocally = false;
                     }
-                        
+
                     break;
                 }
             }
-            
+
             AutomationAssetManager.Delete(assetsToDelete, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, deleteLocally, deleteFromCloud, getEncryptionCertificateThumbprint());
         }
 
-        public void startContinualGet() {
+        public void startContinualGet()
+        {
 
             // Set timer interval to 30 seconds
             refreshTimer.Interval = 30000;
@@ -220,14 +222,15 @@ namespace AutomationISE
             refreshTimer.Start();
         }
 
-        public void refresh(object source, ElapsedEventArgs e) {
+        public void refresh(object source, ElapsedEventArgs e)
+        {
             this.Dispatcher.Invoke((Action)(() =>
             {
                 refreshAssets();
                 // TODO: add refresh runbooks
             }));
         }
-        
+
         public async void refreshAssets()
         {
             try
@@ -260,7 +263,7 @@ namespace AutomationISE
             catch (Exception exception)
             {
                 var showError = true;
-                
+
                 // If the message is not token expired, or if this is the first time we'd show token expired message
                 // since previously being connected, show a dialog
                 if (exception.HResult == -2146233088)
@@ -282,8 +285,9 @@ namespace AutomationISE
 
         private async void loginButton_Click(object sender, RoutedEventArgs e)
         {
-            try {
-		        //TODO: probably refactor this a little
+            try
+            {
+                //TODO: probably refactor this a little
                 UpdateStatusBox(configurationStatusTextBox, "Launching login window");
                 iseClient.azureADAuthResult = AutomationISE.Model.AuthenticateHelper.GetInteractiveLogin(userNameTextBox.Text);
 
@@ -364,11 +368,11 @@ namespace AutomationISE
                     /* Update Status */
                     UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
                     setRunbookAndAssetNonSelectionButtonState(true);
-                    UpdateStatusBox(configurationStatusTextBox,"Workspace location is: " + iseClient.currWorkspace);
+                    UpdateStatusBox(configurationStatusTextBox, "Workspace location is: " + iseClient.currWorkspace);
                     UpdateStatusBox(configurationStatusTextBox, "Save new runbooks you wish to upload to Azure Automation in this folder");
                     /* Update Runbooks */
                     UpdateStatusBox(configurationStatusTextBox, "Getting runbook data...");
-                    ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient, 
+                    ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient,
                         iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
                     UpdateStatusBox(configurationStatusTextBox, "Done getting runbook data");
                     /* Update Assets */
@@ -399,6 +403,14 @@ namespace AutomationISE
 
                     //TODO: possibly rename/refactor this
                     refresh(null, null);
+
+                    // Enable source control sync in Azure Automation if it is set up for this automation account   
+                    bool isSourceControlEnabled = await AutomationSourceControl.isSourceControlEnabled(iseClient.automationManagementClient,
+                        iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+
+                    if (isSourceControlEnabled) ButtonSourceControlRunbook.IsEnabled = true;
+                    else ButtonSourceControlRunbook.IsEnabled = false;
+
                 }
             }
             catch (Exception exception)
@@ -411,7 +423,7 @@ namespace AutomationISE
         private void assetsListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             setAssetSelectionButtonState(assetsListView.SelectedItems.Count > 0);
-        } 
+        }
 
         private void assetsComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -444,6 +456,8 @@ namespace AutomationISE
                 var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
             }
         }
+
+        private void configurationStatusTextBox_TextChanged(object sender, TextChangedEventArgs e) { }
 
         private void UpdateStatusBox(System.Windows.Controls.TextBox statusTextBox, String Message)
         {
@@ -669,7 +683,7 @@ namespace AutomationISE
                 await AutomationRunbookManager.UploadRunbookAsDraft(selectedRunbook, iseClient.automationManagementClient,
                         iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show("The runbook could not be uploaded.\r\nError details: " + ex.Message, "Error");
             }
@@ -718,10 +732,13 @@ namespace AutomationISE
             }
             /* start the test job */
             TestJobCreateResponse jobResponse = null;
-            try {
-                jobResponse = await iseClient.automationManagementClient.TestJobs.CreateAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name, 
+            try
+            {
+                jobResponse = await iseClient.automationManagementClient.TestJobs.CreateAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
                     iseClient.currAccount.Name, jobCreationParams, new CancellationToken());
-            } catch {
+            }
+            catch
+            {
                 MessageBox.Show("The test job could not be submitted to Azure.", "Error");
                 return;
             }
@@ -731,10 +748,12 @@ namespace AutomationISE
             }
             else
             {
-                try {
-                    TestJobOutputWindow jobWindow = new TestJobOutputWindow(jobCreationParams.RunbookName, jobResponse, iseClient);
+                try
+                {
+                    JobOutputWindow jobWindow = new JobOutputWindow(jobCreationParams.RunbookName, jobResponse, iseClient);
                     jobWindow.Show();
-                } catch (Exception exception)
+                }
+                catch (Exception exception)
                 {
                     MessageBox.Show(exception.Message, "Error");
                     return;
@@ -745,7 +764,7 @@ namespace AutomationISE
         private void createOrUpdateCredentialAsset(string credentialAssetName, AutomationCredential credToEdit)
         {
             var dialog = new NewOrEditCredentialDialog(credToEdit);
-            
+
             if (dialog.ShowDialog() == true)
             {
                 var assetsToSave = new List<AutomationAsset>();
@@ -777,7 +796,7 @@ namespace AutomationISE
         private void ButttonNewAsset_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new ChooseNewAssetTypeDialog();
-                
+
             if (dialog.ShowDialog() == true)
             {
                 if (dialog.newAssetType == AutomationISE.Model.Constants.assetVariable)
@@ -790,11 +809,11 @@ namespace AutomationISE
                 }
                 else if (dialog.newAssetType == AutomationISE.Model.Constants.assetConnection)
                 {
-                    
+
                 }
                 else if (dialog.newAssetType == AutomationISE.Model.Constants.assetCertificate)
                 {
-                    
+
                 }
             }
         }
@@ -802,11 +821,13 @@ namespace AutomationISE
         private void ButtonEditAsset_Click(object sender, RoutedEventArgs e)
         {
             var asset = getSelectedAssets().ElementAt(0);
-            
-            if(asset is AutomationCredential) {
+
+            if (asset is AutomationCredential)
+            {
                 createOrUpdateCredentialAsset(asset.Name, (AutomationCredential)asset);
             }
-            else if(asset is AutomationVariable) {
+            else if (asset is AutomationVariable)
+            {
                 createOrUpdateVariableAsset(asset.Name, (AutomationVariable)asset);
             }
         }
@@ -825,6 +846,29 @@ namespace AutomationISE
         }
 
         private void certificateTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
+
+        private async void ButtonSourceControlRunbook_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                JobCreateResponse sourceControlJob = await AutomationSourceControl.startSouceControlJob(iseClient.automationManagementClient,
+                            iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+
+                JobOutputWindow jobWindow = new JobOutputWindow(sourceControlJob.Job.Properties.Runbook.Name, sourceControlJob, iseClient);
+                jobWindow.Show();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("The source control job could not be started. " + ex.Message, "Error");
+                return;
+            }
+
+        }
+
+        private void ButtonCheckinSourceControlRunbook_Click(object sender, RoutedEventArgs e)
         {
 
         }
