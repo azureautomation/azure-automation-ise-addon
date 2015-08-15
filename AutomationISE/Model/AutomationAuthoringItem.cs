@@ -28,17 +28,22 @@ namespace AutomationISE.Model
         public AutomationAuthoringItem(string name, DateTime? lastModifiedLocal, DateTime? lastModifiedCloud)
         {
             this.Name = name;
+            this.LastModifiedCloud = lastModifiedCloud;
+            this.LastModifiedLocal = lastModifiedLocal;
+            UpdateSyncStatus();
+        }
 
-            // some datetime string formats don't store milliseconds, so remove the miliseconds in case one of these doesn't store them,
-            // which would mess up sync status comparison as they could never be equal
-            this.LastModifiedCloud = removeMillis(lastModifiedCloud);
-            this.LastModifiedLocal = removeMillis(lastModifiedLocal);
-
+        /* Compare the LastModifiedLocal and LastModifiedCloud values, and 
+         * set the SyncStatus accordingly */
+        public void UpdateSyncStatus()
+        {
+            this.LastModifiedCloud = removeMillis(this.LastModifiedCloud);
+            this.LastModifiedLocal = removeMillis(this.LastModifiedLocal);
             if (this.LastModifiedLocal == null)
             {
                 this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.CloudOnly;
             }
-            else if(this.LastModifiedCloud == null) 
+            else if (this.LastModifiedCloud == null)
             {
                 this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.LocalOnly;
             }
@@ -104,13 +109,22 @@ namespace AutomationISE.Model
         /// <summary>
         /// The sync status for the item
         /// </summary>
-        public string SyncStatus { get; set; }
+        private string _syncStatus;
+        public string SyncStatus
+        {
+            get { return _syncStatus; }
+            set
+            {
+                _syncStatus = value;
+                NotifyPropertyChanged("SyncStatus");
+            }
+        }
 
         /// <summary>
         /// The last modified date of the item locally
         /// </summary>
         private DateTime? _lastModifiedLocal;
-        public new DateTime? LastModifiedLocal
+        public DateTime? LastModifiedLocal
         {
             get { return _lastModifiedLocal; }
             set
@@ -124,7 +138,7 @@ namespace AutomationISE.Model
         /// The last modified date of the item in the cloud
         /// </summary>
         private DateTime? _lastModifiedCloud;
-        public new DateTime? LastModifiedCloud
+        public DateTime? LastModifiedCloud
         {
             get { return _lastModifiedCloud; }
             set

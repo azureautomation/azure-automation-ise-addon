@@ -529,9 +529,10 @@ namespace AutomationISE
                 ButtonDownloadRunbook.IsEnabled = true;
                 return;
             }
-            //downloadQueue.Add(new RunbookDownloadJob(selectedRunbook)); //blocks if queue is at capacity
             if (downloadQueue.TryAdd(new RunbookDownloadJob(selectedRunbook))) //TryAdd() immediately returns false if queue is at capacity
                 JobsRemainingLabel.Text = "(" + downloadQueue.Count + " remaining)";
+            else
+                MessageBox.Show("Too many runbooks are waiting to be downloaded right now. Cool your jets!");
             ButtonDownloadRunbook.IsEnabled = true;
         }
 
@@ -572,6 +573,11 @@ namespace AutomationISE
                     MessageBox.Show("The runbook could not be downloaded.\r\nError details: " + ex.Message);
                 }
                 await Task.Delay(5000); //simulate work taking longer, for testing
+                /* UI update, use the UI thread */
+                this.Dispatcher.Invoke(() =>
+                {
+                    job.Runbook.UpdateSyncStatus();
+                });
                 if (downloadQueue.Count == 0)
                 {
                     progress.Report(null);
@@ -690,7 +696,7 @@ namespace AutomationISE
                     curr.Description = runbookWithName[curr.Name].Description;
                     curr.LastModifiedCloud = runbookWithName[curr.Name].LastModifiedCloud;
                     curr.LastModifiedLocal = runbookWithName[curr.Name].LastModifiedLocal;
-                    //TODO: update sync status
+                    curr.UpdateSyncStatus();
                     runbookWithName.Remove(curr.Name);
                 }
                 foreach (String name in runbookWithName.Keys)
@@ -730,6 +736,11 @@ namespace AutomationISE
             }
             finally
             {
+                /* Update the UI, use the UI thread */
+                this.Dispatcher.Invoke(() =>
+                {
+                    selectedRunbook.UpdateSyncStatus();
+                });
                 ButtonUploadRunbook.IsEnabled = true;
             }
         }

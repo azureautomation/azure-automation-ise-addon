@@ -47,13 +47,18 @@ namespace AutomationISE.Model
         public IDictionary<string, RunbookParameter> Parameters { get; set; }
 
         //Runbook already exists in the cloud, but not on disk.
-        public AutomationRunbook(Runbook cloudRunbook) :
+        public AutomationRunbook(Runbook cloudRunbook, RunbookDraft cloudRunbookDraft) :
             base(cloudRunbook.Name, null, cloudRunbook.Properties.LastModifiedTime.LocalDateTime)
         {
             this.AuthoringState = cloudRunbook.Properties.State;
             this.localFileInfo = null;
             this.Description = cloudRunbook.Properties.Description;
             this.Parameters = cloudRunbook.Properties.Parameters;
+            if (cloudRunbookDraft != null)
+            {
+                this.LastModifiedCloud = cloudRunbookDraft.LastModifiedTime.LocalDateTime;
+                UpdateSyncStatus();
+            }
         }
 
         //Runbook exists on disk, but not in the cloud.
@@ -66,13 +71,18 @@ namespace AutomationISE.Model
         }
 
         //Runbook exists both on disk and in the cloud. But are they in sync?
-        public AutomationRunbook(FileInfo localFile, Runbook cloudRunbook)
+        public AutomationRunbook(FileInfo localFile, Runbook cloudRunbook, RunbookDraft cloudRunbookDraft)
             : base(cloudRunbook.Name, localFile.LastWriteTime, cloudRunbook.Properties.LastModifiedTime.LocalDateTime)
         {
             this.AuthoringState = cloudRunbook.Properties.State;
             this.localFileInfo = localFile;
             this.Description = cloudRunbook.Properties.Description;
             this.Parameters = cloudRunbook.Properties.Parameters;
+            if (cloudRunbookDraft != null)
+            {
+                this.LastModifiedCloud = cloudRunbookDraft.LastModifiedTime.LocalDateTime;
+                UpdateSyncStatus();
+            }
         }
         public static class AuthoringStates
         {
