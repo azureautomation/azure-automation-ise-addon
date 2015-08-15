@@ -48,17 +48,37 @@ namespace AutomationISE
                                                 iseClient.currAccount.Name, runbookName, new System.Threading.CancellationToken());
 
             OutputTextBlockParagraph.Inlines.Add("\r\nStatus: " + response.TestJob.Status);
-
-            JobStreamListResponse jslResponse = await iseClient.automationManagementClient.JobStreams.ListTestJobStreamsAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
-                iseClient.currAccount.Name, runbookName, null, new System.Threading.CancellationToken());
-
-            // Write out each stream output
-            foreach (JobStream stream in jslResponse.JobStreams)
+            if (response.TestJob.Status == "Failed")
             {
-                var jslStream = await iseClient.automationManagementClient.JobStreams.GetTestJobStreamAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
-                        iseClient.currAccount.Name, runbookName, stream.Properties.JobStreamId, new System.Threading.CancellationToken());
-                updateJobOutputTextBlock(response, jslStream);
+                updateJobOutputTextBlockWithException(response.TestJob.Exception);
             }
+            else
+            {
+                JobStreamListResponse jslResponse = await iseClient.automationManagementClient.JobStreams.ListTestJobStreamsAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
+                    iseClient.currAccount.Name, runbookName, null, new System.Threading.CancellationToken());
+
+                // Write out each stream output
+                foreach (JobStream stream in jslResponse.JobStreams)
+                {
+                    var jslStream = await iseClient.automationManagementClient.JobStreams.GetTestJobStreamAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
+                            iseClient.currAccount.Name, runbookName, stream.Properties.JobStreamId, new System.Threading.CancellationToken());
+                    updateJobOutputTextBlock(response, jslStream);
+                }
+                if (response.TestJob.Status == "Suspended")
+                {
+                    updateJobOutputTextBlockWithException(response.TestJob.Exception);
+                }
+            }
+        }
+
+        private void updateJobOutputTextBlockWithException(string exceptionMessage)
+        {
+            OutputTextBlockParagraph.Inlines.Add("\r\n");
+            OutputTextBlockParagraph.Inlines.Add(new Run(exceptionMessage)
+            {
+                Foreground = (SolidColorBrush)(new BrushConverter().ConvertFrom(ErrorForegroundColorCode)),
+                Background = (SolidColorBrush)(new BrushConverter().ConvertFrom(ErrorBackgroundColorCode))
+            });
         }
 
         private void updateJobOutputTextBlock(TestJobGetResponse response, JobStreamGetResponse stream)
