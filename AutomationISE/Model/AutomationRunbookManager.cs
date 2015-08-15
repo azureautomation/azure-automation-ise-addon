@@ -35,6 +35,7 @@ namespace AutomationISE.Model
             RunbookDraft draft = await GetRunbookDraft(runbook.Name, automationManagementClient, resourceGroupName, account.Name);
             runbook.localFileInfo.LastWriteTime = draft.LastModifiedTime.LocalDateTime;
             runbook.LastModifiedLocal = draft.LastModifiedTime.LocalDateTime;
+            runbook.LastModifiedCloud = draft.LastModifiedTime.LocalDateTime;
         }
 
         public static async Task<LongRunningOperationResultResponse> PublishRunbook(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
@@ -76,7 +77,8 @@ namespace AutomationISE.Model
             if (draftResponse != null)
             {
                 runbook.localFileInfo.LastWriteTime = draftResponse.RunbookDraft.LastModifiedTime.LocalDateTime;
-                runbook.LastModifiedLocal = runbook.localFileInfo.LastWriteTime;
+                runbook.LastModifiedLocal = draftResponse.RunbookDraft.LastModifiedTime.LocalDateTime;
+                runbook.LastModifiedCloud = draftResponse.RunbookDraft.LastModifiedTime.LocalDateTime;
             }
         }
 
