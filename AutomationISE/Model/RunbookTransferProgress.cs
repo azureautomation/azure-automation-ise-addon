@@ -18,7 +18,8 @@ namespace AutomationISE.Model
         public enum TransferStatus
         {
             Starting,
-            Completed
+            Completed,
+            AllCompleted
         };
     }
 }

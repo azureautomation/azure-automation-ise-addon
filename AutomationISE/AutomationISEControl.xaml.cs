@@ -30,6 +30,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography.X509Certificates;
+using System.Windows.Media.Animation;
 
 namespace AutomationISE
 {
@@ -44,6 +45,10 @@ namespace AutomationISE
         private BlockingCollection<RunbookTransferJob> fileTransferQueue;
         private Task fileTransferWorker;
         private IProgress<RunbookTransferProgress> fileTransferWorkerProgress;
+        private Storyboard progressSpinnerStoryboard;
+        private Storyboard progressSpinnerStoryboardReverse;
+        private Storyboard miniProgressSpinnerStoryboard;
+        private Storyboard miniProgressSpinnerStoryboardReverse;
         private bool tokenExpired = false;
         public ObjectModelRoot HostObject { get; set; }
 
@@ -56,6 +61,10 @@ namespace AutomationISE
                 fileTransferQueue = new BlockingCollection<RunbookTransferJob>(new ConcurrentQueue<RunbookTransferJob>(),50);
                 fileTransferWorkerProgress = new Progress<RunbookTransferProgress>(updateUiWithTransferProgress);
                 fileTransferWorker = Task.Factory.StartNew(() => processJobsFromQueue(fileTransferWorkerProgress), TaskCreationOptions.LongRunning);
+                progressSpinnerStoryboard = (Storyboard)FindResource("bigGearRotationStoryboard");
+                progressSpinnerStoryboardReverse = (Storyboard)FindResource("bigGearRotationStoryboardReverse");
+                miniProgressSpinnerStoryboard = (Storyboard)FindResource("smallGearRotationStoryboard");
+                miniProgressSpinnerStoryboardReverse = (Storyboard)FindResource("smallGearRotationStoryboardReverse");
 
                 /* Determine working directory */
                 String localWorkspace = Properties.Settings.Default["localWorkspace"].ToString();
@@ -543,7 +552,7 @@ namespace AutomationISE
                 return;
             }
             if (fileTransferQueue.TryAdd(new RunbookTransferJob(selectedRunbook, RunbookTransferJob.TransferOperation.Download))) //TryAdd() immediately returns false if queue is at capacity
-                JobsRemainingLabel.Text = "(" + fileTransferQueue.Count + " tasks remaining)";
+                JobsRemainingLabel.Content = "(" + fileTransferQueue.Count + " tasks remaining)";
             else
                 MessageBox.Show("Too many runbooks are waiting to be downloaded/uploaded right now. Cool your jets!");
             /* Make sure the worker is alive, start a new one if not */
@@ -552,27 +561,77 @@ namespace AutomationISE
             ButtonDownloadRunbook.IsEnabled = true;
         }
 
+        private void beginOrResumeClockwiseSpin()
+        {
+            progressSpinnerStoryboardReverse.Pause(this);
+            miniProgressSpinnerStoryboardReverse.Pause(this);
+            try
+            {
+                progressSpinnerStoryboard.GetCurrentState();
+                progressSpinnerStoryboard.Resume(this);
+                miniProgressSpinnerStoryboard.Resume(this);
+            }
+            catch
+            {
+                /*Begin hasn't been called yet*/
+                progressSpinnerStoryboard.Begin(this, true);
+                miniProgressSpinnerStoryboard.Begin(this, true);
+            }
+        }
+
+        private void beginOrResumeAntiClockwiseSpin()
+        {
+            progressSpinnerStoryboard.Pause(this);
+            miniProgressSpinnerStoryboard.Pause(this);
+            try
+            {
+                progressSpinnerStoryboard.GetCurrentState();
+                progressSpinnerStoryboardReverse.Resume(this);
+                miniProgressSpinnerStoryboardReverse.Resume(this);
+            }
+            catch
+            {
+                /*Begin hasn't been called yet*/
+                progressSpinnerStoryboardReverse.Begin(this, true);
+                miniProgressSpinnerStoryboardReverse.Begin(this, true);
+            }
+        }
+
         private void updateUiWithTransferProgress(RunbookTransferProgress progress)
         {
             if (progress.Status == RunbookTransferProgress.TransferStatus.Starting)
             {
                 if (progress.Job.Operation == RunbookTransferJob.TransferOperation.Download)
-                    ProgressLabel.Text = "Downloading runbook " + progress.Job.Runbook.Name + "...";
-                else
-                    ProgressLabel.Text = "Uploading runbook " + progress.Job.Runbook.Name + "...";
-                if (fileTransferQueue.Count > 0)
                 {
-                    JobsRemainingLabel.Text = "(" + fileTransferQueue.Count + " tasks remaining)";
+                    ProgressLabel.Content = "Downloading runbook " + progress.Job.Runbook.Name + "...";
+                    beginOrResumeClockwiseSpin();
                 }
                 else
                 {
-                    JobsRemainingLabel.Text = "";
+                    ProgressLabel.Content = "Uploading runbook " + progress.Job.Runbook.Name + "...";
+                    beginOrResumeAntiClockwiseSpin();
+                }
+                if (fileTransferQueue.Count > 0)
+                {
+                    JobsRemainingLabel.Content = "(" + fileTransferQueue.Count + " tasks remaining)";
+                }
+                else
+                {
+                    JobsRemainingLabel.Content = "";
                 }
             }
             else if (progress.Status == RunbookTransferProgress.TransferStatus.Completed)
             {
-                ProgressLabel.Text = "";
                 progress.Job.Runbook.UpdateSyncStatus();
+            }
+            else if (progress.Status == RunbookTransferProgress.TransferStatus.AllCompleted)
+            {
+                progress.Job.Runbook.UpdateSyncStatus();
+                ProgressLabel.Content = "";
+                progressSpinnerStoryboard.Pause(this);
+                progressSpinnerStoryboardReverse.Pause(this);
+                miniProgressSpinnerStoryboard.Pause(this);
+                miniProgressSpinnerStoryboardReverse.Pause(this);
             }
         }
 
@@ -607,9 +666,17 @@ namespace AutomationISE
                         MessageBox.Show("The runbook " + job.Runbook.Name + " could not be uploaded.\r\nError details: " + ex.Message);
                     }
                 }
-                //await Task.Delay(5000); //simulate work taking longer, for testing
-                currentProgress.Status = RunbookTransferProgress.TransferStatus.Completed;
-                progress.Report(currentProgress);
+                await Task.Delay(5000); //simulate work taking longer, for testing
+                if (fileTransferQueue.Count == 0) //about to block
+                {
+                    currentProgress.Status = RunbookTransferProgress.TransferStatus.AllCompleted;
+                    progress.Report(currentProgress);
+                }
+                else
+                {
+                    currentProgress.Status = RunbookTransferProgress.TransferStatus.Completed;
+                    progress.Report(currentProgress);
+                }
             }
         }
 
@@ -753,7 +820,7 @@ namespace AutomationISE
             }
             ButtonUploadRunbook.IsEnabled = false;
             if (fileTransferQueue.TryAdd(new RunbookTransferJob(selectedRunbook, RunbookTransferJob.TransferOperation.Upload))) //TryAdd() immediately returns false if queue is at capacity
-                JobsRemainingLabel.Text = "(" + fileTransferQueue.Count + " tasks remaining)";
+                JobsRemainingLabel.Content = "(" + fileTransferQueue.Count + " tasks remaining)";
             else
                 MessageBox.Show("Too many runbooks are waiting to be downloaded/uploaded right now. Hold your horses!");
             /* Make sure the worker is alive, start a new one if not */
