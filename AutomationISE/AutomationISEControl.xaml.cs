@@ -47,6 +47,7 @@ namespace AutomationISE
         private ObservableCollection<AutomationRunbook> runbookListViewModel;
         private BlockingCollection<RunbookDownloadJob> downloadQueue;
         private Task downloadWorker;
+        private IProgress<RunbookDownloadProgress> downloadWorkerProgress;
         private bool tokenExpired = false;
         public ObjectModelRoot HostObject { get; set; }
 
@@ -57,8 +58,8 @@ namespace AutomationISE
                 InitializeComponent();
                 iseClient = new AutomationISEClient();
                 downloadQueue = new BlockingCollection<RunbookDownloadJob>(new ConcurrentQueue<RunbookDownloadJob>(),50);
-                IProgress<string> progress = new Progress<string>(updateUiWithDownloadProgress);
-                downloadWorker = Task.Factory.StartNew(() => processJobsFromQueue(progress), TaskCreationOptions.LongRunning);
+                downloadWorkerProgress = new Progress<RunbookDownloadProgress>(updateUiWithDownloadProgress);
+                downloadWorker = Task.Factory.StartNew(() => processJobsFromQueue(downloadWorkerProgress), TaskCreationOptions.LongRunning);
 
                 /* Determine working directory */
                 String localWorkspace = Properties.Settings.Default["localWorkspace"].ToString();
@@ -533,19 +534,17 @@ namespace AutomationISE
                 JobsRemainingLabel.Text = "(" + downloadQueue.Count + " remaining)";
             else
                 MessageBox.Show("Too many runbooks are waiting to be downloaded right now. Cool your jets!");
+            /* Make sure the worker is alive, start a new one if not */
+            if (downloadWorker == null || downloadWorker.Status == TaskStatus.Canceled || downloadWorker.Status == TaskStatus.Faulted)
+                downloadWorker = Task.Factory.StartNew(() => processJobsFromQueue(downloadWorkerProgress), TaskCreationOptions.LongRunning);
             ButtonDownloadRunbook.IsEnabled = true;
         }
 
-        private void updateUiWithDownloadProgress(string runbookName)
+        private void updateUiWithDownloadProgress(RunbookDownloadProgress progress)
         {
-            if (String.IsNullOrEmpty(runbookName))
+            if (progress.Status == RunbookDownloadProgress.DownloadStatus.Starting)
             {
-                ProgressLabel.Text = "";
-                JobsRemainingLabel.Text = "";
-            }
-            else
-            {
-                ProgressLabel.Text = "Downloading runbook '" + runbookName + "'...";
+                ProgressLabel.Text = "Downloading runbook '" + progress.Runbook.Name + "'...";
                 if (downloadQueue.Count > 0)
                 {
                     JobsRemainingLabel.Text = "(" + downloadQueue.Count + " remaining)";
@@ -555,14 +554,20 @@ namespace AutomationISE
                     JobsRemainingLabel.Text = "";
                 }
             }
+            else if (progress.Status == RunbookDownloadProgress.DownloadStatus.Completed)
+            {
+                ProgressLabel.Text = "";
+                progress.Runbook.UpdateSyncStatus();
+            }
         }
 
-        private async Task processJobsFromQueue(IProgress<string> progress)
+        private async Task processJobsFromQueue(IProgress<RunbookDownloadProgress> progress)
         {
             while (true)
             {
                 RunbookDownloadJob job = downloadQueue.Take(); //blocks until there is something to take
-                progress.Report(job.Runbook.Name);
+                RunbookDownloadProgress currentProgress = new RunbookDownloadProgress(job.Runbook);
+                progress.Report(currentProgress);
                 try
                 {
                     await AutomationRunbookManager.DownloadRunbook(job.Runbook, iseClient.automationManagementClient,
@@ -570,18 +575,11 @@ namespace AutomationISE
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("The runbook could not be downloaded.\r\nError details: " + ex.Message);
+                    MessageBox.Show("The runbook " + job.Runbook.Name + " could not be downloaded.\r\nError details: " + ex.Message);
                 }
                 await Task.Delay(5000); //simulate work taking longer, for testing
-                /* UI update, use the UI thread */
-                this.Dispatcher.Invoke(() =>
-                {
-                    job.Runbook.UpdateSyncStatus();
-                });
-                if (downloadQueue.Count == 0)
-                {
-                    progress.Report(null);
-                }
+                currentProgress.Status = RunbookDownloadProgress.DownloadStatus.Completed;
+                progress.Report(currentProgress);
             }
         }
 
@@ -903,5 +901,20 @@ namespace AutomationISE
         {
             this.Runbook = rb;
         }
+    }
+    public class RunbookDownloadProgress
+    {
+        public AutomationRunbook Runbook { get; set; }
+        public DownloadStatus Status;
+        public RunbookDownloadProgress(AutomationRunbook rb)
+        {
+            this.Runbook = rb;
+            this.Status = DownloadStatus.Starting;
+        }
+        public enum DownloadStatus
+        {
+            Starting,
+            Completed
+        };
     }
 }
