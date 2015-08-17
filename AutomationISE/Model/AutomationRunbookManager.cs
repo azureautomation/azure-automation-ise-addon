@@ -19,9 +19,7 @@ namespace AutomationISE.Model
         public static async Task UploadRunbookAsDraft(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, AutomationAccount account)
         {
             RunbookCreateOrUpdateDraftProperties draftProperties = new RunbookCreateOrUpdateDraftProperties("Script", new RunbookDraft());
-            if (runbook.Description == null) draftProperties.Description = runbook.Name;
-            else draftProperties.Description = runbook.Description;
-
+            draftProperties.Description = runbook.Description;
             RunbookCreateOrUpdateDraftParameters draftParams = new RunbookCreateOrUpdateDraftParameters(draftProperties);
             draftParams.Name = runbook.Name;
             draftParams.Location = account.Location;
@@ -33,7 +31,11 @@ namespace AutomationISE.Model
                 Stream = File.ReadAllText(runbook.localFileInfo.FullName)
             };
             await automationManagementClient.RunbookDraft.UpdateAsync(resourceGroupName, account.Name, draftUpdateParams);
-            UpdateRunbookMetadata(runbook, automationManagementClient, resourceGroupName, account.Name);
+            /* Ensure the correct sync status is detected */
+            RunbookDraft draft = await GetRunbookDraft(runbook.Name, automationManagementClient, resourceGroupName, account.Name);
+            runbook.localFileInfo.LastWriteTime = draft.LastModifiedTime.LocalDateTime;
+            runbook.LastModifiedLocal = draft.LastModifiedTime.LocalDateTime;
+            runbook.LastModifiedCloud = draft.LastModifiedTime.LocalDateTime;
         }
 
         public static async Task<LongRunningOperationResultResponse> PublishRunbook(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
@@ -44,25 +46,40 @@ namespace AutomationISE.Model
                 PublishedBy = "ISE User: " + System.Security.Principal.WindowsIdentity.GetCurrent().Name
             };
             LongRunningOperationResultResponse resultResponse = await automationManagementClient.RunbookDraft.PublishAsync(resourceGroupName, accountName, publishParams);
-            UpdateRunbookMetadata(runbook, automationManagementClient, resourceGroupName, accountName);
             return resultResponse;
         }
 
         public static async Task DownloadRunbook(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string workspace, string resourceGroupName, AutomationAccount account)
         {
             RunbookGetResponse response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, account.Name, runbook.Name);
+            RunbookDraftGetResponse draftResponse = null;
             RunbookContentResponse runbookContentResponse = null;
             if (response.Runbook.Properties.State == "Published")
+            {
                 runbookContentResponse = await automationManagementClient.Runbooks.ContentAsync(resourceGroupName, account.Name, runbook.Name);
+            }
             else
+            {
                 runbookContentResponse = await automationManagementClient.RunbookDraft.ContentAsync(resourceGroupName, account.Name, runbook.Name);
+                draftResponse = await automationManagementClient.RunbookDraft.GetAsync(resourceGroupName, account.Name, runbook.Name);
+            }
             String runbookFilePath = System.IO.Path.Combine(workspace, runbook.Name + ".ps1");
             File.WriteAllText(runbookFilePath, runbookContentResponse.Stream.ToString());
             runbook.localFileInfo = new FileInfo(runbookFilePath);
             /* This is the only way I can see to "check out" the runbook using the SDK.
              * Hopefully there's a better way but for now this works */
             if (response.Runbook.Properties.State == "Published")
+            {
                 await UploadRunbookAsDraft(runbook, automationManagementClient, resourceGroupName, account);
+                draftResponse = await automationManagementClient.RunbookDraft.GetAsync(resourceGroupName, account.Name, runbook.Name);
+            }
+            /* Ensures the correct sync status is detected */
+            if (draftResponse != null)
+            {
+                runbook.localFileInfo.LastWriteTime = draftResponse.RunbookDraft.LastModifiedTime.LocalDateTime;
+                runbook.LastModifiedLocal = draftResponse.RunbookDraft.LastModifiedTime.LocalDateTime;
+                runbook.LastModifiedCloud = draftResponse.RunbookDraft.LastModifiedTime.LocalDateTime;
+            }
         }
 
         public static async Task<ISet<AutomationRunbook>> GetAllRunbookMetadata(AutomationManagementClient automationManagementClient, string workspace, string resourceGroupName, string accountName)
@@ -83,16 +100,25 @@ namespace AutomationISE.Model
             /* Start by checking the downloaded runbooks */
             foreach (Runbook cloudRunbook in cloudRunbooks)
             {
-                // Only download script runbooks
-                if (cloudRunbook.Properties.RunbookType == Constants.RunbookType.Script)
+                /* Don't bother with graphical runbooks, since the ISE can't do anything with them */
+                if (cloudRunbook.Properties.RunbookType != Constants.RunbookType.Graphical)
                 {
+                    RunbookDraftGetResponse draftResponse;
+                    try
+                    {
+                        draftResponse = await automationManagementClient.RunbookDraft.GetAsync(resourceGroupName, accountName, cloudRunbook.Name);
+                    }
+                    catch
+                    {
+                        draftResponse = null;
+                    }
                     if (filePathForRunbook.ContainsKey(cloudRunbook.Name))
                     {
-                        result.Add(new AutomationRunbook(new FileInfo(filePathForRunbook[cloudRunbook.Name]), cloudRunbook));
+                        result.Add(new AutomationRunbook(new FileInfo(filePathForRunbook[cloudRunbook.Name]), cloudRunbook, draftResponse.RunbookDraft));
                     }
                     else
                     {
-                        result.Add(new AutomationRunbook(cloudRunbook));
+                        result.Add(new AutomationRunbook(cloudRunbook, draftResponse.RunbookDraft));
                     }
                 }
             }
@@ -112,12 +138,6 @@ namespace AutomationISE.Model
         {
             RunbookDraftGetResponse response = await automationManagementClient.RunbookDraft.GetAsync(resourceGroupName, accountName, runbookName);
             return response.RunbookDraft;
-        }
-
-        private static void UpdateRunbookMetadata(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
-        {
-            RunbookGetResponse response = automationManagementClient.Runbooks.Get(resourceGroupName, accountName, runbook.Name);
-            runbook.UpdateMetadata(response.Runbook);
         }
 
         private static async Task<IList<Runbook>> DownloadRunbookMetadata(AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)

@@ -25,7 +25,7 @@ namespace AutomationISE
 
         private AutomationISEClient iseClient;
         private String runbookName;
-        /* These values are the defaults for the settings visible using > (Get-Host).PrivateData */
+        /* These values are the defaults for the settings visible using >(Get-Host).PrivateData */
         public static String ErrorForegroundColorCode = "#FFFF0000";
         public static String ErrorBackgroundColorCode = "#00FFFFFF";
         public static String WarningForegroundColorCode = "#FFFF8C00";
@@ -39,7 +39,7 @@ namespace AutomationISE
             runbookName = name;
             TestjobCreateResponse = response;
             iseClient = client;
-            OutputTextBlockParagraph.Inlines.Add("Test job created at " + TestjobCreateResponse.TestJob.CreationTime + " for Runbook " + runbookName);
+            OutputTextBlockParagraph.Inlines.Add("Test job created at " + TestjobCreateResponse.TestJob.CreationTime + " for runbook " + runbookName);
             OutputTextBlockParagraph.Inlines.Add("\r\nTip: not seeing Verbose output? Add the line \"$VerbosePreference='Continue'\" to your runbook.");
             OutputTextBlockParagraph.Inlines.Add("\r\nClick 'Refresh' to check for updates.");
         }
@@ -61,17 +61,37 @@ namespace AutomationISE
                                                 iseClient.currAccount.Name, runbookName, new System.Threading.CancellationToken());
 
             OutputTextBlockParagraph.Inlines.Add("\r\nStatus: " + response.TestJob.Status);
-
-            JobStreamListResponse jslResponse = await iseClient.automationManagementClient.JobStreams.ListTestJobStreamsAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
-                iseClient.currAccount.Name, runbookName, null, new System.Threading.CancellationToken());
-
-            // Write out each stream output
-            foreach (JobStream stream in jslResponse.JobStreams)
+            if (response.TestJob.Status == "Failed")
             {
-                var jslStream = await iseClient.automationManagementClient.JobStreams.GetTestJobStreamAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
-                        iseClient.currAccount.Name, runbookName, stream.Properties.JobStreamId, new System.Threading.CancellationToken());
-                updateJobOutputTextBlock(jslStream);
+                updateJobOutputTextBlockWithException(response.TestJob.Exception);
             }
+            else
+            {
+                JobStreamListResponse jslResponse = await iseClient.automationManagementClient.JobStreams.ListTestJobStreamsAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
+                    iseClient.currAccount.Name, runbookName, null, new System.Threading.CancellationToken());
+
+                // Write out each stream output
+                foreach (JobStream stream in jslResponse.JobStreams)
+                {
+                    var jslStream = await iseClient.automationManagementClient.JobStreams.GetTestJobStreamAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
+                            iseClient.currAccount.Name, runbookName, stream.Properties.JobStreamId, new System.Threading.CancellationToken());
+                    updateJobOutputTextBlock(jslStream);
+                }
+                if (response.TestJob.Status == "Suspended")
+                {
+                    updateJobOutputTextBlockWithException(response.TestJob.Exception);
+                }
+            }
+        }
+
+        private void updateJobOutputTextBlockWithException(string exceptionMessage)
+        {
+            OutputTextBlockParagraph.Inlines.Add("\r\n");
+            OutputTextBlockParagraph.Inlines.Add(new Run(exceptionMessage)
+            {
+                Foreground = (SolidColorBrush)(new BrushConverter().ConvertFrom(ErrorForegroundColorCode)),
+                Background = (SolidColorBrush)(new BrushConverter().ConvertFrom(ErrorBackgroundColorCode))
+            });
         }
 
         private async Task checkJob()

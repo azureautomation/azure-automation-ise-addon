@@ -13,13 +13,14 @@
 // ----------------------------------------------------------------------------------
 
 using System;
+using System.ComponentModel;
 
 namespace AutomationISE.Model
 {
     /// <summary>
     /// The automation asset
     /// </summary>
-    public abstract class AutomationAuthoringItem : IComparable<AutomationAuthoringItem>
+    public abstract class AutomationAuthoringItem : IComparable<AutomationAuthoringItem>, INotifyPropertyChanged
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AutomationAuthoringItem"/> class.
@@ -27,17 +28,22 @@ namespace AutomationISE.Model
         public AutomationAuthoringItem(string name, DateTime? lastModifiedLocal, DateTime? lastModifiedCloud)
         {
             this.Name = name;
+            this.LastModifiedCloud = lastModifiedCloud;
+            this.LastModifiedLocal = lastModifiedLocal;
+            UpdateSyncStatus();
+        }
 
-            // some datetime string formats don't store milliseconds, so remove the miliseconds in case one of these doesn't store them,
-            // which would mess up sync status comparison as they could never be equal
-            this.LastModifiedCloud = removeMillis(lastModifiedCloud);
-            this.LastModifiedLocal = removeMillis(lastModifiedLocal);
-
+        /* Compare the LastModifiedLocal and LastModifiedCloud values, and 
+         * set the SyncStatus accordingly */
+        public void UpdateSyncStatus()
+        {
+            this.LastModifiedCloud = removeMillis(this.LastModifiedCloud);
+            this.LastModifiedLocal = removeMillis(this.LastModifiedLocal);
             if (this.LastModifiedLocal == null)
             {
                 this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.CloudOnly;
             }
-            else if(this.LastModifiedCloud == null) 
+            else if (this.LastModifiedCloud == null)
             {
                 this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.LocalOnly;
             }
@@ -103,17 +109,53 @@ namespace AutomationISE.Model
         /// <summary>
         /// The sync status for the item
         /// </summary>
-        public string SyncStatus { get; set; }
+        private string _syncStatus;
+        public string SyncStatus
+        {
+            get { return _syncStatus; }
+            set
+            {
+                _syncStatus = value;
+                NotifyPropertyChanged("SyncStatus");
+            }
+        }
 
         /// <summary>
         /// The last modified date of the item locally
         /// </summary>
-        public DateTime? LastModifiedLocal { get; set; }
+        private DateTime? _lastModifiedLocal;
+        public DateTime? LastModifiedLocal
+        {
+            get { return _lastModifiedLocal; }
+            set
+            {
+                _lastModifiedLocal = value;
+                NotifyPropertyChanged("LastModifiedLocal");
+            }
+        }
 
         /// <summary>
         /// The last modified date of the item in the cloud
         /// </summary>
-        public DateTime? LastModifiedCloud { get; set; }
+        private DateTime? _lastModifiedCloud;
+        public DateTime? LastModifiedCloud
+        {
+            get { return _lastModifiedCloud; }
+            set
+            {
+                _lastModifiedCloud = value;
+                NotifyPropertyChanged("LastModifiedCloud");
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void NotifyPropertyChanged(String propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
 
         public class Constants
         {

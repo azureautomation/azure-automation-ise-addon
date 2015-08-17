@@ -22,9 +22,19 @@ using System.Diagnostics;
 
 namespace AutomationISE.Model
 {
+    /* Note that AutomationAuthoringItem implements INotifyPropertyChanged */
     public class AutomationRunbook : AutomationAuthoringItem
     {
-        public string AuthoringState { get; set; }
+        private string _authoringState;
+        public string AuthoringState
+        {
+            get { return _authoringState; }
+            set
+            {
+                _authoringState = value;
+                NotifyPropertyChanged("AuthoringState");
+            }
+        }
 
         public string Description { get; set; }
 
@@ -37,12 +47,18 @@ namespace AutomationISE.Model
         public IDictionary<string, RunbookParameter> Parameters { get; set; }
 
         //Runbook already exists in the cloud, but not on disk.
-        public AutomationRunbook(Runbook cloudRunbook) :
+        public AutomationRunbook(Runbook cloudRunbook, RunbookDraft cloudRunbookDraft) :
             base(cloudRunbook.Name, null, cloudRunbook.Properties.LastModifiedTime.LocalDateTime)
         {
             this.AuthoringState = cloudRunbook.Properties.State;
             this.localFileInfo = null;
+            this.Description = cloudRunbook.Properties.Description;
             this.Parameters = cloudRunbook.Properties.Parameters;
+            if (cloudRunbookDraft != null)
+            {
+                this.LastModifiedCloud = cloudRunbookDraft.LastModifiedTime.LocalDateTime;
+                UpdateSyncStatus();
+            }
         }
 
         //Runbook exists on disk, but not in the cloud.
@@ -55,33 +71,17 @@ namespace AutomationISE.Model
         }
 
         //Runbook exists both on disk and in the cloud. But are they in sync?
-        public AutomationRunbook(FileInfo localFile, Runbook cloudRunbook)
+        public AutomationRunbook(FileInfo localFile, Runbook cloudRunbook, RunbookDraft cloudRunbookDraft)
             : base(cloudRunbook.Name, localFile.LastWriteTime, cloudRunbook.Properties.LastModifiedTime.LocalDateTime)
         {
             this.AuthoringState = cloudRunbook.Properties.State;
             this.localFileInfo = localFile;
-            this.Parameters = cloudRunbook.Properties.Parameters;
-        }
-
-        public void UpdateMetadata(Runbook cloudRunbook)
-        {
-            this.AuthoringState = cloudRunbook.Properties.State;
-            this.Parameters = cloudRunbook.Properties.Parameters;
             this.Description = cloudRunbook.Properties.Description;
-            
-            this.LastModifiedCloud = cloudRunbook.Properties.LastModifiedTime.UtcDateTime;
-            //TODO: refactor
-            if (this.localFileInfo == null)
+            this.Parameters = cloudRunbook.Properties.Parameters;
+            if (cloudRunbookDraft != null)
             {
-                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.CloudOnly;
-            }
-            else if (this.localFileInfo.LastWriteTimeUtc > this.LastModifiedCloud)
-            {
-                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.UpdatedLocally;
-            }
-            else
-            {
-                this.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.UpdatedInCloud;
+                this.LastModifiedCloud = cloudRunbookDraft.LastModifiedTime.LocalDateTime;
+                UpdateSyncStatus();
             }
         }
         public static class AuthoringStates
