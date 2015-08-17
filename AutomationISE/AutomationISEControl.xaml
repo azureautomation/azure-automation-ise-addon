@@ -34,9 +34,8 @@
                     <Label x:Name="automationAccountLabel" Content="Select Automation Account" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="3" Grid.Column="0"/>
                     <Label x:Name="configurationStatusLabel" Content="Status" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2"/>
                     <Label x:Name="certificateStatusLabel" Content="Certificate thumbprint to encrypt local assets" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"/>
-                    <TextBox x:Name="certificateTextBox" Margin="5" VerticalAlignment="Bottom" TextChanged="certificateTextBox_TextChanged" Grid.Column="0" Grid.Row="4"/>
+                    <TextBox x:Name="certificateTextBox" Margin="5" VerticalAlignment="Bottom" Grid.Column="0" Grid.Row="4"/>
                     <Button x:Name="certificateButton" Content="Change" Margin="5" VerticalAlignment="Bottom" Click="certificateButton_Click" Grid.Column="1" Grid.Row="4"/>
-
                 </Grid>
             </TabItem>
             <TabItem x:Name="runbookTab" Header="Runbooks">

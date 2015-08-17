@@ -126,6 +126,8 @@
     </Compile>
     <Compile Include="Model\AutomationSelfSignedCertificate.cs" />
     <Compile Include="Model\Certificate.cs" />
+    <Compile Include="Model\RunbookTransferJob.cs" />
+    <Compile Include="Model\RunbookTransferProgress.cs" />
     <Compile Include="NewOrEditVariableDialog.xaml.cs">
       <DependentUpon>NewOrEditVariableDialog.xaml</DependentUpon>
     </Compile>

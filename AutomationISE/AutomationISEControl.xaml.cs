@@ -324,11 +324,6 @@ namespace AutomationISE
             }
         }
 
-        private void azureADTextBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-
-        }
-
         private async void SubscriptionComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             try
@@ -403,7 +398,6 @@ namespace AutomationISE
                     assetsComboBox.SelectedValue = AutomationISE.Model.Constants.assetVariable;
                     ButtonRefreshAssetList.IsEnabled = true;
 
-                    //TODO: possibly rename/refactor this
                     refresh(null, null);
                 }
             }
@@ -531,9 +525,9 @@ namespace AutomationISE
                 return;
             }
             if (fileTransferQueue.TryAdd(new RunbookTransferJob(selectedRunbook, RunbookTransferJob.TransferOperation.Download))) //TryAdd() immediately returns false if queue is at capacity
-                JobsRemainingLabel.Text = "(" + fileTransferQueue.Count + " remaining)";
+                JobsRemainingLabel.Text = "(" + fileTransferQueue.Count + " tasks remaining)";
             else
-                MessageBox.Show("Too many runbooks are waiting to be downloaded right now. Cool your jets!");
+                MessageBox.Show("Too many runbooks are waiting to be downloaded/uploaded right now. Cool your jets!");
             /* Make sure the worker is alive, start a new one if not */
             if (fileTransferWorker == null || fileTransferWorker.Status == TaskStatus.Canceled || fileTransferWorker.Status == TaskStatus.Faulted)
                 fileTransferWorker = Task.Factory.StartNew(() => processJobsFromQueue(fileTransferWorkerProgress), TaskCreationOptions.LongRunning);
@@ -672,7 +666,6 @@ namespace AutomationISE
                 ButtonUploadRunbook.IsEnabled = false;
                 ButtonPublishRunbook.Content = "Publishing...";
                 /* Do the uploading */
-                //TODO (?): Check if you are overwriting or missing draft content in the cloud
                 await AutomationRunbookManager.PublishRunbook(selectedRunbook, iseClient.automationManagementClient,
                             iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
             }
@@ -732,7 +725,7 @@ namespace AutomationISE
             }
         }
 
-        private async void ButtonUploadRunbook_Click(object sender, RoutedEventArgs e)
+        private void ButtonUploadRunbook_Click(object sender, RoutedEventArgs e)
         {
             AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
             if (selectedRunbook == null)
@@ -742,7 +735,7 @@ namespace AutomationISE
             }
             ButtonUploadRunbook.IsEnabled = false;
             if (fileTransferQueue.TryAdd(new RunbookTransferJob(selectedRunbook, RunbookTransferJob.TransferOperation.Upload))) //TryAdd() immediately returns false if queue is at capacity
-                JobsRemainingLabel.Text = "(" + fileTransferQueue.Count + " remaining)";
+                JobsRemainingLabel.Text = "(" + fileTransferQueue.Count + " tasks remaining)";
             else
                 MessageBox.Show("Too many runbooks are waiting to be downloaded/uploaded right now. Hold your horses!");
             /* Make sure the worker is alive, start a new one if not */
@@ -895,41 +888,5 @@ namespace AutomationISE
                 MessageBox.Show("The thumbprint could not be updated " + ex.Message, "Error");
             }
         }
-
-        private void certificateTextBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-
-        }
-    }
-
-    public class RunbookTransferJob
-    {
-        public AutomationRunbook Runbook { get; set; }
-        public TransferOperation Operation { get; set;  }
-        public RunbookTransferJob(AutomationRunbook rb, TransferOperation t)
-        {
-            this.Runbook = rb;
-            this.Operation = t;
-        }
-        public enum TransferOperation
-        {
-            Download,
-            Upload
-        };
-    }
-    public class RunbookTransferProgress
-    {
-        public RunbookTransferJob Job { get; set; }
-        public TransferStatus Status;
-        public RunbookTransferProgress(RunbookTransferJob rtj)
-        {
-            this.Job = rtj;
-            this.Status = TransferStatus.Starting;
-        }
-        public enum TransferStatus
-        {
-            Starting,
-            Completed
-        };
     }
 }
