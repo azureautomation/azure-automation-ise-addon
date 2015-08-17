@@ -45,9 +45,9 @@ namespace AutomationISE
         private System.Timers.Timer refreshTimer = new System.Timers.Timer();
         private AutomationISEClient iseClient;
         private ObservableCollection<AutomationRunbook> runbookListViewModel;
-        private BlockingCollection<RunbookDownloadJob> downloadQueue;
-        private Task downloadWorker;
-        private IProgress<RunbookDownloadProgress> downloadWorkerProgress;
+        private BlockingCollection<RunbookTransferJob> fileTransferQueue;
+        private Task fileTransferWorker;
+        private IProgress<RunbookTransferProgress> fileTransferWorkerProgress;
         private bool tokenExpired = false;
         public ObjectModelRoot HostObject { get; set; }
 
@@ -57,9 +57,9 @@ namespace AutomationISE
             {
                 InitializeComponent();
                 iseClient = new AutomationISEClient();
-                downloadQueue = new BlockingCollection<RunbookDownloadJob>(new ConcurrentQueue<RunbookDownloadJob>(),50);
-                downloadWorkerProgress = new Progress<RunbookDownloadProgress>(updateUiWithDownloadProgress);
-                downloadWorker = Task.Factory.StartNew(() => processJobsFromQueue(downloadWorkerProgress), TaskCreationOptions.LongRunning);
+                fileTransferQueue = new BlockingCollection<RunbookTransferJob>(new ConcurrentQueue<RunbookTransferJob>(),50);
+                fileTransferWorkerProgress = new Progress<RunbookTransferProgress>(updateUiWithTransferProgress);
+                fileTransferWorker = Task.Factory.StartNew(() => processJobsFromQueue(fileTransferWorkerProgress), TaskCreationOptions.LongRunning);
 
                 /* Determine working directory */
                 String localWorkspace = Properties.Settings.Default["localWorkspace"].ToString();
@@ -530,55 +530,73 @@ namespace AutomationISE
                 ButtonDownloadRunbook.IsEnabled = true;
                 return;
             }
-            if (downloadQueue.TryAdd(new RunbookDownloadJob(selectedRunbook))) //TryAdd() immediately returns false if queue is at capacity
-                JobsRemainingLabel.Text = "(" + downloadQueue.Count + " remaining)";
+            if (fileTransferQueue.TryAdd(new RunbookTransferJob(selectedRunbook, RunbookTransferJob.TransferOperation.Download))) //TryAdd() immediately returns false if queue is at capacity
+                JobsRemainingLabel.Text = "(" + fileTransferQueue.Count + " remaining)";
             else
                 MessageBox.Show("Too many runbooks are waiting to be downloaded right now. Cool your jets!");
             /* Make sure the worker is alive, start a new one if not */
-            if (downloadWorker == null || downloadWorker.Status == TaskStatus.Canceled || downloadWorker.Status == TaskStatus.Faulted)
-                downloadWorker = Task.Factory.StartNew(() => processJobsFromQueue(downloadWorkerProgress), TaskCreationOptions.LongRunning);
+            if (fileTransferWorker == null || fileTransferWorker.Status == TaskStatus.Canceled || fileTransferWorker.Status == TaskStatus.Faulted)
+                fileTransferWorker = Task.Factory.StartNew(() => processJobsFromQueue(fileTransferWorkerProgress), TaskCreationOptions.LongRunning);
             ButtonDownloadRunbook.IsEnabled = true;
         }
 
-        private void updateUiWithDownloadProgress(RunbookDownloadProgress progress)
+        private void updateUiWithTransferProgress(RunbookTransferProgress progress)
         {
-            if (progress.Status == RunbookDownloadProgress.DownloadStatus.Starting)
+            if (progress.Status == RunbookTransferProgress.TransferStatus.Starting)
             {
-                ProgressLabel.Text = "Downloading runbook '" + progress.Runbook.Name + "'...";
-                if (downloadQueue.Count > 0)
+                if (progress.Job.Operation == RunbookTransferJob.TransferOperation.Download)
+                    ProgressLabel.Text = "Downloading runbook " + progress.Job.Runbook.Name + "...";
+                else
+                    ProgressLabel.Text = "Uploading runbook " + progress.Job.Runbook.Name + "...";
+                if (fileTransferQueue.Count > 0)
                 {
-                    JobsRemainingLabel.Text = "(" + downloadQueue.Count + " remaining)";
+                    JobsRemainingLabel.Text = "(" + fileTransferQueue.Count + " tasks remaining)";
                 }
                 else
                 {
                     JobsRemainingLabel.Text = "";
                 }
             }
-            else if (progress.Status == RunbookDownloadProgress.DownloadStatus.Completed)
+            else if (progress.Status == RunbookTransferProgress.TransferStatus.Completed)
             {
                 ProgressLabel.Text = "";
-                progress.Runbook.UpdateSyncStatus();
+                progress.Job.Runbook.UpdateSyncStatus();
             }
         }
 
-        private async Task processJobsFromQueue(IProgress<RunbookDownloadProgress> progress)
+        private async Task processJobsFromQueue(IProgress<RunbookTransferProgress> progress)
         {
             while (true)
             {
-                RunbookDownloadJob job = downloadQueue.Take(); //blocks until there is something to take
-                RunbookDownloadProgress currentProgress = new RunbookDownloadProgress(job.Runbook);
+                RunbookTransferJob job = fileTransferQueue.Take(); //blocks until there is something to take
+                RunbookTransferProgress currentProgress = new RunbookTransferProgress(job);
                 progress.Report(currentProgress);
-                try
+                if (job.Operation == RunbookTransferJob.TransferOperation.Download)
                 {
-                    await AutomationRunbookManager.DownloadRunbook(job.Runbook, iseClient.automationManagementClient,
-                                iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
+                    try
+                    {
+                        await AutomationRunbookManager.DownloadRunbook(job.Runbook, iseClient.automationManagementClient,
+                                    iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("The runbook " + job.Runbook.Name + " could not be downloaded.\r\nError details: " + ex.Message);
+                    }
                 }
-                catch (Exception ex)
+                else
                 {
-                    MessageBox.Show("The runbook " + job.Runbook.Name + " could not be downloaded.\r\nError details: " + ex.Message);
+                    try
+                    {
+                        await AutomationRunbookManager.UploadRunbookAsDraft(job.Runbook, iseClient.automationManagementClient,
+                                    iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("The runbook " + job.Runbook.Name + " could not be uploaded.\r\nError details: " + ex.Message);
+                    }
                 }
                 await Task.Delay(5000); //simulate work taking longer, for testing
-                currentProgress.Status = RunbookDownloadProgress.DownloadStatus.Completed;
+                currentProgress.Status = RunbookTransferProgress.TransferStatus.Completed;
                 progress.Report(currentProgress);
             }
         }
@@ -723,24 +741,14 @@ namespace AutomationISE
                 return;
             }
             ButtonUploadRunbook.IsEnabled = false;
-            try
-            {
-                await AutomationRunbookManager.UploadRunbookAsDraft(selectedRunbook, iseClient.automationManagementClient,
-                        iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
-            }
-            catch(Exception ex)
-            {
-                MessageBox.Show("The runbook could not be uploaded.\r\nError details: " + ex.Message, "Error");
-            }
-            finally
-            {
-                /* Update the UI, use the UI thread */
-                this.Dispatcher.Invoke(() =>
-                {
-                    selectedRunbook.UpdateSyncStatus();
-                });
-                ButtonUploadRunbook.IsEnabled = true;
-            }
+            if (fileTransferQueue.TryAdd(new RunbookTransferJob(selectedRunbook, RunbookTransferJob.TransferOperation.Upload))) //TryAdd() immediately returns false if queue is at capacity
+                JobsRemainingLabel.Text = "(" + fileTransferQueue.Count + " remaining)";
+            else
+                MessageBox.Show("Too many runbooks are waiting to be downloaded/uploaded right now. Hold your horses!");
+            /* Make sure the worker is alive, start a new one if not */
+            if (fileTransferWorker == null || fileTransferWorker.Status == TaskStatus.Canceled || fileTransferWorker.Status == TaskStatus.Faulted)
+                fileTransferWorker = Task.Factory.StartNew(() => processJobsFromQueue(fileTransferWorkerProgress), TaskCreationOptions.LongRunning);
+            ButtonUploadRunbook.IsEnabled = true;
         }
 
         private async void ButtonTestRunbook_Click(object sender, RoutedEventArgs e)
@@ -894,24 +902,31 @@ namespace AutomationISE
         }
     }
 
-    public class RunbookDownloadJob
+    public class RunbookTransferJob
     {
         public AutomationRunbook Runbook { get; set; }
-        public RunbookDownloadJob(AutomationRunbook rb)
+        public TransferOperation Operation { get; set;  }
+        public RunbookTransferJob(AutomationRunbook rb, TransferOperation t)
         {
             this.Runbook = rb;
+            this.Operation = t;
         }
+        public enum TransferOperation
+        {
+            Download,
+            Upload
+        };
     }
-    public class RunbookDownloadProgress
+    public class RunbookTransferProgress
     {
-        public AutomationRunbook Runbook { get; set; }
-        public DownloadStatus Status;
-        public RunbookDownloadProgress(AutomationRunbook rb)
+        public RunbookTransferJob Job { get; set; }
+        public TransferStatus Status;
+        public RunbookTransferProgress(RunbookTransferJob rtj)
         {
-            this.Runbook = rb;
-            this.Status = DownloadStatus.Starting;
+            this.Job = rtj;
+            this.Status = TransferStatus.Starting;
         }
-        public enum DownloadStatus
+        public enum TransferStatus
         {
             Starting,
             Completed
