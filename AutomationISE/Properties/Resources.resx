@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AzureADAuthResult" xml:space="preserve">
+    <value>An Azure AD Authentication Result is needed to query Azure for subscriptions.</value>
+  </data>
   <data name="CancelSignIn" xml:space="preserve">
     <value>User cancelled sign in</value>
   </data>
@@ -137,5 +140,8 @@
   </data>
   <data name="RetrieveSubscriptions" xml:space="preserve">
     <value>Retrieving subscriptions for this user account. Please wait...</value>
+  </data>
+  <data name="SubscriptionNotSet" xml:space="preserve">
+    <value>Cannot get Automation Accounts until an Azure subscription has been set.</value>
   </data>
 </root>

@@ -19,7 +19,8 @@ namespace AutomationISE.Model
         public static async Task UploadRunbookAsDraft(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, AutomationAccount account)
         {
             RunbookCreateOrUpdateDraftProperties draftProperties = new RunbookCreateOrUpdateDraftProperties("Script", new RunbookDraft());
-            draftProperties.Description = runbook.Description;
+            if (runbook.Description == null) draftProperties.Description = runbook.Name;
+            else draftProperties.Description = runbook.Description;
 
             RunbookCreateOrUpdateDraftParameters draftParams = new RunbookCreateOrUpdateDraftParameters(draftProperties);
             draftParams.Name = runbook.Name;

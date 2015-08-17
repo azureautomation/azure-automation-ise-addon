@@ -62,7 +62,7 @@ namespace AutomationISE.Model
         public async Task<IList<Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription>> GetSubscriptions()
         {
             if (azureADAuthResult == null)
-                throw new Exception("An Azure AD Authentication Result is needed to query Azure for subscriptions.");
+                throw new Exception(Properties.Resources.AzureADAuthResult);
             if (cloudCredentials == null)
                 subscriptionCredentials = new Microsoft.WindowsAzure.TokenCloudCredentials(azureADAuthResult.AccessToken);
             subscriptionClient = new Microsoft.WindowsAzure.Subscriptions.SubscriptionClient(subscriptionCredentials);
@@ -75,7 +75,7 @@ namespace AutomationISE.Model
         public async Task<IList<AutomationAccount>> GetAutomationAccounts()
         {
             if(currSubscription == null)
-                throw new Exception("Cannot get Automation Accounts until an Azure subscription has been set.");
+                throw new Exception(Properties.Resources.SubscriptionNotSet);
 
             // Get the token for the tenant on this subscription.
             var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
@@ -109,7 +109,7 @@ namespace AutomationISE.Model
         public async Task<IList<ResourceGroupExtended>> GetResourceGroups()
         {
             if (currSubscription == null)
-                throw new Exception("Cannot get Automation Accounts until an Azure subscription has been set.");
+                throw new Exception(Properties.Resources.SubscriptionNotSet);
 
             // Get the token for the tenant on this subscription.
             var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);

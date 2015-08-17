@@ -20,18 +20,13 @@ using System.Windows.Controls;
 using Microsoft.PowerShell.Host.ISE;
 using Microsoft.Azure.Management.Automation.Models;
 using AutomationISE.Model;
-using System.Security;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using Microsoft.Azure.Subscriptions.Models;
 using System.IO;
 using System.Threading;
 using System.Windows.Threading;
 using System.Linq;
-
 using System.Diagnostics;
 using System.Timers;
 using System.Collections;
-using System.Security.Cryptography.X509Certificates;
 
 namespace AutomationISE
 {
@@ -368,7 +363,7 @@ namespace AutomationISE
                     /* Update Status */
                     UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
                     setRunbookAndAssetNonSelectionButtonState(true);
-                    UpdateStatusBox(configurationStatusTextBox, "Workspace location is: " + iseClient.currWorkspace);
+
                     UpdateStatusBox(configurationStatusTextBox, "Save new runbooks you wish to upload to Azure Automation in this folder");
                     /* Update Runbooks */
                     UpdateStatusBox(configurationStatusTextBox, "Getting runbook data...");
@@ -408,8 +403,16 @@ namespace AutomationISE
                     bool isSourceControlEnabled = await AutomationSourceControl.isSourceControlEnabled(iseClient.automationManagementClient,
                         iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
 
-                    if (isSourceControlEnabled) ButtonSourceControlRunbook.IsEnabled = true;
-                    else ButtonSourceControlRunbook.IsEnabled = false;
+                    if (isSourceControlEnabled)
+                    {
+                        ButtonSourceControlRunbook.Visibility = Visibility.Visible;
+                        ButtonSourceControlRunbook.IsEnabled = true;
+                    }
+                    else ButtonSourceControlRunbook.Visibility = Visibility.Collapsed;
+
+                    // Change current directory to new workspace location
+                    UpdateStatusBox(configurationStatusTextBox, "Workspace location is: " + iseClient.currWorkspace);
+                    HostObject.CurrentPowerShellTab.Invoke("cd '" + iseClient.currWorkspace + "'");
 
                 }
             }
