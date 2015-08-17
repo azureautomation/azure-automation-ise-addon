@@ -304,17 +304,17 @@ namespace AutomationISE
                 else UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoSubscriptions);
                 refreshTimer.Start();
             }
-            catch (Microsoft.IdentityModel.Clients.ActiveDirectory.AdalServiceException)
+            catch (Microsoft.IdentityModel.Clients.ActiveDirectory.AdalServiceException Ex)
             {
-                UpdateStatusBox(configurationStatusTextBox, Properties.Resources.CancelSignIn);
+                UpdateStatusBox(configurationStatusTextBox, Properties.Resources.CancelSignIn +  " Error code: " + Ex.ErrorCode.ToString() + " Error Message: " + Ex.Message);
             }
-            catch (Microsoft.IdentityModel.Clients.ActiveDirectory.AdalException)
+            catch (Microsoft.IdentityModel.Clients.ActiveDirectory.AdalException Ex)
             {
-                UpdateStatusBox(configurationStatusTextBox, Properties.Resources.CancelSignIn);
+                UpdateStatusBox(configurationStatusTextBox, Properties.Resources.CancelSignIn + " Error code: " + Ex.ErrorCode.ToString() + " Error Message: " + Ex.Message);
             }
-            catch (Exception exception)
+            catch (Exception Ex)
             {
-                var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
+                var detailsDialog = System.Windows.Forms.MessageBox.Show(Ex.Message);
             }
         }
 
