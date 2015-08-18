@@ -4,6 +4,7 @@
         Title="Job Output" Height="Auto" Width="Auto">
     <Grid>
         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
@@ -11,14 +12,25 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <Label Grid.Row="0" Margin="10,0,0,0">Job Output:</Label>
-        <RichTextBox Name="OutputTextBlock" Grid.Row="1" Grid.Column="0" Grid.RowSpan="4" Margin="10,0,0,10" Padding="5" Width="Auto" IsReadOnly="True" VerticalScrollBarVisibility="Auto" Background="#FF012456" Foreground="White" FontFamily="Lucida Console">
+        <Label Name="JobDetails" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="10,0,0,0" >Job details will appear here.</Label>
+        <Label Padding="5,0,0,0" Grid.Row="2" Grid.Column="0" Margin="10,0,0,0">Status:</Label>
+        <Label Name="JobStatus" Padding="0,0,0,0" Grid.Row="2" Grid.Column="1" Margin="0,0,0,0"/>
+        <Label Padding="5,0,0,0" Grid.Row="3" Grid.Column="0" Margin="10,0,0,0">Streams:</Label>
+        <RichTextBox Name="OutputTextBlock" Grid.Row="4" Grid.Column="0" Grid.RowSpan="4" Grid.ColumnSpan="2" Margin="10,0,0,0" Padding="5" Width="Auto" IsReadOnly="True" VerticalScrollBarVisibility="Auto" Background="#FF012456" Foreground="White" FontFamily="Lucida Console">
             <FlowDocument>
                 <Paragraph Name="OutputTextBlockParagraph"/>
             </FlowDocument>
         </RichTextBox>
-        <Button Name="RefreshJobButton" Grid.Column="1" Grid.Row="2" Margin="10,10,10,10" MinWidth="100" Click="RefreshJobButton_Click">Refresh</Button>
+        <TextBlock Name="AdditionalInformation" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" TextWrapping="Wrap" HorizontalAlignment="Center" Margin="5,5,5,5"/>
+        <Button Name="StartJobButton" Grid.Column="2" Grid.Row="4" Margin="10,10,10,10" MinWidth="100" Click="StartJobButton_Click">Start New Job</Button>
+        <Button Name="StopJobButton" Grid.Column="2" Grid.Row="5" Margin="10,0,10,10" MinWidth="100" Click="StopJobButton_Click">Stop Job</Button>
+        <Button Name="RefreshJobButton" Grid.Column="2" Grid.Row="6" Margin="10,0,10,10" MinWidth="100" Click="RefreshJobButton_Click">Refresh</Button>
     </Grid>
 </Window>

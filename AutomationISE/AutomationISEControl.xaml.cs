@@ -780,54 +780,24 @@ namespace AutomationISE
             }
             catch
             {
-                MessageBox.Show("Error: couldn't connect to Azure");
+                MessageBox.Show("Couldn't connect to Azure");
                 return;
             }
             if (draft.InEdit == false)
             {
                 //TODO: verify that it is indeed in the published state
                 MessageBox.Show("This runbook has no draft to test because it is in a 'Published' state.");
-                return;
-            }
-            //Job creation parameters
-            TestJobCreateParameters jobCreationParams = new TestJobCreateParameters();
-            jobCreationParams.RunbookName = selectedRunbook.Name;
-            if (draft.Parameters.Count > 0)
-            {
-                /* User needs to specify values for them */
-                RunbookParamDialog paramDialog = new RunbookParamDialog(draft.Parameters);
-                if (paramDialog.ShowDialog() == true)
-                    jobCreationParams.Parameters = paramDialog.paramValues;
-                else
-                    return;
-            }
-            /* start the test job */
-            TestJobCreateResponse jobResponse = null;
-            try
-            {
-                jobResponse = await iseClient.automationManagementClient.TestJobs.CreateAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
-                    iseClient.currAccount.Name, jobCreationParams, new CancellationToken());
-            }
-            catch
-            {
-                MessageBox.Show("The test job could not be submitted to Azure.", "Error");
-                return;
-            }
-            if (jobResponse == null || jobResponse.StatusCode != System.Net.HttpStatusCode.Created)
-            {
-                MessageBox.Show("The test job could not be created.", "Error");
             }
             else
             {
                 try
                 {
-                    JobOutputWindow jobWindow = new JobOutputWindow(jobCreationParams.RunbookName, jobResponse, iseClient);
+                    JobOutputWindow jobWindow = new JobOutputWindow(selectedRunbook.Name, iseClient);
                     jobWindow.Show();
                 }
                 catch (Exception exception)
                 {
                     MessageBox.Show(exception.Message, "Error");
-                    return;
                 }
             }
         }

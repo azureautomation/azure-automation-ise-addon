@@ -20,9 +20,7 @@ namespace AutomationISE
     /// </summary>
     public partial class JobOutputWindow : Window
     {
-        private TestJobCreateResponse TestjobCreateResponse = null;
         private JobCreateResponse jobCreateResponse = null;
-
         private AutomationISEClient iseClient;
         private String runbookName;
         /* These values are the defaults for the settings visible using >(Get-Host).PrivateData */
@@ -33,34 +31,37 @@ namespace AutomationISE
         public static String VerboseForegroundColorCode = "#FF00FFFF";
         public static String VerboseBackgroundColorCode = "#00FFFFFF";
 
-        public JobOutputWindow(String name, TestJobCreateResponse response, AutomationISEClient client)
+        public JobOutputWindow(String name, AutomationISEClient client)
         {
             InitializeComponent();
+            this.Title = name + " Test Job";
+            AdditionalInformation.Text = "Tip: not seeing Verbose output? Add the line \"$VerbosePreference='Continue'\" to your runbook.";
             runbookName = name;
-            TestjobCreateResponse = response;
             iseClient = client;
-            OutputTextBlockParagraph.Inlines.Add("Test job created at " + TestjobCreateResponse.TestJob.CreationTime + " for runbook " + runbookName);
-            OutputTextBlockParagraph.Inlines.Add("\r\nTip: not seeing Verbose output? Add the line \"$VerbosePreference='Continue'\" to your runbook.");
-            OutputTextBlockParagraph.Inlines.Add("\r\nClick 'Refresh' to check for updates.");
+            Task t = checkTestJob();
         }
 
+        //TODO: refactor this to a different class with some inheritance structure
         public JobOutputWindow(String name, JobCreateResponse response, AutomationISEClient client)
         {
             InitializeComponent();
+            StartJobButton.IsEnabled = false;
+            StopJobButton.IsEnabled = false;
+            this.Title = "Job: " + name;
+            AdditionalInformation.Text = "This is a Global Runbook responsible for syncing your GitHub repo with your Automation Account. Neato!";
             runbookName = name;
             jobCreateResponse = response;
             iseClient = client;
-            OutputTextBlockParagraph.Inlines.Add("Job created at " + jobCreateResponse.Job.Properties.CreationTime + " for Runbook " + runbookName);
-            OutputTextBlockParagraph.Inlines.Add("\r\nTip: not seeing Verbose output? Add the line \"$VerbosePreference='Continue'\" to your runbook.");
-            OutputTextBlockParagraph.Inlines.Add("\r\nClick 'Refresh' to check for updates.");
+            Task t = checkJob();
         }
 
         private async Task checkTestJob()
         {
             TestJobGetResponse response = await iseClient.automationManagementClient.TestJobs.GetAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
                                                 iseClient.currAccount.Name, runbookName, new System.Threading.CancellationToken());
-
-            OutputTextBlockParagraph.Inlines.Add("\r\nStatus: " + response.TestJob.Status);
+            JobDetails.Content = runbookName + " test job created at " + response.TestJob.CreationTime.LocalDateTime;
+            JobDetails.Content += "\r\nLast refreshed at " + DateTime.Now;
+            JobStatus.Content = response.TestJob.Status;
             if (response.TestJob.Status == "Failed")
             {
                 updateJobOutputTextBlockWithException(response.TestJob.Exception);
@@ -69,8 +70,7 @@ namespace AutomationISE
             {
                 JobStreamListResponse jslResponse = await iseClient.automationManagementClient.JobStreams.ListTestJobStreamsAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
                     iseClient.currAccount.Name, runbookName, null, new System.Threading.CancellationToken());
-
-                // Write out each stream output
+                /* Write out each stream's output */
                 foreach (JobStream stream in jslResponse.JobStreams)
                 {
                     var jslStream = await iseClient.automationManagementClient.JobStreams.GetTestJobStreamAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
@@ -84,27 +84,18 @@ namespace AutomationISE
             }
         }
 
-        private void updateJobOutputTextBlockWithException(string exceptionMessage)
-        {
-            OutputTextBlockParagraph.Inlines.Add("\r\n");
-            OutputTextBlockParagraph.Inlines.Add(new Run(exceptionMessage)
-            {
-                Foreground = (SolidColorBrush)(new BrushConverter().ConvertFrom(ErrorForegroundColorCode)),
-                Background = (SolidColorBrush)(new BrushConverter().ConvertFrom(ErrorBackgroundColorCode))
-            });
-        }
-
         private async Task checkJob()
         {
             JobGetResponse response = await iseClient.automationManagementClient.Jobs.GetAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
                                                 iseClient.currAccount.Name, jobCreateResponse.Job.Properties.JobId, new System.Threading.CancellationToken());
 
-            OutputTextBlockParagraph.Inlines.Add("\r\nStatus: " + response.Job.Properties.Status);
+            JobDetails.Content = runbookName + " test job created at " + response.Job.Properties.CreationTime.LocalDateTime;
+            JobDetails.Content += "\r\nLast refreshed at " + DateTime.Now;
+            JobStatus.Content = response.Job.Properties.Status;
 
             JobStreamListResponse jslResponse = await iseClient.automationManagementClient.JobStreams.ListAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
                 iseClient.currAccount.Name, jobCreateResponse.Job.Properties.JobId, null, new System.Threading.CancellationToken());
 
-            // Write out each stream output
             foreach (JobStream stream in jslResponse.JobStreams)
             {
                 var jslStream = await iseClient.automationManagementClient.JobStreams.GetAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
@@ -155,22 +146,107 @@ namespace AutomationISE
             }
         }
 
+        private void updateJobOutputTextBlockWithException(string exceptionMessage)
+        {
+            OutputTextBlockParagraph.Inlines.Add("\r\n");
+            OutputTextBlockParagraph.Inlines.Add(new Run(exceptionMessage)
+            {
+                Foreground = (SolidColorBrush)(new BrushConverter().ConvertFrom(ErrorForegroundColorCode)),
+                Background = (SolidColorBrush)(new BrushConverter().ConvertFrom(ErrorBackgroundColorCode))
+            });
+        }
+
         private async void RefreshJobButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 RefreshJobButton.IsEnabled = false;
                 RefreshJobButton.Content = "Refreshing...";
+                OutputTextBlockParagraph.Inlines.Clear();
                 if (jobCreateResponse != null) await checkJob();
                 else await checkTestJob();
-                RefreshJobButton.IsEnabled = true;
-                RefreshJobButton.Content = "Refresh";
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message, "Error");
-                return;
+                MessageBox.Show(exception.Message, "Refresh Failure", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            finally
+            {
+                RefreshJobButton.IsEnabled = true;
+                RefreshJobButton.Content = "Refresh";
+            }
+        }
+
+        private async void StopJobButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                StopJobButton.IsEnabled = false;
+                StopJobButton.Content = "Stopping...";
+                Microsoft.Azure.AzureOperationResponse response = await iseClient.automationManagementClient.TestJobs.StopAsync(
+                    iseClient.accountResourceGroups[iseClient.currAccount].Name,
+                    iseClient.currAccount.Name, runbookName, new System.Threading.CancellationToken());
+                if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                    throw new Exception("The job couldn't be stopped.\r\nReceived status code: " + response.StatusCode);
+                JobStatus.Content = "Submitted job stop request";
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Job Stop Failure", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                StopJobButton.IsEnabled = true;
+                StopJobButton.Content = "Stop Job";
+            }
+        }
+
+        private async void StartJobButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                StartJobButton.IsEnabled = false;
+                TestJobCreateResponse response = await createTestJob();
+                if (response != null)
+                {
+                    OutputTextBlockParagraph.Inlines.Clear();
+                    JobDetails.Content = runbookName + " test job created at " + response.TestJob.CreationTime.LocalDateTime;
+                    JobStatus.Content = response.TestJob.Status;
+                }
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Job Start Failure", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                StartJobButton.IsEnabled = true;
+            }
+        }
+        private async Task<TestJobCreateResponse> createTestJob()
+        {
+            RunbookDraft draft = await AutomationRunbookManager.GetRunbookDraft(runbookName, iseClient.automationManagementClient,
+                            iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            if (draft.InEdit == false)
+                throw new Exception("This runbook has no draft to test because it is in a 'Published' state.");
+            TestJobCreateParameters jobCreationParams = new TestJobCreateParameters();
+            jobCreationParams.RunbookName = runbookName;
+            if (draft.Parameters.Count > 0)
+            {
+                /* User needs to specify values for them */
+                RunbookParamDialog paramDialog = new RunbookParamDialog(draft.Parameters);
+                if (paramDialog.ShowDialog() == true)
+                    jobCreationParams.Parameters = paramDialog.paramValues;
+                else
+                    return null;
+            }
+            /* start the test job */
+            TestJobCreateResponse jobResponse = await iseClient.automationManagementClient.TestJobs.CreateAsync(
+                            iseClient.accountResourceGroups[iseClient.currAccount].Name,
+                            iseClient.currAccount.Name, jobCreationParams, new System.Threading.CancellationToken());
+            if (jobResponse == null || jobResponse.StatusCode != System.Net.HttpStatusCode.Created)
+                throw new Exception("The test job could not be created: received HTTP status code " + jobResponse.StatusCode);
+            return jobResponse;
         }
     }
 }
