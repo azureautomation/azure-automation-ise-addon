@@ -87,6 +87,8 @@ namespace AutomationISE
                 certificateTextBox.Text = selfSignedThumbprint;
                 UpdateStatusBox(configurationStatusTextBox, "Certificate to use for encrypting local assets is " + selfSignedThumbprint);
 
+                // Load feedback page to increase load time before users clicks on feedback tab
+                surveyBrowserControl.Navigate(new Uri(Constants.feedbackURI));
 
                 startContinualGet();
             }
