@@ -367,6 +367,8 @@ namespace AutomationISE
                 {
                     /* Update Status */
                     UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
+                    if (iseClient.AccountWorkspaceExists())
+                        accountPathTextBox.Text = iseClient.currWorkspace;
                     /* Update Runbooks */
                     UpdateStatusBox(configurationStatusTextBox, "Getting runbook data...");
                     if (runbookListViewModel != null) runbookListViewModel.Clear();
@@ -409,7 +411,7 @@ namespace AutomationISE
                     }
                     else ButtonSourceControlRunbook.Visibility = Visibility.Collapsed;
                     /* Change current directory to new workspace location */
-                    UpdateStatusBox(configurationStatusTextBox, "Workspace location is: " + iseClient.currWorkspace);
+                    accountPathTextBox.Text = iseClient.currWorkspace;
                     HostObject.CurrentPowerShellTab.Invoke("cd '" + iseClient.currWorkspace + "'");
 
                     refreshTimer.Start();
@@ -877,6 +879,19 @@ namespace AutomationISE
             {
                 MessageBox.Show("The source control job could not be started. " + ex.Message, "Error");
                 return;
+            }
+        }
+
+        private void accountPathButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!String.IsNullOrEmpty(accountPathTextBox.Text))
+                    Process.Start(@accountPathTextBox.Text);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Couldn't open path", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
