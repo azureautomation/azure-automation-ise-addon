@@ -71,6 +71,8 @@ namespace AutomationISE
                 /* Update UI */
                 workspaceTextBox.Text = iseClient.baseWorkspace;
                 userNameTextBox.Text = Properties.Settings.Default["ADUserName"].ToString();
+                subscriptionComboBox.IsEnabled = false;
+                accountsComboBox.IsEnabled = false;
 
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetVariable);
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCredential);
@@ -290,27 +292,26 @@ namespace AutomationISE
         {
             try
             {
-                //TODO: probably refactor this a little
                 UpdateStatusBox(configurationStatusTextBox, "Launching login window");
                 iseClient.azureADAuthResult = AutomationISE.Model.AuthenticateHelper.GetInteractiveLogin(userNameTextBox.Text);
+                refreshTimer.Stop();
 
                 userNameTextBox.Text = iseClient.azureADAuthResult.UserInfo.DisplayableId;
                 Properties.Settings.Default["ADUserName"] = userNameTextBox.Text;
                 Properties.Settings.Default.Save();
 
                 UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveSubscriptions);
-                refreshTimer.Start();
                 IList<Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription> subscriptions = await iseClient.GetSubscriptions();
-                //TODO: what if there are no subscriptions? Does this still work?
                 if (subscriptions.Count > 0)
                 {
                     UpdateStatusBox(configurationStatusTextBox, Properties.Resources.FoundSubscriptions);
                     subscriptionComboBox.ItemsSource = subscriptions;
                     subscriptionComboBox.DisplayMemberPath = "SubscriptionName";
                     subscriptionComboBox.SelectedItem = subscriptionComboBox.Items[0];
+                    subscriptionComboBox.IsEnabled = true;
+                    refreshTimer.Start();
                 }
                 else UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoSubscriptions);
-                refreshTimer.Start();
             }
             catch (Microsoft.IdentityModel.Clients.ActiveDirectory.AdalServiceException Ex)
             {
@@ -331,10 +332,10 @@ namespace AutomationISE
             try
             {
                 accountsComboBox.IsEnabled = false;
+                refreshTimer.Stop();
                 iseClient.currSubscription = (Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription)subscriptionComboBox.SelectedValue;
                 if (iseClient.currSubscription != null)
                 {
-                    refreshTimer.Stop();
                     UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveAutomationAccounts);
                     IList<AutomationAccount> automationAccounts = await iseClient.GetAutomationAccounts();
                     accountsComboBox.ItemsSource = automationAccounts;
@@ -344,9 +345,9 @@ namespace AutomationISE
                         UpdateStatusBox(configurationStatusTextBox, Properties.Resources.FoundAutomationAccounts);
                         accountsComboBox.SelectedItem = accountsComboBox.Items[0];
                         accountsComboBox.IsEnabled = true;
+                        refreshTimer.Start();
                     }
                     else UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoAutomationAccounts);
-                    refreshTimer.Start();
                 }
             }
             catch (Exception exception)
@@ -361,15 +362,14 @@ namespace AutomationISE
             {
                 AutomationAccount account = (AutomationAccount)accountsComboBox.SelectedValue;
                 iseClient.currAccount = account;
+                refreshTimer.Stop();
                 if (account != null)
                 {
                     /* Update Status */
                     UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
-                    setRunbookAndAssetNonSelectionButtonState(true);
-
-                    UpdateStatusBox(configurationStatusTextBox, "Save new runbooks you wish to upload to Azure Automation in this folder");
                     /* Update Runbooks */
                     UpdateStatusBox(configurationStatusTextBox, "Getting runbook data...");
+                    if (runbookListViewModel != null) runbookListViewModel.Clear();
                     runbookListViewModel = new ObservableCollection<AutomationRunbook>(await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient, 
                           iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name));
                     UpdateStatusBox(configurationStatusTextBox, "Done getting runbook data");
@@ -393,30 +393,26 @@ namespace AutomationISE
                         message += "Make sure it exists in your module path (env:PSModulePath).";
                         MessageBox.Show(message);
                     }
-
                     /* Update UI */
                     RunbooksListView.ItemsSource = runbookListViewModel;
                     setRunbookSelectionButtonState(false);
+                    setRunbookAndAssetNonSelectionButtonState(true);
                     assetsComboBox.SelectedValue = AutomationISE.Model.Constants.assetVariable;
                     ButtonRefreshAssetList.IsEnabled = true;
-
-                    refresh(null, null);
-
-                    // Enable source control sync in Azure Automation if it is set up for this automation account   
+                    /* Enable source control sync in Azure Automation if it is set up for this automation account */
                     bool isSourceControlEnabled = await AutomationSourceControl.isSourceControlEnabled(iseClient.automationManagementClient,
                         iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
-
                     if (isSourceControlEnabled)
                     {
                         ButtonSourceControlRunbook.Visibility = Visibility.Visible;
                         ButtonSourceControlRunbook.IsEnabled = true;
                     }
                     else ButtonSourceControlRunbook.Visibility = Visibility.Collapsed;
-
-                    // Change current directory to new workspace location
+                    /* Change current directory to new workspace location */
                     UpdateStatusBox(configurationStatusTextBox, "Workspace location is: " + iseClient.currWorkspace);
                     HostObject.CurrentPowerShellTab.Invoke("cd '" + iseClient.currWorkspace + "'");
 
+                    refreshTimer.Start();
                 }
             }
             catch (Exception exception)
@@ -764,7 +760,7 @@ namespace AutomationISE
             ButtonUploadRunbook.IsEnabled = true;
         }
 
-        private async void ButtonTestRunbook_Click(object sender, RoutedEventArgs e)
+        private void ButtonTestRunbook_Click(object sender, RoutedEventArgs e)
         {
             AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
             if (selectedRunbook == null)
@@ -772,33 +768,14 @@ namespace AutomationISE
                 MessageBox.Show("No runbook selected.");
                 return;
             }
-            RunbookDraft draft = null;
             try
             {
-                draft = await AutomationRunbookManager.GetRunbookDraft(selectedRunbook.Name, iseClient.automationManagementClient,
-                            iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                JobOutputWindow jobWindow = new JobOutputWindow(selectedRunbook.Name, iseClient);
+                jobWindow.Show();
             }
-            catch
+            catch (Exception exception)
             {
-                MessageBox.Show("Couldn't connect to Azure");
-                return;
-            }
-            if (draft.InEdit == false)
-            {
-                //TODO: verify that it is indeed in the published state
-                MessageBox.Show("This runbook has no draft to test because it is in a 'Published' state.");
-            }
-            else
-            {
-                try
-                {
-                    JobOutputWindow jobWindow = new JobOutputWindow(selectedRunbook.Name, iseClient);
-                    jobWindow.Show();
-                }
-                catch (Exception exception)
-                {
-                    MessageBox.Show(exception.Message, "Error");
-                }
+                MessageBox.Show(exception.Message, "Error");
             }
         }
 
