@@ -30,13 +30,17 @@ namespace AutomationISE.Model
 
         public static async Task<bool> isSourceControlEnabled(AutomationManagementClient automationClient, String resourceGroup, String automationAccount)
         {
-            JobListParameters listParams = new JobListParameters();
-            listParams.RunbookName = Constants.sourceControlRunbook;
-
-            var response = await automationClient.Jobs.ListAsync(resourceGroup,
-                    automationAccount, listParams, new System.Threading.CancellationToken());
-            if (response.Jobs.Count > 0) return true;
-            else return false;
+            // TODO
+            // This is a current way to determine if source control is enabled.
+            // Will update this once the API becomes available.
+            try {
+                var response = await automationClient.Variables.GetAsync(resourceGroup, automationAccount, Constants.sourceControlConnectionVariable);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public static async Task<JobCreateResponse> startSouceControlJob(AutomationManagementClient automationClient, String resourceGroup, String automationAccount)

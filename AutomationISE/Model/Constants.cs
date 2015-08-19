@@ -48,6 +48,7 @@ namespace AutomationISE.Model
         public const int ExpirationLengthInDaysForSelfSignedCert = 365 * 2;
 
         public const String sourceControlRunbook = "Sync-MicrosoftAzureAutomationAccountFromGithubV1";
+        public const String sourceControlConnectionVariable = "Microsoft.Azure.Automation.SourceControl.Connection";
 
         public class RunbookType
         {
