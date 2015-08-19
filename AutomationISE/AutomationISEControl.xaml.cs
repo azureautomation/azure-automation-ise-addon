@@ -235,7 +235,15 @@ namespace AutomationISE
             this.Dispatcher.Invoke(() =>
             {
                 refreshAssets();
-                Task t = refreshRunbooks();
+                try
+                {
+                    Task t = refreshRunbooks();
+                }
+                catch (Exception exception)
+                {
+                    if (!showTokenExpiredMessageIfApplicable(exception))
+                        MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             });
         }
 
@@ -265,30 +273,30 @@ namespace AutomationISE
                 {
                     assetsListView.ItemsSource = await getAssetsOfType("AutomationCertificate");
                 }
-
                 tokenExpired = false;
             }
             catch (Exception exception)
             {
-                var showError = true;
-
-                // If the message is not token expired, or if this is the first time we'd show token expired message
-                // since previously being connected, show a dialog
-                if (exception.HResult == -2146233088)
-                {
-                    if (tokenExpired)
-                    {
-                        showError = false;
-                    }
-
-                    tokenExpired = true;
-                }
-
-                if (showError)
-                {
-                    var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
-                }
+                if (!showTokenExpiredMessageIfApplicable(exception))
+                    MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        /* 
+         * If the given exception means the user's token has expired, displays a MessageBox notifying the user IFF
+         *   this is the first time the exception is being encountered for the session. Relies on global bool tokenExpired.
+         * Returns true IFF the MessageBox was displayed.
+         */ 
+        private bool showTokenExpiredMessageIfApplicable(Exception exception)
+        {
+            int tokenExpiredResult = -2146233088;
+            if (exception.HResult == tokenExpiredResult && !tokenExpired)
+            {
+                tokenExpired = true;
+                MessageBox.Show(exception.Message, "Token Expired", MessageBoxButton.OK, MessageBoxImage.Error);
+                return true;
+            }
+            return false;
         }
 
         private async void loginButton_Click(object sender, RoutedEventArgs e)
@@ -314,7 +322,11 @@ namespace AutomationISE
                     subscriptionComboBox.IsEnabled = true;
                     refreshTimer.Start();
                 }
-                else UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoSubscriptions);
+                else
+                {
+                    UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoSubscriptions);
+                }
+                tokenExpired = false;
             }
             catch (Microsoft.IdentityModel.Clients.ActiveDirectory.AdalServiceException Ex)
             {
@@ -754,7 +766,7 @@ namespace AutomationISE
             }
             catch (Exception ex)
             {
-                MessageBox.Show("The runbook list could not be refreshed.\r\nError details: " + ex.Message, "Error");
+                MessageBox.Show("The runbook list could not be refreshed.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
