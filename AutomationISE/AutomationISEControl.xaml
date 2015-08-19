@@ -63,11 +63,31 @@
                                 <GridView.ColumnHeaderContextMenu>
                                     <ContextMenu/>
                                 </GridView.ColumnHeaderContextMenu>
-                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
-                                <GridViewColumn Header="Status" DisplayMemberBinding="{Binding AuthoringState}" />
-                                <GridViewColumn Header="Sync Status" DisplayMemberBinding="{Binding SyncStatus}" />
-                                <GridViewColumn Header="Last Modified (Local)" DisplayMemberBinding="{Binding LastModifiedLocal, StringFormat='{}{0:MM/dd/yy hh:mm tt}'}" />
-                                <GridViewColumn Header="Last Modified (Cloud)" DisplayMemberBinding="{Binding LastModifiedCloud, StringFormat='{}{0:MM/dd/yy hh:mm tt}'}"/>
+                                <GridViewColumn DisplayMemberBinding="{Binding Name}">
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="Name" Click="runbookListColumnHeader_Click">Name</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
+                                </GridViewColumn>
+                                <GridViewColumn DisplayMemberBinding="{Binding AuthoringState}">
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="AuthoringState" Click="runbookListColumnHeader_Click">Status</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
+                                </GridViewColumn>
+                                <GridViewColumn DisplayMemberBinding="{Binding SyncStatus}" >
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="SyncStatus" Click="runbookListColumnHeader_Click">Sync Status</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
+                                </GridViewColumn>
+                                <GridViewColumn DisplayMemberBinding="{Binding LastModifiedLocal, StringFormat='{}{0:MM/dd/yy hh:mm tt}'}">
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="LastModifiedLocal" Click="runbookListColumnHeader_Click">Last Modified (Local)</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
+                                </GridViewColumn>
+                                <GridViewColumn DisplayMemberBinding="{Binding LastModifiedCloud, StringFormat='{}{0:MM/dd/yy hh:mm tt}'}">
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="LastModifiedCloud" Click="runbookListColumnHeader_Click">Last Modified (Cloud)</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
+                                </GridViewColumn>
                             </GridView>
                         </ListView.View>
                     </ListView>

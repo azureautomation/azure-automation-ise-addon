@@ -30,6 +30,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography.X509Certificates;
+using System.ComponentModel;
 
 namespace AutomationISE
 {
@@ -41,6 +42,8 @@ namespace AutomationISE
         private System.Timers.Timer refreshTimer = new System.Timers.Timer();
         private AutomationISEClient iseClient;
         private ObservableCollection<AutomationRunbook> runbookListViewModel;
+        private ListSortDirection runbookCurrSortDir;
+        private string runbookCurrSortProperty;
         private BlockingCollection<RunbookTransferJob> fileTransferQueue;
         private Task fileTransferWorker;
         private IProgress<RunbookTransferProgress> fileTransferWorkerProgress;
@@ -893,6 +896,28 @@ namespace AutomationISE
             {
                 MessageBox.Show(exception.Message, "Couldn't open path", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+        /*
+         * Sorting logic:
+         * Clicking on a column sorts it in ascending order.
+         * If the column was already sorted in ascending order, it gets re-sorted into descending order.
+         * If a column can have the same value in many different rows (e.g. Status and SyncStatus),
+         *   then the list is secondarily sorted by runbook name, ascending.
+         */ 
+        private void runbookListColumnHeader_Click(object sender, RoutedEventArgs e)
+        {
+            GridViewColumnHeader column = (GridViewColumnHeader)sender;
+            string sortProperty = column.Tag.ToString();
+            RunbooksListView.Items.SortDescriptions.Clear();
+            if (sortProperty != runbookCurrSortProperty || runbookCurrSortDir == ListSortDirection.Descending)
+                runbookCurrSortDir = ListSortDirection.Ascending;
+            else
+                runbookCurrSortDir = ListSortDirection.Descending;
+            runbookCurrSortProperty = sortProperty;
+            SortDescription newDescription = new SortDescription(runbookCurrSortProperty, runbookCurrSortDir);
+            RunbooksListView.Items.SortDescriptions.Add(newDescription);
+            if (runbookCurrSortProperty != "Name")
+                RunbooksListView.Items.SortDescriptions.Add(new SortDescription("Name", ListSortDirection.Ascending));
         }
     }
 }
