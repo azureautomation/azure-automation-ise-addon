@@ -10,6 +10,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Diagnostics;
+using System.Timers;
 using Microsoft.Azure.Management.Automation.Models;
 using AutomationISE.Model;
 
@@ -23,6 +24,7 @@ namespace AutomationISE
         private JobCreateResponse jobCreateResponse = null;
         private AutomationISEClient iseClient;
         private String runbookName;
+        private Timer refreshTimer;
         /* These values are the defaults for the settings visible using >(Get-Host).PrivateData */
         public static String ErrorForegroundColorCode = "#FFFF0000";
         public static String ErrorBackgroundColorCode = "#00FFFFFF";
@@ -39,6 +41,9 @@ namespace AutomationISE
             runbookName = name;
             iseClient = client;
             Task t = checkTestJob();
+            refreshTimer = new Timer();
+            refreshTimer.Interval = 30000;
+            refreshTimer.Elapsed += new ElapsedEventHandler(refresh);
         }
 
         //TODO: refactor this to a different class with some inheritance structure
@@ -53,6 +58,9 @@ namespace AutomationISE
             jobCreateResponse = response;
             iseClient = client;
             Task t = checkJob();
+            refreshTimer = new Timer();
+            refreshTimer.Interval = 30000;
+            refreshTimer.Elapsed += new ElapsedEventHandler(refresh);
         }
 
         private async Task checkTestJob()
@@ -65,6 +73,7 @@ namespace AutomationISE
             if (response.TestJob.Status == "Failed")
             {
                 updateJobOutputTextBlockWithException(response.TestJob.Exception);
+                refreshTimer.Stop();
             }
             else
             {
@@ -80,7 +89,10 @@ namespace AutomationISE
                 if (response.TestJob.Status == "Suspended")
                 {
                     updateJobOutputTextBlockWithException(response.TestJob.Exception);
+                    refreshTimer.Stop();
                 }
+                else if (response.TestJob.Status == "Completed")
+                    refreshTimer.Stop();
             }
         }
 
@@ -156,12 +168,27 @@ namespace AutomationISE
             });
         }
 
+
+        private void refresh(object source, ElapsedEventArgs e)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                OutputTextBlockParagraph.Inlines.Clear();
+                Task t;
+                if (jobCreateResponse != null)
+                    t = checkJob();
+                else 
+                    t = checkTestJob();
+            });
+        }
+
         private async void RefreshJobButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 RefreshJobButton.IsEnabled = false;
                 RefreshJobButton.Content = "Refreshing...";
+                refreshTimer.Stop();
                 OutputTextBlockParagraph.Inlines.Clear();
                 if (jobCreateResponse != null) await checkJob();
                 else await checkTestJob();
@@ -172,6 +199,7 @@ namespace AutomationISE
             }
             finally
             {
+                refreshTimer.Start();
                 RefreshJobButton.IsEnabled = true;
                 RefreshJobButton.Content = "Refresh";
             }
@@ -196,6 +224,7 @@ namespace AutomationISE
             }
             finally
             {
+                refreshTimer.Start();
                 StopJobButton.IsEnabled = true;
                 StopJobButton.Content = "Stop Job";
             }
@@ -206,6 +235,7 @@ namespace AutomationISE
             try
             {
                 StartJobButton.IsEnabled = false;
+                refreshTimer.Stop();
                 TestJobCreateResponse response = await createTestJob();
                 if (response != null)
                 {
@@ -220,6 +250,7 @@ namespace AutomationISE
             }
             finally
             {
+                refreshTimer.Start();
                 StartJobButton.IsEnabled = true;
             }
         }

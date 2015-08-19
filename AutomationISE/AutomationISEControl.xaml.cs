@@ -232,11 +232,11 @@ namespace AutomationISE
 
         public void refresh(object source, ElapsedEventArgs e)
         {
-            this.Dispatcher.Invoke((Action)(() =>
+            this.Dispatcher.Invoke(() =>
             {
                 refreshAssets();
-                // TODO: add refresh runbooks
-            }));
+                Task t = refreshRunbooks();
+            });
         }
 
         public async void refreshAssets()
@@ -717,35 +717,40 @@ namespace AutomationISE
             }
         }
 
+        private async Task refreshRunbooks()
+        {
+            ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient,
+                                    iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            IDictionary<String, AutomationRunbook> runbookWithName = new Dictionary<String, AutomationRunbook>(runbooks.Count);
+            foreach (AutomationRunbook runbook in runbooks)
+            {
+                runbookWithName.Add(runbook.Name, runbook);
+            }
+            foreach (AutomationRunbook curr in runbookListViewModel)
+            {
+                curr.AuthoringState = runbookWithName[curr.Name].AuthoringState;
+                Debug.WriteLine(runbookWithName[curr.Name].AuthoringState);
+                curr.Parameters = runbookWithName[curr.Name].Parameters;
+                curr.Description = runbookWithName[curr.Name].Description;
+                curr.LastModifiedCloud = runbookWithName[curr.Name].LastModifiedCloud;
+                curr.LastModifiedLocal = runbookWithName[curr.Name].LastModifiedLocal;
+                curr.UpdateSyncStatus();
+                runbookWithName.Remove(curr.Name);
+            }
+            foreach (String name in runbookWithName.Keys)
+            {
+                runbookListViewModel.Add(runbookWithName[name]);
+                Debug.WriteLine(name);
+            }
+        }
+
         private async void ButtonRefreshRunbookList_Click(object sender, RoutedEventArgs e)
         {
             ButtonRefreshRunbookList.IsEnabled = false;
             ButtonRefreshRunbookList.Content = "Refreshing...";
             try
             {
-                ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient,
-                                    iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
-                IDictionary<String, AutomationRunbook> runbookWithName = new Dictionary<String, AutomationRunbook>(runbooks.Count);
-                foreach (AutomationRunbook runbook in runbooks)
-                {
-                    runbookWithName.Add(runbook.Name, runbook);
-                }
-                foreach (AutomationRunbook curr in runbookListViewModel)
-                {
-                    curr.AuthoringState = runbookWithName[curr.Name].AuthoringState;
-                    Debug.WriteLine(runbookWithName[curr.Name].AuthoringState);
-                    curr.Parameters = runbookWithName[curr.Name].Parameters;
-                    curr.Description = runbookWithName[curr.Name].Description;
-                    curr.LastModifiedCloud = runbookWithName[curr.Name].LastModifiedCloud;
-                    curr.LastModifiedLocal = runbookWithName[curr.Name].LastModifiedLocal;
-                    curr.UpdateSyncStatus();
-                    runbookWithName.Remove(curr.Name);
-                }
-                foreach (String name in runbookWithName.Keys)
-                {
-                    runbookListViewModel.Add(runbookWithName[name]);
-                    Debug.WriteLine(name);
-                }
+                await refreshRunbooks();
             }
             catch (Exception ex)
             {
