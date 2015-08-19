@@ -13,8 +13,6 @@
 // ----------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Web.Script.Serialization;
 using Microsoft.Azure.Management.Automation.Models;
 using Microsoft.Azure.Management.Automation;
 using System.Threading.Tasks;
@@ -27,11 +25,16 @@ namespace AutomationISE.Model
     /// </summary>
     static class AutomationSourceControl
     {
-
+        /// <summary>
+        /// This function checks is source control is enabled on the automation account
+        /// </summary>
+        /// <param name="automationClient"></param>
+        /// <param name="resourceGroup"></param>
+        /// <param name="automationAccount"></param>
+        /// <returns>boolean value indicating if source control is enabled. True means it is and false means it is not</returns>
         public static async Task<bool> isSourceControlEnabled(AutomationManagementClient automationClient, String resourceGroup, String automationAccount)
         {
-            // TODO
-            // This is a current way to determine if source control is enabled.
+            // TODO This is a current way to determine if source control is enabled.
             // Will update this once the API becomes available.
             try {
                 var response = await automationClient.Variables.GetAsync(resourceGroup, automationAccount, Constants.sourceControlConnectionVariable);
@@ -43,7 +46,15 @@ namespace AutomationISE.Model
             }
         }
 
-        public static async Task<JobCreateResponse> startSouceControlJob(AutomationManagementClient automationClient, String resourceGroup, String automationAccount)
+        /// <summary>
+        /// This function starts the source control runbook Sync-MicrosoftAzureAutomationAccountFromGithubV1
+        /// that is defined in the constants class Constants.sourceControlRunbook
+        /// </summary>
+        /// <param name="automationClient"></param>
+        /// <param name="resourceGroup"></param>
+        /// <param name="automationAccount"></param>
+        /// <returns>A JobCreateResponse object for the created job</returns>
+        public static async Task<JobCreateResponse> startSourceControlJob(AutomationManagementClient automationClient, String resourceGroup, String automationAccount)
         {
             var jobParams = new JobCreateParameters
             {

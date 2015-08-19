@@ -872,7 +872,7 @@ namespace AutomationISE
         {
             try
             {
-                JobCreateResponse sourceControlJob = await AutomationSourceControl.startSouceControlJob(iseClient.automationManagementClient,
+                JobCreateResponse sourceControlJob = await AutomationSourceControl.startSourceControlJob(iseClient.automationManagementClient,
                             iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
 
                 JobOutputWindow jobWindow = new JobOutputWindow(sourceControlJob.Job.Properties.Runbook.Name, sourceControlJob, iseClient);

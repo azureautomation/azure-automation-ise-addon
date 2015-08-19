@@ -19,6 +19,10 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace AutomationISE.Model
 {
+    /// <summary>
+    /// A generic certificate class to create private (.PFX) certificates.
+    /// It usese the CERTENROLLib library for core capabilities. https://msdn.microsoft.com/en-us/library/windows/desktop/aa374846(v=vs.85).aspx
+    /// </summary>
     class Certificate
     {
 
@@ -31,6 +35,9 @@ namespace AutomationISE.Model
         private CObjectId objObjectId = null;
         private String stringResponse = null;
 
+        /// <summary>
+        /// Certificate constructor to intialize objects and values required to create a certificate
+        /// </summary>
         public Certificate()
         {
             try
@@ -57,7 +64,7 @@ namespace AutomationISE.Model
                 // The key can be used for decryption
                 this.KeyUsage = X509PrivateKeyUsageFlags.XCN_NCRYPT_ALLOW_DECRYPT_FLAG;
 
-                // Create for machine and not user
+                // Create for user and not machine
                 this.MachineContext = false;
 
                 // Default to expire in 1 year
@@ -95,6 +102,10 @@ namespace AutomationISE.Model
             }
         }
 
+        /// <summary>
+        /// Creates a certificate request with the given name.
+        /// </summary>
+        /// <param name="name"></param>
         public void CreateCertificateRequest(String name)
         {
             try
@@ -119,6 +130,7 @@ namespace AutomationISE.Model
                         this.ObjectIdPublicKeyFlags,
                         this.AlgorithmFlags, this.AlgorithmName);
 
+                // Add the name passed in
                 objDN.Encode(
                     "CN=" + name,
                     X500NameFlags.XCN_CERT_NAME_STR_NONE
@@ -142,6 +154,10 @@ namespace AutomationISE.Model
             }
         }
 
+        /// <summary>
+        /// Installs the certificate
+        /// </summary>
+        /// <returns></returns>
         public X509Certificate2 InstallCertficate()
         {
             CX509Enrollment objEnroll = new CX509Enrollment();
@@ -169,6 +185,7 @@ namespace AutomationISE.Model
             }
         }
 
+        // Below are various values that can be set determining the type of certificate you want to create.
         public int KeySize { get; set; }
         public X509KeySpec KeySpec { get; set; }
         public X509PrivateKeyUsageFlags KeyUsage { get; set; }
