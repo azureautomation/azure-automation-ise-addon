@@ -54,7 +54,7 @@ namespace AutomationISE.Model
         {
             public const String Script = "Script";
 
-            public const String Graphical = "Graphical";
+            public const String Graphical = "Graph";
         }
 
         public class AutomationAccountState
