@@ -43,6 +43,7 @@ namespace AutomationISE
         private System.Timers.Timer refreshTimer = new System.Timers.Timer();
         private AutomationISEClient iseClient;
         private ObservableCollection<AutomationRunbook> runbookListViewModel;
+        private ObservableCollection<AutomationAsset> assetListViewModel;
         private ListSortDirection runbookCurrSortDir;
         private string runbookCurrSortProperty;
         private ListSortDirection assetCurrSortDir;
@@ -246,10 +247,10 @@ namespace AutomationISE
         {
             this.Dispatcher.Invoke(() =>
             {
-                refreshAssets();
+                Task t = refreshAssets();
                 try
                 {
-                    Task t = refreshRunbooks();
+                    t = refreshRunbooks();
                 }
                 catch (Exception exception)
                 {
@@ -259,31 +260,28 @@ namespace AutomationISE
             });
         }
 
-        public async void refreshAssets()
+        public async Task refreshAssets()
         {
             try
             {
                 string selectedAssetType = (string)assetsComboBox.SelectedValue;
-                if (selectedAssetType == null)
-                {
-                    selectedAssetType = "";
-                }
+                if (selectedAssetType == null) return;
 
                 if (selectedAssetType == AutomationISE.Model.Constants.assetVariable)
                 {
-                    assetsListView.ItemsSource = await getAssetsOfType("AutomationVariable");
+                    mergeAssetListWith(await getAssetsOfType("AutomationVariable"));
                 }
                 else if (selectedAssetType == AutomationISE.Model.Constants.assetCredential)
                 {
-                    assetsListView.ItemsSource = await getAssetsOfType("AutomationCredential");
+                    mergeAssetListWith(await getAssetsOfType("AutomationCredential"));
                 }
                 else if (selectedAssetType == AutomationISE.Model.Constants.assetConnection)
                 {
-                    assetsListView.ItemsSource = await getAssetsOfType("AutomationConnection");
+                    mergeAssetListWith(await getAssetsOfType("AutomationConnection"));
                 }
                 else if (selectedAssetType == AutomationISE.Model.Constants.assetCertificate)
                 {
-                    assetsListView.ItemsSource = await getAssetsOfType("AutomationCertificate");
+                    mergeAssetListWith(await getAssetsOfType("AutomationCertificate"));
                 }
                 tokenExpired = false;
             }
@@ -291,6 +289,30 @@ namespace AutomationISE
             {
                 if (!showTokenExpiredMessageIfApplicable(exception))
                     MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void mergeAssetListWith(ICollection<AutomationAsset> newAssetCollection)
+        {
+            IDictionary<string, AutomationAsset> newAssetWithName = new Dictionary<string, AutomationAsset>();
+            foreach (AutomationAsset asset in newAssetCollection) {
+                newAssetWithName.Add(asset.Name, asset);
+            }
+            foreach (AutomationAsset asset in assetListViewModel)
+            {
+                if (newAssetWithName.ContainsKey(asset.Name))
+                {
+                    AutomationAsset newAsset = newAssetWithName[asset.Name];
+                    asset.LastModifiedLocal = newAsset.LastModifiedLocal;
+                    asset.LastModifiedCloud = newAsset.LastModifiedCloud;
+                    asset.UpdateSyncStatus();
+                    newAssetWithName.Remove(asset.Name);
+                }
+            }
+            /* get new ones that weren't merged in */
+            foreach (string name in newAssetWithName.Keys)
+            {
+                assetListViewModel.Add(newAssetWithName[name]);
             }
         }
 
@@ -399,6 +421,7 @@ namespace AutomationISE
                     /* Update Runbooks */
                     UpdateStatusBox(configurationStatusTextBox, "Getting runbook data...");
                     if (runbookListViewModel != null) runbookListViewModel.Clear();
+                    if (assetListViewModel != null) assetListViewModel.Clear();
                     runbookListViewModel = new ObservableCollection<AutomationRunbook>(await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient, 
                           iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name));
                     UpdateStatusBox(configurationStatusTextBox, "Done getting runbook data");
@@ -410,6 +433,8 @@ namespace AutomationISE
                         await downloadAllAssets();
                         UpdateStatusBox(configurationStatusTextBox, "Assets downloaded");
                     }
+                    assetListViewModel = new ObservableCollection<AutomationAsset>();
+                    await refreshAssets(); //populates the viewmodel
                     /* Update PowerShell Module */
                     try
                     {
@@ -424,6 +449,7 @@ namespace AutomationISE
                     }
                     /* Update UI */
                     RunbooksListView.ItemsSource = runbookListViewModel;
+                    assetsListView.ItemsSource = assetListViewModel;
                     setRunbookSelectionButtonState(false);
                     setRunbookAndAssetNonSelectionButtonState(true);
                     assetsComboBox.SelectedValue = AutomationISE.Model.Constants.assetVariable;
@@ -456,9 +482,10 @@ namespace AutomationISE
             setAssetSelectionButtonState(assetsListView.SelectedItems.Count > 0);
         }
 
-        private void assetsComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void assetsComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            refreshAssets();
+            assetListViewModel.Clear();
+            await refreshAssets();
         }
 
         private void workspaceTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -523,29 +550,27 @@ namespace AutomationISE
             }
         }
 
-        private void userNameTextBox_TextChanged(object sender, TextChangedEventArgs e) { }
-
-        private void ButtonDownloadAsset_Click(object sender, RoutedEventArgs e)
+        private async void ButtonDownloadAsset_Click(object sender, RoutedEventArgs e)
         {
             downloadAssets(getSelectedAssets());
-            refreshAssets();
+            await refreshAssets();
         }
 
         private async void ButtonUploadAsset_Click(object sender, RoutedEventArgs e)
         {
             await uploadAssets(getSelectedAssets());
-            refreshAssets();
+            await refreshAssets();
         }
 
-        private void ButtonDeleteAsset_Click(object sender, RoutedEventArgs e)
+        private async void ButtonDeleteAsset_Click(object sender, RoutedEventArgs e)
         {
             deleteAssets(getSelectedAssets());
-            refreshAssets();
+            await refreshAssets();
         }
 
-        private void ButtonRefreshAssetList_Click(object sender, RoutedEventArgs e)
+        private async void ButtonRefreshAssetList_Click(object sender, RoutedEventArgs e)
         {
-            refreshAssets();
+            await refreshAssets();
         }
 
         private bool ConfirmRunbookDownload(string name)
@@ -904,7 +929,7 @@ namespace AutomationISE
             }
         }
 
-        private void createOrUpdateCredentialAsset(string credentialAssetName, AutomationCredential credToEdit)
+        private async Task createOrUpdateCredentialAsset(string credentialAssetName, AutomationCredential credToEdit)
         {
             var dialog = new NewOrEditCredentialDialog(credToEdit);
 
@@ -916,11 +941,11 @@ namespace AutomationISE
                 assetsToSave.Add(newCred);
 
                 AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint());
-                refreshAssets();
+                await refreshAssets();
             }
         }
 
-        private void createOrUpdateVariableAsset(string variableAssetName, AutomationVariable variableToEdit)
+        private async void createOrUpdateVariableAsset(string variableAssetName, AutomationVariable variableToEdit)
         {
             var dialog = new NewOrEditVariableDialog(variableToEdit);
 
@@ -932,11 +957,11 @@ namespace AutomationISE
                 assetsToSave.Add(newVariable);
 
                 AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint());
-                refreshAssets();
+                await refreshAssets();
             }
         }
 
-        private void ButttonNewAsset_Click(object sender, RoutedEventArgs e)
+        private async void ButttonNewAsset_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new ChooseNewAssetTypeDialog();
 
@@ -948,7 +973,7 @@ namespace AutomationISE
                 }
                 else if (dialog.newAssetType == AutomationISE.Model.Constants.assetCredential)
                 {
-                    createOrUpdateCredentialAsset(dialog.newAssetName, null);
+                    await createOrUpdateCredentialAsset(dialog.newAssetName, null);
                 }
                 else if (dialog.newAssetType == AutomationISE.Model.Constants.assetConnection)
                 {
