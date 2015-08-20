@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="ADUsername" Type="System.String" Scope="User">
-      <Value Profile="(Default)">username@contoso.onmicrosoft.com</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="localWorkspace" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
