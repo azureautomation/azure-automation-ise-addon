@@ -45,6 +45,8 @@ namespace AutomationISE
         private ObservableCollection<AutomationRunbook> runbookListViewModel;
         private ListSortDirection runbookCurrSortDir;
         private string runbookCurrSortProperty;
+        private ListSortDirection assetCurrSortDir;
+        private string assetCurrSortProperty;
         private BlockingCollection<RunbookTransferJob> fileTransferQueue;
         private Task fileTransferWorker;
         private IProgress<RunbookTransferProgress> fileTransferWorkerProgress;
@@ -1036,6 +1038,24 @@ namespace AutomationISE
             RunbooksListView.Items.SortDescriptions.Add(newDescription);
             if (runbookCurrSortProperty != "Name")
                 RunbooksListView.Items.SortDescriptions.Add(new SortDescription("Name", ListSortDirection.Ascending));
+        }
+        /*
+         * Sorting logic: same as for runbooks.
+         */ 
+        private void assetListColumnHeader_Click(object sender, RoutedEventArgs e)
+        {
+            GridViewColumnHeader column = (GridViewColumnHeader)sender;
+            string sortProperty = column.Tag.ToString();
+            assetsListView.Items.SortDescriptions.Clear();
+            if (sortProperty != assetCurrSortProperty || assetCurrSortDir == ListSortDirection.Descending)
+                assetCurrSortDir = ListSortDirection.Ascending;
+            else
+                assetCurrSortDir = ListSortDirection.Descending;
+            assetCurrSortProperty = sortProperty;
+            SortDescription newDescription = new SortDescription(assetCurrSortProperty, assetCurrSortDir);
+            assetsListView.Items.SortDescriptions.Add(newDescription);
+            if (assetCurrSortProperty != "Name")
+                assetsListView.Items.SortDescriptions.Add(new SortDescription("Name", ListSortDirection.Ascending));
         }
     }
 }
