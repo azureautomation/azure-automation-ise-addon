@@ -92,8 +92,9 @@ namespace AutomationISE
                 certificateTextBox.Text = selfSignedThumbprint;
                 UpdateStatusBox(configurationStatusTextBox, "Certificate to use for encrypting local assets is " + selfSignedThumbprint);
 
-                // Load feedback page to increase load time before users clicks on feedback tab
+                // Load feedback and help page to increase load time before users clicks on these tabs
                 surveyBrowserControl.Navigate(new Uri(Constants.feedbackURI));
+                helpBrowserControl.Navigate(new Uri(Constants.helpURI));
 
                 startContinualGet();
             }
@@ -501,6 +502,9 @@ namespace AutomationISE
                     break;
                 case "feedbackTab":
                     surveyBrowserControl.Navigate(new Uri(Constants.feedbackURI));
+                    break;
+                case "helpTab":
+                    helpBrowserControl.Navigate(new Uri(Constants.helpURI));
                     break;
                 default:
                     Debug.WriteLine("Couldn't find tab handler with name: " + selectedTab.Name);

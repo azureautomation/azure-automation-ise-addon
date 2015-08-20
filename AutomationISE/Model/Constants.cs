@@ -44,6 +44,7 @@ namespace AutomationISE.Model
         public const String assetModule = "Module";
 
         public const String feedbackURI = "http://iseautomation.azurewebsites.net/FeedbackForm.aspx";
+        public const String helpURI = "http://iseautomation.azurewebsites.net/Help.html";
 
         public const int ExpirationLengthInDaysForSelfSignedCert = 365 * 2;
 

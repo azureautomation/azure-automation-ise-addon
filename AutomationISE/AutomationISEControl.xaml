@@ -166,6 +166,14 @@
                     <WebBrowser x:Name="surveyBrowserControl" Margin="10,10,10,0" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="1"/>
                 </Grid>
             </TabItem>
+                        <TabItem x:Name="helpTab" Header="Help">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+                    <WebBrowser x:Name="helpBrowserControl" Margin="10,10,10,0" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="1"/>
+                </Grid>
+            </TabItem>
         </TabControl>
     </Grid>
 </UserControl>
