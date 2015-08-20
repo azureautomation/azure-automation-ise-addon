@@ -945,7 +945,7 @@ namespace AutomationISE
             }
         }
 
-        private async void createOrUpdateVariableAsset(string variableAssetName, AutomationVariable variableToEdit)
+        private async Task createOrUpdateVariableAsset(string variableAssetName, AutomationVariable variableToEdit)
         {
             var dialog = new NewOrEditVariableDialog(variableToEdit);
 
@@ -969,7 +969,7 @@ namespace AutomationISE
             {
                 if (dialog.newAssetType == AutomationISE.Model.Constants.assetVariable)
                 {
-                    createOrUpdateVariableAsset(dialog.newAssetName, null);
+                    await createOrUpdateVariableAsset(dialog.newAssetName, null);
                 }
                 else if (dialog.newAssetType == AutomationISE.Model.Constants.assetCredential)
                 {
@@ -986,17 +986,17 @@ namespace AutomationISE
             }
         }
 
-        private void ButtonEditAsset_Click(object sender, RoutedEventArgs e)
+        private async void ButtonEditAsset_Click(object sender, RoutedEventArgs e)
         {
             var asset = getSelectedAssets().ElementAt(0);
 
             if (asset is AutomationCredential)
             {
-                createOrUpdateCredentialAsset(asset.Name, (AutomationCredential)asset);
+                await createOrUpdateCredentialAsset(asset.Name, (AutomationCredential)asset);
             }
             else if (asset is AutomationVariable)
             {
-                createOrUpdateVariableAsset(asset.Name, (AutomationVariable)asset);
+                await createOrUpdateVariableAsset(asset.Name, (AutomationVariable)asset);
             }
         }
 

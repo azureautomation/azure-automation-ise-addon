@@ -94,7 +94,7 @@ namespace AutomationISE
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
             bool done = true;
-            _encrypted = variableEncryptedComboBox.SelectedValue == Constants.EncryptedState.Encrypted;
+            _encrypted = (String)variableEncryptedComboBox.SelectedValue == Constants.EncryptedState.Encrypted;
             
             if(_encrypted)
             {
@@ -105,7 +105,7 @@ namespace AutomationISE
                 _value = valueTextbox.Text;
             }
 
-            if(variableTypeComboBox.SelectedValue == Constants.VariableType.Number)
+            if((String)variableTypeComboBox.SelectedValue == Constants.VariableType.Number)
             {
                 try
                 {
@@ -131,9 +131,9 @@ namespace AutomationISE
             }
         }
 
-        private async void VariableEncryptedComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void VariableEncryptedComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            setEncrypted(variableEncryptedComboBox.SelectedValue == Constants.EncryptedState.Encrypted); 
+            setEncrypted((String)variableEncryptedComboBox.SelectedValue == Constants.EncryptedState.Encrypted); 
         }
 
         private bool IsNumber(object value)

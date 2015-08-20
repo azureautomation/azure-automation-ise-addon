@@ -26,7 +26,6 @@ namespace AutomationISE.Model
     {
         /* Azure Credential Data */
         public AuthenticationResult azureADAuthResult { get; set; }
-        private TokenCloudCredentials cloudCredentials;
         private Microsoft.WindowsAzure.TokenCloudCredentials subscriptionCredentials;
         private SubscriptionCloudCredentials subscriptionCreds;
 
@@ -63,8 +62,7 @@ namespace AutomationISE.Model
         {
             if (azureADAuthResult == null)
                 throw new Exception(Properties.Resources.AzureADAuthResult);
-            if (cloudCredentials == null)
-                subscriptionCredentials = new Microsoft.WindowsAzure.TokenCloudCredentials(azureADAuthResult.AccessToken);
+            subscriptionCredentials = new Microsoft.WindowsAzure.TokenCloudCredentials(azureADAuthResult.AccessToken);
             subscriptionClient = new Microsoft.WindowsAzure.Subscriptions.SubscriptionClient(subscriptionCredentials);
            
             var cancelToken = new CancellationToken();
