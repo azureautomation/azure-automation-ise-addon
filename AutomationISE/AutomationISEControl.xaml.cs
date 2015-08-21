@@ -48,9 +48,8 @@ namespace AutomationISE
         private string runbookCurrSortProperty;
         private ListSortDirection assetCurrSortDir;
         private string assetCurrSortProperty;
-        private BlockingCollection<RunbookTransferJob> fileTransferQueue;
-        private Task fileTransferWorker;
-        private IProgress<RunbookTransferProgress> fileTransferWorkerProgress;
+        private int numBackgroundTasks = 0;
+        private Object backgroundWorkLock;
         private Storyboard progressSpinnerStoryboard;
         private Storyboard progressSpinnerStoryboardReverse;
         private Storyboard miniProgressSpinnerStoryboard;
@@ -64,9 +63,7 @@ namespace AutomationISE
             {
                 InitializeComponent();
                 iseClient = new AutomationISEClient();
-                fileTransferQueue = new BlockingCollection<RunbookTransferJob>(new ConcurrentQueue<RunbookTransferJob>(), 200);
-                fileTransferWorkerProgress = new Progress<RunbookTransferProgress>(updateUiWithTransferProgress);
-                fileTransferWorker = Task.Factory.StartNew(() => processJobsFromQueue(fileTransferWorkerProgress), TaskCreationOptions.LongRunning);
+                backgroundWorkLock = new Object();
                 progressSpinnerStoryboard = (Storyboard)FindResource("bigGearRotationStoryboard");
                 progressSpinnerStoryboardReverse = (Storyboard)FindResource("bigGearRotationStoryboardReverse");
                 miniProgressSpinnerStoryboard = (Storyboard)FindResource("smallGearRotationStoryboard");
@@ -102,7 +99,7 @@ namespace AutomationISE
                 var certObj = new AutomationSelfSignedCertificate();
                 String selfSignedThumbprint = certObj.CreateSelfSignedCertificate();
                 certificateTextBox.Text = selfSignedThumbprint;
-                UpdateStatusBox(configurationStatusTextBox, "Certificate to use for encrypting local assets is " + selfSignedThumbprint);
+                UpdateStatusBox(configurationStatusTextBox, "Thumbprint of certificate used to encrypt local assets: " + selfSignedThumbprint);
 
                 // Load feedback and help page to increase load time before users clicks on these tabs
                 surveyBrowserControl.Navigate(new Uri(Constants.feedbackURI));
@@ -337,19 +334,23 @@ namespace AutomationISE
         {
             try
             {
-                UpdateStatusBox(configurationStatusTextBox, "Launching login window");
+                UpdateStatusBox(configurationStatusTextBox, "Launching login window...");
                 iseClient.azureADAuthResult = AutomationISE.Model.AuthenticateHelper.GetInteractiveLogin(userNameTextBox.Text);
                 refreshTimer.Stop();
 
+                beginBackgroundWork(Properties.Resources.RetrieveSubscriptions);
                 userNameTextBox.Text = iseClient.azureADAuthResult.UserInfo.DisplayableId;
+                UpdateStatusBox(configurationStatusTextBox, "Logged in user: " + userNameTextBox.Text);
                 Properties.Settings.Default["ADUserName"] = userNameTextBox.Text;
                 Properties.Settings.Default.Save();
 
-                UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveSubscriptions);
+                //UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveSubscriptions);
+
                 IList<Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription> subscriptions = await iseClient.GetSubscriptions();
                 if (subscriptions.Count > 0)
                 {
-                    UpdateStatusBox(configurationStatusTextBox, Properties.Resources.FoundSubscriptions);
+                    //UpdateStatusBox(configurationStatusTextBox, Properties.Resources.FoundSubscriptions);
+                    endBackgroundWork(Properties.Resources.FoundSubscriptions);
                     subscriptionComboBox.ItemsSource = subscriptions;
                     subscriptionComboBox.DisplayMemberPath = "SubscriptionName";
                     subscriptionComboBox.SelectedItem = subscriptionComboBox.Items[0];
@@ -358,20 +359,30 @@ namespace AutomationISE
                 }
                 else
                 {
-                    UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoSubscriptions);
+                    //UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoSubscriptions);
+                    endBackgroundWork(Properties.Resources.NoSubscriptions);
                 }
                 tokenExpired = false;
             }
             catch (Microsoft.IdentityModel.Clients.ActiveDirectory.AdalServiceException Ex)
             {
-                UpdateStatusBox(configurationStatusTextBox, Properties.Resources.CancelSignIn +  " Error code: " + Ex.ErrorCode.ToString() + " Error Message: " + Ex.Message);
+                int userCancelResult = -2146233088;
+                if (Ex.HResult == userCancelResult)
+                    UpdateStatusBox(configurationStatusTextBox, Properties.Resources.CancelSignIn);
+                else
+                    UpdateStatusBox(configurationStatusTextBox, "Sign-in error: " + Ex.ErrorCode.ToString() + " Error Message: " + Ex.Message);
             }
             catch (Microsoft.IdentityModel.Clients.ActiveDirectory.AdalException Ex)
             {
-                UpdateStatusBox(configurationStatusTextBox, Properties.Resources.CancelSignIn + " Error code: " + Ex.ErrorCode.ToString() + " Error Message: " + Ex.Message);
+                int userCancelResult = -2146233088;
+                if (Ex.HResult == userCancelResult)
+                    UpdateStatusBox(configurationStatusTextBox, Properties.Resources.CancelSignIn);
+                else
+                    UpdateStatusBox(configurationStatusTextBox, "Sign-in error: " + Ex.ErrorCode.ToString() + " Error Message: " + Ex.Message);
             }
             catch (Exception Ex)
             {
+                endBackgroundWork("Couldn't retrieve subscriptions.");
                 var detailsDialog = System.Windows.Forms.MessageBox.Show(Ex.Message);
             }
         }
@@ -381,26 +392,33 @@ namespace AutomationISE
             try
             {
                 accountsComboBox.IsEnabled = false;
+                beginBackgroundWork(Properties.Resources.RetrieveAutomationAccounts);
                 refreshTimer.Stop();
                 iseClient.currSubscription = (Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription)subscriptionComboBox.SelectedValue;
                 if (iseClient.currSubscription != null)
                 {
-                    UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveAutomationAccounts);
+                    //UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveAutomationAccounts);
                     IList<AutomationAccount> automationAccounts = await iseClient.GetAutomationAccounts();
                     accountsComboBox.ItemsSource = automationAccounts;
                     accountsComboBox.DisplayMemberPath = "Name";
                     if (accountsComboBox.HasItems)
                     {
-                        UpdateStatusBox(configurationStatusTextBox, Properties.Resources.FoundAutomationAccounts);
+                        //UpdateStatusBox(configurationStatusTextBox, Properties.Resources.FoundAutomationAccounts);
+                        endBackgroundWork(Properties.Resources.FoundAutomationAccounts);
                         accountsComboBox.SelectedItem = accountsComboBox.Items[0];
                         accountsComboBox.IsEnabled = true;
                         refreshTimer.Start();
                     }
-                    else UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoAutomationAccounts);
+                    else
+                    {
+                        //UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoAutomationAccounts);
+                        endBackgroundWork(Properties.Resources.NoAutomationAccounts);
+                    }
                 }
             }
             catch (Exception exception)
             {
+                endBackgroundWork("Couldn't retrieve Automation Accounts.");
                 var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
             }
         }
@@ -419,22 +437,27 @@ namespace AutomationISE
                     if (iseClient.AccountWorkspaceExists())
                         accountPathTextBox.Text = iseClient.currWorkspace;
                     /* Update Runbooks */
-                    UpdateStatusBox(configurationStatusTextBox, "Getting runbook data...");
+                    //UpdateStatusBox(configurationStatusTextBox, "Getting runbook data...");
+                    beginBackgroundWork("Getting account data");
+                    beginBackgroundWork("Getting runbook data for " + account.Name);
                     if (runbookListViewModel != null) runbookListViewModel.Clear();
                     if (assetListViewModel != null) assetListViewModel.Clear();
                     runbookListViewModel = new ObservableCollection<AutomationRunbook>(await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient, 
                           iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name));
-                    UpdateStatusBox(configurationStatusTextBox, "Done getting runbook data");
+                    //UpdateStatusBox(configurationStatusTextBox, "Done getting runbook data");
+                    endBackgroundWork("Done getting runbook data");
                     /* Update Assets */
+                    beginBackgroundWork("Downloading assets for " + account.Name);
                     //TODO: this is not quite checking what we need it to check
                     if (!iseClient.AccountWorkspaceExists())
                     {
-                        UpdateStatusBox(configurationStatusTextBox, "Downloading assets...");
+                        //UpdateStatusBox(configurationStatusTextBox, "Downloading assets...");
                         await downloadAllAssets();
-                        UpdateStatusBox(configurationStatusTextBox, "Assets downloaded");
+                        //UpdateStatusBox(configurationStatusTextBox, "Assets downloaded");
                     }
                     assetListViewModel = new ObservableCollection<AutomationAsset>();
                     await refreshAssets(); //populates the viewmodel
+                    endBackgroundWork("Assets downloaded.");
                     /* Update PowerShell Module */
                     try
                     {
@@ -466,15 +489,15 @@ namespace AutomationISE
                     /* Change current directory to new workspace location */
                     accountPathTextBox.Text = iseClient.currWorkspace;
                     HostObject.CurrentPowerShellTab.Invoke("cd '" + iseClient.currWorkspace + "'");
-
+                    endBackgroundWork("Finished getting data for " + account.Name);
                     refreshTimer.Start();
                 }
             }
             catch (Exception exception)
             {
+                endBackgroundWork("Error getting account data");
                 var detailsDialog = MessageBox.Show(exception.Message);
             }
-
         }
 
         private void assetsListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -515,8 +538,6 @@ namespace AutomationISE
             }
         }
 
-        private void configurationStatusTextBox_TextChanged(object sender, TextChangedEventArgs e) { }
-
         private void UpdateStatusBox(System.Windows.Controls.TextBox statusTextBox, String Message)
         {
             var dispatchMessage = Dispatcher.BeginInvoke(DispatcherPriority.Send, (SendOrPostCallback)delegate
@@ -552,25 +573,33 @@ namespace AutomationISE
 
         private async void ButtonDownloadAsset_Click(object sender, RoutedEventArgs e)
         {
+            beginBackgroundWork("Downloading selected assets...");
             downloadAssets(getSelectedAssets());
             await refreshAssets();
+            endBackgroundWork("Assets downloaded.");
         }
 
         private async void ButtonUploadAsset_Click(object sender, RoutedEventArgs e)
         {
+            beginBackgroundWork("Uploading selected assets...");
             await uploadAssets(getSelectedAssets());
             await refreshAssets();
+            endBackgroundWork("Assets uploaded.");
         }
 
         private async void ButtonDeleteAsset_Click(object sender, RoutedEventArgs e)
         {
+            beginBackgroundWork("Deleting selected assets...");
             deleteAssets(getSelectedAssets());
             await refreshAssets();
+            endBackgroundWork("Assets deleted.");
         }
 
         private async void ButtonRefreshAssetList_Click(object sender, RoutedEventArgs e)
         {
+            beginBackgroundWork("Refreshing assets list...");
             await refreshAssets();
+            endBackgroundWork("Refreshed assets list.");
         }
 
         private bool ConfirmRunbookDownload(string name)
@@ -585,11 +614,18 @@ namespace AutomationISE
             return false;
         }
 
-        private void ButtonDownloadRunbook_Click(object sender, RoutedEventArgs e)
+        private async void ButtonDownloadRunbook_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 ButtonDownloadRunbook.IsEnabled = false;
+                /* 
+                 * These outer, empty calls to [begin|end]BackgroundWork() prevent the spinner from stopping
+                 * every time a runbook download finishes, which can make the UI look jittery.
+                 */
+                beginBackgroundWork();
+                int count = 0;
+                string name = "";
                 foreach (Object obj in RunbooksListView.SelectedItems)
                 {
                     AutomationRunbook runbook = (AutomationRunbook)obj;
@@ -597,28 +633,34 @@ namespace AutomationISE
                         continue;
                     if (runbook.localFileInfo != null && File.Exists(runbook.localFileInfo.FullName) && !ConfirmRunbookDownload(runbook.Name))
                         continue;
-                    if (fileTransferQueue.TryAdd(new RunbookTransferJob(runbook, RunbookTransferJob.TransferOperation.Download)))
+                    try
                     {
-                        //TryAdd() immediately returns false if queue is at capacity
-                        JobsRemainingLabel.Content = "(" + fileTransferQueue.Count + " tasks remaining)";
+                        beginBackgroundWork("Downloading runbook " + runbook.Name + "...");
+                        await AutomationRunbookManager.DownloadRunbook(runbook, iseClient.automationManagementClient,
+                                    iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
+                        endBackgroundWork("Downloaded " + runbook.Name + ".");
+                        count++;
+                        name = runbook.Name;
+                        runbook.UpdateSyncStatus();
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        MessageBox.Show("Too many runbooks are waiting to be downloaded/uploaded right now. Cool your jets!",
-                            "Download Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        break;
+                        endBackgroundWork("Error downloading runbook " + runbook.Name);
+                        MessageBox.Show("The runbook " + runbook.Name + " could not be downloaded.\r\nError details: " + ex.Message);
                     }
                 }
+                if (count == 1) endBackgroundWork("Downloaded " + name + ".");
+                else endBackgroundWork("Downloaded " + count + " runbooks.");
+                ButtonOpenRunbook.IsEnabled = true;
+                ButtonUploadRunbook.IsEnabled = true;
             }
             catch (Exception ex)
             {
+                endBackgroundWork("Error downloading runbooks.");
                 MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
-                /* Make sure the worker is alive, start a new one if not */
-                if (fileTransferWorker == null || fileTransferWorker.Status == TaskStatus.Canceled || fileTransferWorker.Status == TaskStatus.Faulted)
-                    fileTransferWorker = Task.Factory.StartNew(() => processJobsFromQueue(fileTransferWorkerProgress), TaskCreationOptions.LongRunning);
                 ButtonDownloadRunbook.IsEnabled = true;
             }
         }
@@ -659,86 +701,12 @@ namespace AutomationISE
             }
         }
 
-        private void updateUiWithTransferProgress(RunbookTransferProgress progress)
+        private void pauseAllSpin()
         {
-            if (progress.Status == RunbookTransferProgress.TransferStatus.Starting)
-            {
-                if (progress.Job.Operation == RunbookTransferJob.TransferOperation.Download)
-                {
-                    ProgressLabel.Content = "Downloading runbook " + progress.Job.Runbook.Name + "...";
-                    beginOrResumeClockwiseSpin();
-                }
-                else
-                {
-                    ProgressLabel.Content = "Uploading runbook " + progress.Job.Runbook.Name + "...";
-                    beginOrResumeAntiClockwiseSpin();
-                }
-                if (fileTransferQueue.Count > 0)
-                {
-                    JobsRemainingLabel.Content = "(" + fileTransferQueue.Count + " tasks remaining)";
-                }
-                else
-                {
-                    JobsRemainingLabel.Content = "";
-                }
-            }
-            else if (progress.Status == RunbookTransferProgress.TransferStatus.Completed)
-            {
-                progress.Job.Runbook.UpdateSyncStatus();
-            }
-            else if (progress.Status == RunbookTransferProgress.TransferStatus.AllCompleted)
-            {
-                progress.Job.Runbook.UpdateSyncStatus();
-                ProgressLabel.Content = "";
-                progressSpinnerStoryboard.Pause(this);
-                progressSpinnerStoryboardReverse.Pause(this);
-                miniProgressSpinnerStoryboard.Pause(this);
-                miniProgressSpinnerStoryboardReverse.Pause(this);
-            }
-        }
-
-        private async Task processJobsFromQueue(IProgress<RunbookTransferProgress> progress)
-        {
-            while (true)
-            {
-                RunbookTransferJob job = fileTransferQueue.Take(); //blocks until there is something to take
-                RunbookTransferProgress currentProgress = new RunbookTransferProgress(job);
-                progress.Report(currentProgress);
-                if (job.Operation == RunbookTransferJob.TransferOperation.Download)
-                {
-                    try
-                    {
-                        await AutomationRunbookManager.DownloadRunbook(job.Runbook, iseClient.automationManagementClient,
-                                    iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("The runbook " + job.Runbook.Name + " could not be downloaded.\r\nError details: " + ex.Message);
-                    }
-                }
-                else
-                {
-                    try
-                    {
-                        await AutomationRunbookManager.UploadRunbookAsDraft(job.Runbook, iseClient.automationManagementClient,
-                                    iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("The runbook " + job.Runbook.Name + " could not be uploaded.\r\nError details: " + ex.Message);
-                    }
-                }
-                if (fileTransferQueue.Count == 0) //about to block
-                {
-                    currentProgress.Status = RunbookTransferProgress.TransferStatus.AllCompleted;
-                    progress.Report(currentProgress);
-                }
-                else
-                {
-                    currentProgress.Status = RunbookTransferProgress.TransferStatus.Completed;
-                    progress.Report(currentProgress);
-                }
-            }
+            progressSpinnerStoryboard.Pause(this);
+            progressSpinnerStoryboardReverse.Pause(this);
+            miniProgressSpinnerStoryboard.Pause(this);
+            miniProgressSpinnerStoryboardReverse.Pause(this);
         }
 
         private void RunbooksListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -803,18 +771,36 @@ namespace AutomationISE
                 ButtonDownloadRunbook.IsEnabled = false;
                 ButtonUploadRunbook.IsEnabled = false;
                 ButtonPublishRunbook.Content = "Publishing...";
+                beginBackgroundWork();
+                int count = 0;
+                string name = "";
                 foreach (Object obj in RunbooksListView.SelectedItems)
                 {
                     AutomationRunbook selectedRunbook = (AutomationRunbook)obj;
                     if (selectedRunbook.AuthoringState == AutomationRunbook.AuthoringStates.Published)
                         continue;
-                    await AutomationRunbookManager.PublishRunbook(selectedRunbook, iseClient.automationManagementClient,
-                                iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                    try
+                    {
+                        beginBackgroundWork("Publishing runbook " + selectedRunbook.Name + "...");
+                        await AutomationRunbookManager.PublishRunbook(selectedRunbook, iseClient.automationManagementClient,
+                                    iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                        count++;
+                        name = selectedRunbook.Name;
+                        endBackgroundWork("Published runbook " + selectedRunbook.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        endBackgroundWork("Error publishing runbook " + selectedRunbook.Name);
+                        MessageBox.Show("The runbook could not be published.\r\nDetails: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
+                if (count == 1) endBackgroundWork("Published " + name);
+                else endBackgroundWork("Published " + count + " runbooks.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show("The runbook could not be published.\r\nDetails: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                endBackgroundWork("Error publishing runbooks.");
+                MessageBox.Show("Error publishing runbooks.\r\nDetails: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -859,10 +845,13 @@ namespace AutomationISE
             ButtonRefreshRunbookList.Content = "Refreshing...";
             try
             {
+                beginBackgroundWork("Refreshing runbook data...");
                 await refreshRunbooks();
+                endBackgroundWork("Refreshed runbook data.");
             }
             catch (Exception ex)
             {
+                endBackgroundWork("Error refreshing runbook data.");
                 MessageBox.Show("The runbook list could not be refreshed.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -872,38 +861,48 @@ namespace AutomationISE
             }
         }
 
-        private void ButtonUploadRunbook_Click(object sender, RoutedEventArgs e)
+        private async void ButtonUploadRunbook_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 ButtonUploadRunbook.IsEnabled = false;
+                beginBackgroundWork();
+                int count = 0;
+                string name = "";
                 foreach (Object obj in RunbooksListView.SelectedItems)
                 {
                     AutomationRunbook selectedRunbook = (AutomationRunbook)obj;
                     if (selectedRunbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.CloudOnly)
                         continue;
-                    if (fileTransferQueue.TryAdd(new RunbookTransferJob(selectedRunbook, RunbookTransferJob.TransferOperation.Upload)))
-                    {   
-                        //TryAdd() immediately returns false if queue is at capacity
-                        JobsRemainingLabel.Content = "(" + fileTransferQueue.Count + " tasks remaining)";
-                    }
-                    else
+                    try
                     {
-                        MessageBox.Show("Too many runbooks are waiting to be downloaded/uploaded right now. Hold your horses!",
-                            "Upload Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        break;
+                        beginBackgroundWork("Uploading runbook " + selectedRunbook.Name + "...");
+                        await AutomationRunbookManager.UploadRunbookAsDraft(selectedRunbook, iseClient.automationManagementClient,
+                                    iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
+                        count++;
+                        name = selectedRunbook.Name;
+                        selectedRunbook.UpdateSyncStatus();
+                        endBackgroundWork("Uploaded " + selectedRunbook.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        endBackgroundWork("Error uploading runbook " + selectedRunbook.Name);
+                        MessageBox.Show("The runbook " + selectedRunbook.Name + " could not be uploaded.\r\nError details: " + ex.Message);
                     }
                 }
+                if (count == 1) endBackgroundWork("Uploaded " + name);
+                else endBackgroundWork("Uploaded " + count + " runbooks.");
+                ButtonPublishRunbook.IsEnabled = true;
+                ButtonTestRunbook.IsEnabled = true;
+                ButtonDownloadRunbook.IsEnabled = true;
             }
             catch (Exception ex)
             {
+                endBackgroundWork("Error uploading runbooks.");
                 MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
-                /* Make sure the worker is alive, start a new one if not */
-                if (fileTransferWorker == null || fileTransferWorker.Status == TaskStatus.Canceled || fileTransferWorker.Status == TaskStatus.Faulted)
-                    fileTransferWorker = Task.Factory.StartNew(() => processJobsFromQueue(fileTransferWorkerProgress), TaskCreationOptions.LongRunning);
                 ButtonUploadRunbook.IsEnabled = true;
             }
         }
@@ -1005,7 +1004,7 @@ namespace AutomationISE
             try
             {
                 AutomationSelfSignedCertificate.SetCertificateInConfigFile(certificateTextBox.Text);
-                UpdateStatusBox(configurationStatusTextBox, "Updated certificate thumbprint to use for encryption / decryption of assets");
+                UpdateStatusBox(configurationStatusTextBox, "Updated thumbprint of certificate used to encrypt local assets: " + certificateTextBox.Text);
             }
             catch (Exception ex)
             {
@@ -1042,6 +1041,37 @@ namespace AutomationISE
                 MessageBox.Show(exception.Message, "Couldn't open path", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private void beginBackgroundWork(string message = "")
+        {
+            lock (backgroundWorkLock)
+            {
+                if (numBackgroundTasks <= 0)
+                {
+                    numBackgroundTasks = 0;
+                    WorkFinishingLabel.Content = "";
+                    beginOrResumeClockwiseSpin();
+                }
+                numBackgroundTasks++;
+                WorkStartingLabel.Content = message;
+            }
+        }
+
+        private void endBackgroundWork(string message = "")
+        {
+            lock (backgroundWorkLock)
+            {
+                numBackgroundTasks--;
+                WorkFinishingLabel.Content = message;
+                if (numBackgroundTasks <= 0)
+                {
+                    numBackgroundTasks = 0;
+                    WorkStartingLabel.Content = "";
+                    pauseAllSpin();
+                }
+            }
+        }
+
         /*
          * Sorting logic:
          * Clicking on a column sorts it in ascending order.
