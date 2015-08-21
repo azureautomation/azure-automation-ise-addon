@@ -121,19 +121,19 @@
     <value>An Azure AD Authentication Result is needed to query Azure for subscriptions.</value>
   </data>
   <data name="CancelSignIn" xml:space="preserve">
-    <value>User cancelled sign in</value>
+    <value>User cancelled sign-in.</value>
   </data>
   <data name="FoundAutomationAccounts" xml:space="preserve">
     <value>Found automation accounts</value>
   </data>
   <data name="FoundSubscriptions" xml:space="preserve">
-    <value>Found subscriptions. Please select one</value>
+    <value>Found subscriptions</value>
   </data>
   <data name="NoAutomationAccounts" xml:space="preserve">
-    <value>No automation accounts found in this subscription. Please create one in the portal</value>
+    <value>No automation accounts found in this subscription. Please create one in the Azure portal.</value>
   </data>
   <data name="NoSubscriptions" xml:space="preserve">
-    <value>No subscriptions found for this user account. Please create one in the portal</value>
+    <value>No subscriptions found for this user account. Please create one in the Azure portal.</value>
   </data>
   <data name="RetrieveAutomationAccounts" xml:space="preserve">
     <value>Retrieving automation accounts. Please wait...</value>

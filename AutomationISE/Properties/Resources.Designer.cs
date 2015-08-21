@@ -70,7 +70,7 @@ namespace AutomationISE.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to User cancelled sign in.
+        ///   Looks up a localized string similar to User cancelled sign-in..
         /// </summary>
         internal static string CancelSignIn {
             get {
@@ -88,7 +88,7 @@ namespace AutomationISE.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Found subscriptions. Please select one.
+        ///   Looks up a localized string similar to Found subscriptions.
         /// </summary>
         internal static string FoundSubscriptions {
             get {
@@ -97,7 +97,7 @@ namespace AutomationISE.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No automation accounts found in this subscription. Please create one in the portal.
+        ///   Looks up a localized string similar to No automation accounts found in this subscription. Please create one in the Azure portal..
         /// </summary>
         internal static string NoAutomationAccounts {
             get {
@@ -106,7 +106,7 @@ namespace AutomationISE.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No subscriptions found for this user account. Please create one in the portal.
+        ///   Looks up a localized string similar to No subscriptions found for this user account. Please create one in the Azure portal..
         /// </summary>
         internal static string NoSubscriptions {
             get {
