@@ -51,6 +51,9 @@ namespace AutomationISE.Model
         public const String sourceControlRunbook = "Sync-MicrosoftAzureAutomationAccountFromGithubV1";
         public const String sourceControlConnectionVariable = "Microsoft.Azure.Automation.SourceControl.Connection";
 
+        // Minutes to check for token refresh
+        public const int tokenRefreshInternal = 10;
+
         public class RunbookType
         {
             public const String Script = "Script";

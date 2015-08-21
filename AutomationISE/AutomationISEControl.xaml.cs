@@ -106,6 +106,7 @@ namespace AutomationISE
                 helpBrowserControl.Navigate(new Uri(Constants.helpURI));
 
                 startContinualGet();
+                startRefreshTokenTimer();
             }
             catch (Exception exception)
             {
@@ -228,6 +229,27 @@ namespace AutomationISE
             AutomationAssetManager.Delete(assetsToDelete, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, deleteLocally, deleteFromCloud, getEncryptionCertificateThumbprint());
         }
 
+        public void startRefreshTokenTimer()
+        {
+            System.Timers.Timer refreshTokenTimer = new System.Timers.Timer();
+            // Set timer interval to 10 minutes
+            refreshTokenTimer.Interval = Constants.tokenRefreshInternal * 60000;
+            refreshTokenTimer.Elapsed += new ElapsedEventHandler(refreshToken);
+
+            refreshTokenTimer.Start();
+        }
+
+        public void refreshToken(object source, ElapsedEventArgs e)
+        {
+            try
+            {
+                iseClient.RefreshAutomationClientwithNewToken();
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
         public void startContinualGet()
         {
 

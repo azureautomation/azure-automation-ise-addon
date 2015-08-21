@@ -26,6 +26,7 @@ namespace AutomationISE.Model
     {
         /* Azure Credential Data */
         public AuthenticationResult azureADAuthResult { get; set; }
+        private AuthenticationResult azureARMAuthResult;
         private Microsoft.WindowsAzure.TokenCloudCredentials subscriptionCredentials;
         private SubscriptionCloudCredentials subscriptionCreds;
 
@@ -70,14 +71,37 @@ namespace AutomationISE.Model
             return subscriptionsResult.Subscriptions;
         }
 
+        /// <summary>
+        /// Refreshes the token used to acccess azure automation.
+        /// This is currently called from a timer that runs on the Constants.tokenRefreshInterval
+        /// If it is about to expire (2 minutes from the next refresh, it will renew)
+        /// </summary>
+        public void RefreshAutomationClientwithNewToken()
+        {
+            // Get the token for the tenant on this subscription and check if it is about to expire.
+            // If it is, refresh it if possible.
+            if (currSubscription == null) return;
+            if (azureARMAuthResult.ExpiresOn.ToLocalTime() < DateTime.Now.AddMinutes(Constants.tokenRefreshInternal + 2))
+            {
+                azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
+                subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, azureARMAuthResult.AccessToken);
+
+                automationManagementClient = new AutomationManagementClient(subscriptionCreds);
+
+                // Add user agent string to indicate this is coming from the ISE automation client.
+                ProductInfoHeaderValue ISEClientAgent = new ProductInfoHeaderValue(Constants.ISEUserAgent, Constants.ISEVersion);
+                automationManagementClient.UserAgent.Add(ISEClientAgent);
+            }
+        }
+
         public async Task<IList<AutomationAccount>> GetAutomationAccounts()
         {
             if(currSubscription == null)
                 throw new Exception(Properties.Resources.SubscriptionNotSet);
 
             // Get the token for the tenant on this subscription.
-            var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
-            subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, cloudtoken.AccessToken);
+            azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
+            subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, azureARMAuthResult.AccessToken);
 
             automationManagementClient = new AutomationManagementClient(subscriptionCreds);
             
