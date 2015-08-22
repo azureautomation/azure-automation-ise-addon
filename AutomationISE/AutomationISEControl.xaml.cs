@@ -93,6 +93,7 @@ namespace AutomationISE
 
                 setRunbookAndAssetNonSelectionButtonState(false);
                 setAssetSelectionButtonState(false);
+                assetsComboBox.IsEnabled = false;
                 setRunbookSelectionButtonState(false);
 
                 // Generate self signed certificate for encrypting local assets in the current user store Cert:\CurrentUser\My\
@@ -497,6 +498,7 @@ namespace AutomationISE
                     assetsListView.ItemsSource = assetListViewModel;
                     setRunbookSelectionButtonState(false);
                     setRunbookAndAssetNonSelectionButtonState(true);
+                    assetsComboBox.IsEnabled = true;
                     assetsComboBox.SelectedValue = AutomationISE.Model.Constants.assetVariable;
                     ButtonRefreshAssetList.IsEnabled = true;
                     /* Enable source control sync in Azure Automation if it is set up for this automation account */
