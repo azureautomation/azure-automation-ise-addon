@@ -900,13 +900,17 @@ namespace AutomationISE
                         continue;
                     try
                     {
-                        beginBackgroundWork("Uploading runbook " + selectedRunbook.Name + "...");
-                        await AutomationRunbookManager.UploadRunbookAsDraft(selectedRunbook, iseClient.automationManagementClient,
-                                    iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
-                        count++;
-                        name = selectedRunbook.Name;
-                        selectedRunbook.UpdateSyncStatus();
-                        endBackgroundWork("Uploaded " + selectedRunbook.Name);
+                        // If the file is unsaved in the ISE, show warning to user before uploading
+                        if (checkIfFileIsSaved(selectedRunbook))
+                        {
+                            beginBackgroundWork("Uploading runbook " + selectedRunbook.Name + "...");
+                            await AutomationRunbookManager.UploadRunbookAsDraft(selectedRunbook, iseClient.automationManagementClient,
+                                        iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
+                            count++;
+                            name = selectedRunbook.Name;
+                            selectedRunbook.UpdateSyncStatus();
+                            endBackgroundWork("Uploaded " + selectedRunbook.Name);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -950,6 +954,30 @@ namespace AutomationISE
             {
                 MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        /// <summary>
+        /// Checks if a file is unsaved in the ISE and shows a dialog to ask user to confirm if they want to continue
+        /// </summary>
+        /// <param name="runbook"></param>
+        /// <returns>false if the user clicks cancel or else returns true to continue with upload of unsaved file</returns>
+        private Boolean checkIfFileIsSaved(AutomationRunbook runbook)
+        {
+            var iseFiles = HostObject.CurrentPowerShellTab.Files;
+            foreach (var file in iseFiles)
+            {
+                if ((file.DisplayName == (runbook.Name + ".ps1*")) && (file.IsSaved == false))
+                {
+                    String message = "The file " + runbook.Name + ".ps1 is currently unsaved in the ISE";
+                    message += "\r\nCancel and save the file or click OK to upload the unsaved file";
+                    String header = "Upload Warning";
+                    System.Windows.Forms.DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(message, header,
+                        System.Windows.Forms.MessageBoxButtons.OKCancel, System.Windows.Forms.MessageBoxIcon.Warning);
+                    if (dialogResult == System.Windows.Forms.DialogResult.Cancel)
+                        return false;
+                }
+            }
+            return true;
         }
 
         private async Task createOrUpdateCredentialAsset(string credentialAssetName, AutomationCredential credToEdit)
