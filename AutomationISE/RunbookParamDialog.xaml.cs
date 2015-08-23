@@ -68,6 +68,8 @@ namespace AutomationISE
                 ParametersGrid.Children.Add(parameterValueBox);
                 count++;
             }
+            // Set focus to first parameter textbox
+            if(count > 0) ParametersGrid.Children[3].Focus();
         }
 
         /* 
