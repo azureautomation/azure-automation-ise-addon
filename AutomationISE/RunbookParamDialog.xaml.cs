@@ -22,13 +22,15 @@ namespace AutomationISE
     public partial class RunbookParamDialog : Window
     {
         private IDictionary<string, RunbookParameter> parameterDict;
+        private IDictionary<string, string> existingParamsDict;
         private IDictionary<string, string> _paramValues;
         public IDictionary<string, string> paramValues { get { return _paramValues; } }
 
-        public RunbookParamDialog(IDictionary<string, RunbookParameter> parameterDict)
+        public RunbookParamDialog(IDictionary<string, RunbookParameter> parameterDict, IDictionary<string, string> existingParamsDict)
         {
             InitializeComponent();
             this.parameterDict = parameterDict;
+            this.existingParamsDict = existingParamsDict;
             AddParamForms();
         }
         private void AddParamForms()
@@ -47,6 +49,7 @@ namespace AutomationISE
             {
                 /* Parameter Name and Type */
                 Label parameterNameLabel = new Label();
+                var paramValue = existingParamsDict.FirstOrDefault(x => x.Key == paramName).Value;
                 parameterNameLabel.Content = paramName;
                 Label parameterTypeLabel = new Label();
                 parameterTypeLabel.Content = "(" + parameterDict[paramName].Type + "): ";
@@ -57,6 +60,8 @@ namespace AutomationISE
                 /* Input field */
                 TextBox parameterValueBox = new TextBox();
                 parameterValueBox.Name = paramName;
+                // Set previous value for this parameter if available
+                if (paramValue != null) parameterValueBox.Text = paramValue;
                 parameterValueBox.MinWidth = 200;
                 parameterValueBox.Margin = new System.Windows.Thickness(0,5,5,5);
                 Grid.SetColumn(parameterValueBox, 0);

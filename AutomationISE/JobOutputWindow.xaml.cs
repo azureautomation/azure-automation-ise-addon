@@ -230,6 +230,14 @@ namespace AutomationISE
             }
         }
 
+        private async Task<IDictionary<string,string>> GetTestJobParams()
+        {
+            TestJobGetResponse response = await iseClient.automationManagementClient.TestJobs.GetAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
+                                    iseClient.currAccount.Name, runbookName, new System.Threading.CancellationToken());
+            IDictionary<string,string> jobParams = response.TestJob.Parameters;
+            return jobParams;
+        }
+
         private async void StartJobButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -265,7 +273,8 @@ namespace AutomationISE
             if (draft.Parameters.Count > 0)
             {
                 /* User needs to specify values for them */
-                RunbookParamDialog paramDialog = new RunbookParamDialog(draft.Parameters);
+                var existingParams = await GetTestJobParams();
+                RunbookParamDialog paramDialog = new RunbookParamDialog(draft.Parameters,existingParams);
                 if (paramDialog.ShowDialog() == true)
                     jobCreationParams.Parameters = paramDialog.paramValues;
                 else
