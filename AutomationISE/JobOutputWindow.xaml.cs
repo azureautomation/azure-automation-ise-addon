@@ -230,12 +230,19 @@ namespace AutomationISE
             }
         }
 
-        private async Task<IDictionary<string,string>> GetTestJobParams()
+        private async Task<IDictionary<string, string>> GetTestJobParams()
         {
-            TestJobGetResponse response = await iseClient.automationManagementClient.TestJobs.GetAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
-                                    iseClient.currAccount.Name, runbookName, new System.Threading.CancellationToken());
-            IDictionary<string,string> jobParams = response.TestJob.Parameters;
-            return jobParams;
+            try {
+                TestJobGetResponse response = await iseClient.automationManagementClient.TestJobs.GetAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
+                                        iseClient.currAccount.Name, runbookName, new System.Threading.CancellationToken());
+                IDictionary<string, string> jobParams = response.TestJob.Parameters;
+                return jobParams;
+            }
+            catch
+            {
+                // return null if test job not found.
+                return null;
+            }
         }
 
         private async void StartJobButton_Click(object sender, RoutedEventArgs e)

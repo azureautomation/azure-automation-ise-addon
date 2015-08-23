@@ -49,7 +49,6 @@ namespace AutomationISE
             {
                 /* Parameter Name and Type */
                 Label parameterNameLabel = new Label();
-                var paramValue = existingParamsDict.FirstOrDefault(x => x.Key == paramName).Value;
                 parameterNameLabel.Content = paramName;
                 Label parameterTypeLabel = new Label();
                 parameterTypeLabel.Content = "(" + parameterDict[paramName].Type + "): ";
@@ -61,7 +60,11 @@ namespace AutomationISE
                 TextBox parameterValueBox = new TextBox();
                 parameterValueBox.Name = paramName;
                 // Set previous value for this parameter if available
-                if (paramValue != null) parameterValueBox.Text = paramValue;
+                if (existingParamsDict != null)
+                {
+                    var paramValue = existingParamsDict.FirstOrDefault(x => x.Key == paramName).Value;
+                    if (paramValue != null) parameterValueBox.Text = paramValue;
+                }
                 parameterValueBox.MinWidth = 200;
                 parameterValueBox.Margin = new System.Windows.Thickness(0,5,5,5);
                 Grid.SetColumn(parameterValueBox, 0);
