@@ -125,12 +125,24 @@
                     </Grid.RowDefinitions>
                     <ComboBox x:Name="assetsComboBox" Margin="10,10,10,0" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" SelectionChanged="assetsComboBox_SelectionChanged"/>
                     <ListView x:Name="assetsListView" Margin="10,10,10,0" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" SelectionChanged="assetsListView_SelectionChanged">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            </Style>
+                        </ListView.ItemContainerStyle>
                         <ListView.View>
                             <GridView>
                                 <GridView.ColumnHeaderContextMenu>
                                     <ContextMenu/>
                                 </GridView.ColumnHeaderContextMenu>
-                                <GridViewColumn DisplayMemberBinding="{Binding Name}">
+                                <GridViewColumn>
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid Background="{Binding ReadinessColor}">
+                                                <TextBlock Text="{Binding Name}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
                                     <GridViewColumn.Header>
                                         <GridViewColumnHeader Tag="Name" Click="assetListColumnHeader_Click">Name</GridViewColumnHeader>
                                     </GridViewColumn.Header>

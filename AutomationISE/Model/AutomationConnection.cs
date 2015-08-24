@@ -70,6 +70,12 @@ namespace AutomationISE.Model
         {
             this.ValueFields = fields;
         }
+
+        protected override bool isReadyForLocalUse()
+        {
+            // TODO: implement this
+            return true;
+        }
     }
 
     public class ConnectionJson : AssetJson {

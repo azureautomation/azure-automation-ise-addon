@@ -78,6 +78,11 @@ namespace AutomationISE.Model
             this.ValueFields.Add("Value", value);
         }
 
+        protected override bool isReadyForLocalUse()
+        {
+            return this.getValue() != null;
+        }
+
         /// <summary>
         /// Whether the automation variable is encrypted or not.
         /// </summary>

@@ -80,6 +80,11 @@ namespace AutomationISE.Model
             this.ValueFields.Remove("Password");
             this.ValueFields.Add("Password", password);
         }
+
+        protected override bool isReadyForLocalUse()
+        {
+            return this.getPassword() != null;
+        }
     }
 
     public class CredentialJson : AssetJson {

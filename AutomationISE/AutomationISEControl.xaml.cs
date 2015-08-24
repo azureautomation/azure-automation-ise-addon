@@ -314,25 +314,10 @@ namespace AutomationISE
 
         private void mergeAssetListWith(ICollection<AutomationAsset> newAssetCollection)
         {
-            IDictionary<string, AutomationAsset> newAssetWithName = new Dictionary<string, AutomationAsset>();
+            assetListViewModel.Clear();
+            
             foreach (AutomationAsset asset in newAssetCollection) {
-                newAssetWithName.Add(asset.Name, asset);
-            }
-            foreach (AutomationAsset asset in assetListViewModel)
-            {
-                if (newAssetWithName.ContainsKey(asset.Name))
-                {
-                    AutomationAsset newAsset = newAssetWithName[asset.Name];
-                    asset.LastModifiedLocal = newAsset.LastModifiedLocal;
-                    asset.LastModifiedCloud = newAsset.LastModifiedCloud;
-                    asset.UpdateSyncStatus();
-                    newAssetWithName.Remove(asset.Name);
-                }
-            }
-            /* get new ones that weren't merged in */
-            foreach (string name in newAssetWithName.Keys)
-            {
-                assetListViewModel.Add(newAssetWithName[name]);
+                assetListViewModel.Add(asset);
             }
         }
 

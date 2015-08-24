@@ -53,10 +53,28 @@ namespace AutomationISE.Model
             this.ValueFields = new Dictionary<string, Object>();
         }
 
+        protected abstract bool isReadyForLocalUse();
+
         /// <summary>
         /// The value of the asset
         /// </summary>
         protected IDictionary<String, Object> ValueFields { get; set; }
+
+        public string ReadinessColor
+        {
+            get
+            {
+                if (this.isReadyForLocalUse() && this.SyncStatus != AutomationAuthoringItem.Constants.SyncStatus.CloudOnly)
+                {
+                    return "White";
+                }
+                else
+                {
+                    return "Red";
+                }
+            }
+            set {}
+        }
 
     }
 
