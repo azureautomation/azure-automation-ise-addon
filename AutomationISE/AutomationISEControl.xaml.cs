@@ -156,6 +156,22 @@ namespace AutomationISE
             return items.Cast<AutomationAsset>().ToList<AutomationAsset>();
         }
 
+        public void setSelectedAssets(IList<AutomationAsset> assetsToSelect)
+        {
+             var assetsToSelectSet = new HashSet<string>();
+             
+             foreach (AutomationAsset asset in assetsToSelect) {
+                assetsToSelectSet.Add(asset.Name);
+            }
+
+            foreach (AutomationAsset asset in assetListViewModel)
+            {
+                if(assetsToSelectSet.Contains(asset.Name)) {
+                    assetsListView.SelectedItems.Add(asset);
+                }
+            }
+        }
+
         public async Task<SortedSet<AutomationAsset>> getAssetsInfo()
         {
             return (SortedSet<AutomationAsset>)await AutomationAssetManager.GetAll(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
@@ -284,6 +300,8 @@ namespace AutomationISE
         {
             try
             {
+                var selectedAssets = getSelectedAssets();
+
                 string selectedAssetType = (string)assetsComboBox.SelectedValue;
                 if (selectedAssetType == null) return;
 
@@ -303,7 +321,10 @@ namespace AutomationISE
                 {
                     mergeAssetListWith(await getAssetsOfType("AutomationCertificate"));
                 }
+
                 tokenExpired = false;
+
+                setSelectedAssets(selectedAssets);
             }
             catch (Exception exception)
             {
