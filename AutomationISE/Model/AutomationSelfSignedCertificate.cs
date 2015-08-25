@@ -99,12 +99,21 @@ namespace AutomationISE.Model
         public static void SetCertificateInConfigFile(String thumbprint)
         {
             List<PSModuleConfiguration.PSModuleConfigurationItem> config = getConfigFileItems();
+            bool found = false;
             foreach (PSModuleConfiguration.PSModuleConfigurationItem pc in config)
             {
                 if (pc.Name.Equals(PSModuleConfiguration.ModuleData.EncryptionCertificateThumbprint_FieldName))
                 {
+                    found = true;
                     pc.Value = thumbprint;
                 }
+            }
+            if (!found)
+            {
+                PSModuleConfiguration.PSModuleConfigurationItem pcItem = new PSModuleConfiguration.PSModuleConfigurationItem();
+                pcItem.Name = PSModuleConfiguration.ModuleData.EncryptionCertificateThumbprint_FieldName;
+                pcItem.Value = thumbprint;
+                config.Add(pcItem);
             }
 
             JavaScriptSerializer jss = new JavaScriptSerializer();
