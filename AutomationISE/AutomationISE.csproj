@@ -250,7 +250,7 @@
       <Lcid>0</Lcid>
       <WrapperTool>tlbimp</WrapperTool>
       <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
     </COMReference>
     <COMReference Include="CertEnrollProviderLib">
       <Guid>{B63F6D78-DD60-49D7-AD69-349DA00B092F}</Guid>
