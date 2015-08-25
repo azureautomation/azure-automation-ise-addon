@@ -27,7 +27,7 @@ namespace AutomationISE.Model
     {
 
         private CX509CertificateRequestCertificate objCertRequest = null;
-        private CX509PrivateKey objPrivateKey = null;
+        private IX509PrivateKey objPrivateKey = null;
         private CCspInformation objCSP = null;
         private CCspInformations objCSPs = null;
         private CX500DistinguishedName objDN = null;
@@ -44,12 +44,12 @@ namespace AutomationISE.Model
             {
                 // Create objects required
                 objCertRequest = new CX509CertificateRequestCertificate();
-                objPrivateKey = new CX509PrivateKey();
                 objCSP = new CCspInformation();
                 objCSPs = new CCspInformations();
                 objDN = new CX500DistinguishedName();
                 objEnroll = new CX509Enrollment();
                 objObjectId = new CObjectId();
+                objPrivateKey = (IX509PrivateKey)Activator.CreateInstance(Type.GetTypeFromProgID("X509Enrollment.CX509PrivateKey"));
 
                 // Friendly name
                 this.FriendlyName = "";
