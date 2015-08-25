@@ -1054,8 +1054,10 @@ namespace AutomationISE
         {
             try
             {
-                AutomationSelfSignedCertificate.SetCertificateInConfigFile(certificateTextBox.Text);
-                certificateThumbprint = certificateTextBox.Text;
+                /* Strip bad character that appears when you copy/paste from certmgr */
+                String cleanedString = certificateTextBox.Text.Trim(new char[] { '\u200E' });
+                AutomationSelfSignedCertificate.SetCertificateInConfigFile(cleanedString);
+                certificateThumbprint = cleanedString;
                 UpdateStatusBox(configurationStatusTextBox, "Updated thumbprint of certificate used to encrypt local assets: " + certificateThumbprint);
             }
             catch (Exception ex)
