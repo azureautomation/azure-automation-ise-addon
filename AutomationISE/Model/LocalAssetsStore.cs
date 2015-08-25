@@ -220,26 +220,8 @@ namespace AutomationISE.Model
                 }
                 else
                 {
-                    X509Store CertStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
-                    try
-                    {
-                        CertStore.Open(OpenFlags.ReadOnly);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("Error reading certificate store", ex);
-                    }
-
-                    var CertCollection = CertStore.Certificates;
-                    var EncryptCert = CertCollection.Find(X509FindType.FindByThumbprint, Thumbprint, false);
-                    CertStore.Close();
-
-                    if (EncryptCert.Count == 0)
-                    {
-                        throw new Exception("Certificate:" + Thumbprint + " does not exist in HKLM\\Root");
-                    }
-
-                    RSACryptoServiceProvider rsaEncryptor = (RSACryptoServiceProvider)EncryptCert[0].PublicKey.Key;
+                    X509Certificate2 EncryptCert = AutomationSelfSignedCertificate.GetCertificateWithThumbprint(Thumbprint);
+                    RSACryptoServiceProvider rsaEncryptor = (RSACryptoServiceProvider)EncryptCert.PublicKey.Key;
                     var valueJson = JsonConvert.SerializeObject(Value);
                     var EncryptedBytes = System.Text.Encoding.Default.GetBytes(valueJson);
                     byte[] EncryptedData = rsaEncryptor.Encrypt(EncryptedBytes, true);
@@ -259,27 +241,9 @@ namespace AutomationISE.Model
                 }
                 else
                 {
-                    X509Store CertStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
-                    try
-                    {
-                        CertStore.Open(OpenFlags.ReadOnly);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("Error reading certificate store", ex);
-                    }
-
-                    var CertCollection = CertStore.Certificates;
-                    var EncryptCert = CertCollection.Find(X509FindType.FindByThumbprint, Thumbprint, false);
-                    CertStore.Close();
-
-                    if (EncryptCert.Count == 0)
-                    {
-                        throw new Exception("Certificate:" + Thumbprint + " does not exist in HKLM\\My");
-                    }
-
+                    X509Certificate2 EncryptCert = AutomationSelfSignedCertificate.GetCertificateWithThumbprint(Thumbprint);
                     Byte[] EncryptedString = Convert.FromBase64String((string)EncryptedValue);
-                    RSACryptoServiceProvider rsaEncryptor = (RSACryptoServiceProvider)EncryptCert[0].PrivateKey;
+                    RSACryptoServiceProvider rsaEncryptor = (RSACryptoServiceProvider)EncryptCert.PrivateKey;
                     byte[] EncryptedData = rsaEncryptor.Decrypt(EncryptedString, true);
                     var valueJson = System.Text.Encoding.Default.GetString(EncryptedData);
                     return JsonConvert.DeserializeObject(valueJson);

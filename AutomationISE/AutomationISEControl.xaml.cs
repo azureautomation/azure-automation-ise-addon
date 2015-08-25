@@ -1056,13 +1056,15 @@ namespace AutomationISE
             {
                 /* Strip bad character that appears when you copy/paste from certmgr */
                 String cleanedString = certificateTextBox.Text.Trim(new char[] { '\u200E' });
+                /* Throw exception if the given thumbprint is not a valid certificate */
+                AutomationSelfSignedCertificate.GetCertificateWithThumbprint(cleanedString);
                 AutomationSelfSignedCertificate.SetCertificateInConfigFile(cleanedString);
                 certificateThumbprint = cleanedString;
                 UpdateStatusBox(configurationStatusTextBox, "Updated thumbprint of certificate used to encrypt local assets: " + certificateThumbprint);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("The thumbprint could not be updated " + ex.Message, "Error");
+                MessageBox.Show("The thumbprint could not be updated:\r\n" + ex.Message + ".", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

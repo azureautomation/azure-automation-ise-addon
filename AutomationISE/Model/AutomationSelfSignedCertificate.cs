@@ -17,6 +17,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Web.Script.Serialization;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 
 namespace AutomationISE.Model
 {
@@ -148,6 +150,29 @@ namespace AutomationISE.Model
             string configFilePath = System.IO.Path.Combine(modulePath, PSModuleConfiguration.ModuleData.ConfigFileName);
 
             return configFilePath;
+        }
+
+        public static X509Certificate2 GetCertificateWithThumbprint(string thumbprint)
+        {
+            X509Store CertStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+            try
+            {
+                CertStore.Open(OpenFlags.ReadOnly);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error reading certificate store", ex);
+            }
+
+            var CertCollection = CertStore.Certificates;
+            var EncryptCert = CertCollection.Find(X509FindType.FindByThumbprint, thumbprint, false);
+            CertStore.Close();
+
+            if (EncryptCert.Count == 0)
+            {
+                throw new Exception("Certificate with thumbprint " + thumbprint + " does not exist in HKLM\\My");
+            }
+            return EncryptCert[0];
         }
     }
 }
