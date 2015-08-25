@@ -1017,7 +1017,7 @@ namespace AutomationISE
             }
         }
 
-        private async void ButttonNewAsset_Click(object sender, RoutedEventArgs e)
+        private async void ButtonNewAsset_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new ChooseNewAssetTypeDialog();
 
