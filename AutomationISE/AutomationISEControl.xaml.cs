@@ -55,6 +55,7 @@ namespace AutomationISE
         private Storyboard miniProgressSpinnerStoryboard;
         private Storyboard miniProgressSpinnerStoryboardReverse;
         private bool tokenExpired = false;
+        private string certificateThumbprint;
         public ObjectModelRoot HostObject { get; set; }
 
         public AutomationISEControl()
@@ -98,9 +99,9 @@ namespace AutomationISE
 
                 // Generate self signed certificate for encrypting local assets in the current user store Cert:\CurrentUser\My\
                 var certObj = new AutomationSelfSignedCertificate();
-                String selfSignedThumbprint = certObj.CreateSelfSignedCertificate();
-                certificateTextBox.Text = selfSignedThumbprint;
-                UpdateStatusBox(configurationStatusTextBox, "Thumbprint of certificate used to encrypt local assets: " + selfSignedThumbprint);
+                certificateThumbprint = certObj.CreateSelfSignedCertificate();
+                certificateTextBox.Text = certificateThumbprint;
+                UpdateStatusBox(configurationStatusTextBox, "Thumbprint of certificate used to encrypt local assets: " + certificateThumbprint);
 
                 // Load feedback and help page to increase load time before users clicks on these tabs
                 surveyBrowserControl.Navigate(new Uri(Constants.feedbackURI));
@@ -117,14 +118,7 @@ namespace AutomationISE
 
         public String getEncryptionCertificateThumbprint()
         {
-            if (!(certificateTextBox.Text == "" || certificateTextBox.Text == "none"))
-            {
-                return certificateTextBox.Text;
-            }
-            else
-            {
-                return null;
-            }
+            return certificateThumbprint;
         }
 
         public void setRunbookAndAssetNonSelectionButtonState(bool enabled)
@@ -1061,7 +1055,8 @@ namespace AutomationISE
             try
             {
                 AutomationSelfSignedCertificate.SetCertificateInConfigFile(certificateTextBox.Text);
-                UpdateStatusBox(configurationStatusTextBox, "Updated thumbprint of certificate used to encrypt local assets: " + certificateTextBox.Text);
+                certificateThumbprint = certificateTextBox.Text;
+                UpdateStatusBox(configurationStatusTextBox, "Updated thumbprint of certificate used to encrypt local assets: " + certificateThumbprint);
             }
             catch (Exception ex)
             {
