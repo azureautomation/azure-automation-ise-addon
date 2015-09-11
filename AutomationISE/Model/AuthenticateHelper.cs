@@ -41,19 +41,13 @@ namespace AutomationISE.Model
         public static AuthenticationResult GetInteractiveLogin(String Username = null, String authority = "common")
         {
             var ctx = new AuthenticationContext(string.Format(Constants.loginAuthority + authority, Constants.tenant));
-
-            if (!String.IsNullOrWhiteSpace(Username))
-            {
-                UserIdentifier user = new UserIdentifier(Username, UserIdentifierType.RequiredDisplayableId);
-                return ctx.AcquireToken(Constants.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Always, user);
-            }
-            else return ctx.AcquireToken(Constants.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Always);
+            return ctx.AcquireToken(Constants.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Always);
         }
 
         public static AuthenticationResult RefreshTokenByAuthority(String authority)
         {
             var ctx = new AuthenticationContext(string.Format(Constants.loginAuthority + authority, Constants.tenant));
-             return ctx.AcquireToken(Constants.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Auto);
+            return ctx.AcquireToken(Constants.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Auto);
         }
     }
 }
