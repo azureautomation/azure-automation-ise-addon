@@ -18,17 +18,33 @@ namespace AutomationISE.Model
     {
         public static async Task UploadRunbookAsDraft(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, AutomationAccount account)
         {
-            RunbookCreateOrUpdateDraftProperties draftProperties = new RunbookCreateOrUpdateDraftProperties("Script", new RunbookDraft());
+            RunbookCreateOrUpdateDraftProperties draftProperties;
+
+            // Parse the script to determine if it is a PS workflow or native script
+            String PSScriptText = File.ReadAllText(runbook.localFileInfo.FullName);
+            System.Management.Automation.Language.Token[] AST;
+            System.Management.Automation.Language.ParseError[] ASTError = null;
+            var ASTScript = System.Management.Automation.Language.Parser.ParseInput(PSScriptText, out AST, out ASTError);
+
+            // If the script starts with workflow, then create a PS Workflow script runbook or else create a native PS script runbook
+            if (ASTScript.EndBlock.Extent.Text.ToLower().StartsWith("workflow"))
+            {
+                draftProperties = new RunbookCreateOrUpdateDraftProperties(Constants.RunbookType.Workflow, new RunbookDraft());
+            }
+            else
+                draftProperties = new RunbookCreateOrUpdateDraftProperties(Constants.RunbookType.PowerShellScript, new RunbookDraft());
+
             draftProperties.Description = runbook.Description;
             RunbookCreateOrUpdateDraftParameters draftParams = new RunbookCreateOrUpdateDraftParameters(draftProperties);
             draftParams.Name = runbook.Name;
             draftParams.Location = account.Location;
             await automationManagementClient.Runbooks.CreateOrUpdateWithDraftAsync(resourceGroupName, account.Name, draftParams);
             /* Update the runbook content from .ps1 file */
+
             RunbookDraftUpdateParameters draftUpdateParams = new RunbookDraftUpdateParameters()
             {
                 Name = runbook.Name,
-                Stream = File.ReadAllText(runbook.localFileInfo.FullName)
+                Stream = PSScriptText
             };
             await automationManagementClient.RunbookDraft.UpdateAsync(resourceGroupName, account.Name, draftUpdateParams);
             /* Ensure the correct sync status is detected */

@@ -56,9 +56,11 @@ namespace AutomationISE.Model
 
         public class RunbookType
         {
-            public const String Script = "Script";
+            public const String Workflow = "Script";
 
             public const String Graphical = "Graph";
+
+            public const String PowerShellScript = "PowerShell";
         }
 
         public class AutomationAccountState
