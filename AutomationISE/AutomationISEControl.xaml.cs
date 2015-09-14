@@ -511,7 +511,8 @@ namespace AutomationISE
                     else ButtonSourceControlRunbook.Visibility = Visibility.Collapsed;
                     /* Change current directory to new workspace location */
                     accountPathTextBox.Text = iseClient.currWorkspace;
-                    HostObject.CurrentPowerShellTab.Invoke("cd '" + iseClient.currWorkspace + "'");
+                    string pathHint = Path.GetPathRoot(iseClient.currWorkspace) + "..." + Path.DirectorySeparatorChar + Path.GetFileName(iseClient.currWorkspace);
+                    HostObject.CurrentPowerShellTab.Invoke("cd '" + iseClient.currWorkspace + "'" + ";function prompt {'PS " + pathHint + "> '}");
                     endBackgroundWork("Finished getting data for " + account.Name);
                     refreshTimer.Start();
                 }
