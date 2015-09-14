@@ -367,12 +367,9 @@ namespace AutomationISE
                 Properties.Settings.Default["ADUserName"] = userNameTextBox.Text;
                 Properties.Settings.Default.Save();
 
-                //UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveSubscriptions);
-
                 IList<Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription> subscriptions = await iseClient.GetSubscriptions();
                 if (subscriptions.Count > 0)
                 {
-                    //UpdateStatusBox(configurationStatusTextBox, Properties.Resources.FoundSubscriptions);
                     endBackgroundWork(Properties.Resources.FoundSubscriptions);
                     subscriptionComboBox.ItemsSource = subscriptions;
                     subscriptionComboBox.DisplayMemberPath = "SubscriptionName";
@@ -382,7 +379,6 @@ namespace AutomationISE
                 }
                 else
                 {
-                    //UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoSubscriptions);
                     endBackgroundWork(Properties.Resources.NoSubscriptions);
                 }
                 tokenExpired = false;
@@ -415,18 +411,16 @@ namespace AutomationISE
             try
             {
                 accountsComboBox.IsEnabled = false;
-                beginBackgroundWork(Properties.Resources.RetrieveAutomationAccounts);
                 refreshTimer.Stop();
                 iseClient.currSubscription = (Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription)subscriptionComboBox.SelectedValue;
                 if (iseClient.currSubscription != null)
                 {
-                    //UpdateStatusBox(configurationStatusTextBox, Properties.Resources.RetrieveAutomationAccounts);
+                    beginBackgroundWork(Properties.Resources.RetrieveAutomationAccounts);
                     IList<AutomationAccount> automationAccounts = await iseClient.GetAutomationAccounts();
                     accountsComboBox.ItemsSource = automationAccounts;
                     accountsComboBox.DisplayMemberPath = "Name";
                     if (accountsComboBox.HasItems)
                     {
-                        //UpdateStatusBox(configurationStatusTextBox, Properties.Resources.FoundAutomationAccounts);
                         endBackgroundWork(Properties.Resources.FoundAutomationAccounts);
                         accountsComboBox.SelectedItem = accountsComboBox.Items[0];
                         accountsComboBox.IsEnabled = true;
@@ -434,7 +428,6 @@ namespace AutomationISE
                     }
                     else
                     {
-                        //UpdateStatusBox(configurationStatusTextBox, Properties.Resources.NoAutomationAccounts);
                         endBackgroundWork(Properties.Resources.NoAutomationAccounts);
                     }
                 }
@@ -460,23 +453,19 @@ namespace AutomationISE
                     if (iseClient.AccountWorkspaceExists())
                         accountPathTextBox.Text = iseClient.currWorkspace;
                     /* Update Runbooks */
-                    //UpdateStatusBox(configurationStatusTextBox, "Getting runbook data...");
                     beginBackgroundWork("Getting account data");
                     beginBackgroundWork("Getting runbook data for " + account.Name);
                     if (runbookListViewModel != null) runbookListViewModel.Clear();
                     if (assetListViewModel != null) assetListViewModel.Clear();
                     runbookListViewModel = new ObservableCollection<AutomationRunbook>(await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient, 
                           iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name));
-                    //UpdateStatusBox(configurationStatusTextBox, "Done getting runbook data");
                     endBackgroundWork("Done getting runbook data");
                     /* Update Assets */
                     beginBackgroundWork("Downloading assets for " + account.Name);
                     //TODO: this is not quite checking what we need it to check
                     if (!iseClient.AccountWorkspaceExists())
                     {
-                        //UpdateStatusBox(configurationStatusTextBox, "Downloading assets...");
                         await downloadAllAssets();
-                        //UpdateStatusBox(configurationStatusTextBox, "Assets downloaded");
                     }
                     assetListViewModel = new ObservableCollection<AutomationAsset>();
                     await refreshAssets(); //populates the viewmodel
