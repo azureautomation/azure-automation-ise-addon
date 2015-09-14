@@ -1105,11 +1105,11 @@ namespace AutomationISE
                 if (numBackgroundTasks <= 0)
                 {
                     numBackgroundTasks = 0;
-                    WorkFinishingLabel.Content = "";
+                    WorkFinishingTextBlock.Text = "";
                     beginOrResumeClockwiseSpin();
                 }
                 numBackgroundTasks++;
-                WorkStartingLabel.Content = message;
+                WorkStartingTextBlock.Text = message;
             }
         }
 
@@ -1118,11 +1118,11 @@ namespace AutomationISE
             lock (backgroundWorkLock)
             {
                 numBackgroundTasks--;
-                WorkFinishingLabel.Content = message;
+                WorkFinishingTextBlock.Text = message;
                 if (numBackgroundTasks <= 0)
                 {
                     numBackgroundTasks = 0;
-                    WorkStartingLabel.Content = "";
+                    WorkStartingTextBlock.Text = "";
                     pauseAllSpin();
                 }
             }

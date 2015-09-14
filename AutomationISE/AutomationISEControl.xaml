@@ -190,8 +190,10 @@
                 </Grid>
             </TabItem>
         </TabControl>
-        <Label Name="WorkStartingLabel" FontSize="13" Grid.Row="4" Grid.Column="0" VerticalAlignment="Top" Margin="5,0,0,0">Hello there, thanks for trying out our beta.</Label>
-        <Label Name="WorkFinishingLabel" FontSize="13" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Margin="5,0,0,0">Happy automating!</Label>
+        <StackPanel Grid.Row="1" Grid.Column="0">
+            <TextBlock Name="WorkStartingTextBlock" FontSize="13" Grid.Row="1" Grid.Column="0" Margin="5,5,0,0" TextWrapping="Wrap">Hello there, thanks for trying out our beta.</TextBlock>
+            <TextBlock Name="WorkFinishingTextBlock" FontSize="13" Grid.Row="1" Grid.Column="0" Margin="5,0,0,0" TextWrapping="Wrap">Happy automating!</TextBlock>
+        </StackPanel>
         <Image Source="Images/automation-big-gear-no-background.png" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right" RenderTransformOrigin=".5,.5" Height="40" Margin="5,5,5,5">
             <Image.RenderTransform>
                 <RotateTransform  x:Name="BigGear" Angle="0" />
