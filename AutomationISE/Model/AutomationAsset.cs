@@ -70,7 +70,7 @@ namespace AutomationISE.Model
                 }
                 else
                 {
-                    return "Red";
+                    return System.Drawing.Color.LightSalmon.Name;
                 }
             }
             set {}
