@@ -40,7 +40,8 @@ namespace AutomationISE
     /// </summary>
     public partial class AutomationISEControl : UserControl, IAddOnToolHostObject
     {
-        private System.Timers.Timer refreshTimer = new System.Timers.Timer();
+        private System.Timers.Timer refreshAccountDataTimer;
+        private System.Timers.Timer refreshAuthTokenTimer;
         private AutomationISEClient iseClient;
         private ObservableCollection<AutomationRunbook> runbookListViewModel;
         private ObservableCollection<AutomationAsset> assetListViewModel;
@@ -54,7 +55,6 @@ namespace AutomationISE
         private Storyboard progressSpinnerStoryboardReverse;
         private Storyboard miniProgressSpinnerStoryboard;
         private Storyboard miniProgressSpinnerStoryboardReverse;
-        private bool tokenExpired = false;
         private string certificateThumbprint;
         public ObjectModelRoot HostObject { get; set; }
 
@@ -64,6 +64,7 @@ namespace AutomationISE
             {
                 InitializeComponent();
                 iseClient = new AutomationISEClient();
+                /* Spinner animation stuff */
                 backgroundWorkLock = new Object();
                 progressSpinnerStoryboard = (Storyboard)FindResource("bigGearRotationStoryboard");
                 progressSpinnerStoryboardReverse = (Storyboard)FindResource("bigGearRotationStoryboardReverse");
@@ -81,6 +82,15 @@ namespace AutomationISE
                 }
                 iseClient.baseWorkspace = localWorkspace;
 
+                /* Initialize Timers */
+                refreshAccountDataTimer = new System.Timers.Timer();
+                refreshAccountDataTimer.Interval = 30000; //30 seconds
+                refreshAccountDataTimer.Elapsed += new ElapsedEventHandler(refreshAccountData);
+
+                refreshAuthTokenTimer = new System.Timers.Timer();
+                refreshAuthTokenTimer.Interval = Constants.tokenRefreshInterval * 60000;
+                refreshAuthTokenTimer.Elapsed += new ElapsedEventHandler(refreshAuthToken);
+
                 /* Update UI */
                 workspaceTextBox.Text = iseClient.baseWorkspace;
                 userNameTextBox.Text = Properties.Settings.Default["ADUserName"].ToString();
@@ -97,18 +107,15 @@ namespace AutomationISE
                 assetsComboBox.IsEnabled = false;
                 setRunbookSelectionButtonState(false);
 
-                // Generate self signed certificate for encrypting local assets in the current user store Cert:\CurrentUser\My\
+                // Generate self-signed certificate for encrypting local assets in the current user store Cert:\CurrentUser\My\
                 var certObj = new AutomationSelfSignedCertificate();
                 certificateThumbprint = certObj.CreateSelfSignedCertificate();
                 certificateTextBox.Text = certificateThumbprint;
                 UpdateStatusBox(configurationStatusTextBox, "Thumbprint of certificate used to encrypt local assets: " + certificateThumbprint);
 
-                // Load feedback and help page to increase load time before users clicks on these tabs
+                // Load feedback and help page preemptively
                 surveyBrowserControl.Navigate(new Uri(Constants.feedbackURI));
                 helpBrowserControl.Navigate(new Uri(Constants.helpURI));
-
-                startContinualGet();
-                startRefreshTokenTimer();
             }
             catch (Exception exception)
             {
@@ -240,17 +247,7 @@ namespace AutomationISE
             AutomationAssetManager.Delete(assetsToDelete, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, deleteLocally, deleteFromCloud, getEncryptionCertificateThumbprint());
         }
 
-        public void startRefreshTokenTimer()
-        {
-            System.Timers.Timer refreshTokenTimer = new System.Timers.Timer();
-            // Set timer interval to 10 minutes
-            refreshTokenTimer.Interval = Constants.tokenRefreshInternal * 60000;
-            refreshTokenTimer.Elapsed += new ElapsedEventHandler(refreshToken);
-
-            refreshTokenTimer.Start();
-        }
-
-        public void refreshToken(object source, ElapsedEventArgs e)
+        public void refreshAuthToken(object source, ElapsedEventArgs e)
         {
             try
             {
@@ -258,73 +255,58 @@ namespace AutomationISE
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                refreshAuthTokenTimer.Stop();
+                MessageBox.Show("Your session expired and could not be refreshed. Please sign in again./r/nDetails: " + exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        public void startContinualGet()
-        {
 
-            // Set timer interval to 30 seconds
-            refreshTimer.Interval = 30000;
-
-            // Set the function to run when timer fires
-            refreshTimer.Elapsed += new ElapsedEventHandler(refresh);
-
-            refreshTimer.Start();
-        }
-
-        public void refresh(object source, ElapsedEventArgs e)
+        public void refreshAccountData(object source, ElapsedEventArgs e)
         {
             this.Dispatcher.Invoke(() =>
             {
-                Task t = refreshAssets();
                 try
                 {
+                    Task t = refreshAssets();
                     t = refreshRunbooks();
                 }
                 catch (Exception exception)
                 {
-                    if (!showTokenExpiredMessageIfApplicable(exception))
+                    refreshAccountDataTimer.Stop();
+                    int tokenExpiredResult = -2146233088;
+                    if (exception.HResult == tokenExpiredResult)
+                    {
+                        MessageBox.Show("Your session has expired. Please sign in again.", "Session Expired", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                    else
+                    {
                         MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
             });
         }
 
         public async Task refreshAssets()
         {
-            try
+            var selectedAssets = getSelectedAssets();
+            string selectedAssetType = (string)assetsComboBox.SelectedValue;
+            if (selectedAssetType == null) return;
+            if (selectedAssetType == AutomationISE.Model.Constants.assetVariable)
             {
-                var selectedAssets = getSelectedAssets();
-
-                string selectedAssetType = (string)assetsComboBox.SelectedValue;
-                if (selectedAssetType == null) return;
-
-                if (selectedAssetType == AutomationISE.Model.Constants.assetVariable)
-                {
-                    mergeAssetListWith(await getAssetsOfType("AutomationVariable"));
-                }
-                else if (selectedAssetType == AutomationISE.Model.Constants.assetCredential)
-                {
-                    mergeAssetListWith(await getAssetsOfType("AutomationCredential"));
-                }
-                else if (selectedAssetType == AutomationISE.Model.Constants.assetConnection)
-                {
-                    mergeAssetListWith(await getAssetsOfType("AutomationConnection"));
-                }
-                else if (selectedAssetType == AutomationISE.Model.Constants.assetCertificate)
-                {
-                    mergeAssetListWith(await getAssetsOfType("AutomationCertificate"));
-                }
-
-                tokenExpired = false;
-
-                setSelectedAssets(selectedAssets);
+                mergeAssetListWith(await getAssetsOfType("AutomationVariable"));
             }
-            catch (Exception exception)
+            else if (selectedAssetType == AutomationISE.Model.Constants.assetCredential)
             {
-                if (!showTokenExpiredMessageIfApplicable(exception))
-                    MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                mergeAssetListWith(await getAssetsOfType("AutomationCredential"));
             }
+            else if (selectedAssetType == AutomationISE.Model.Constants.assetConnection)
+            {
+                mergeAssetListWith(await getAssetsOfType("AutomationConnection"));
+            }
+            else if (selectedAssetType == AutomationISE.Model.Constants.assetCertificate)
+            {
+                mergeAssetListWith(await getAssetsOfType("AutomationCertificate"));
+            }
+            setSelectedAssets(selectedAssets);
         }
 
         private void mergeAssetListWith(ICollection<AutomationAsset> newAssetCollection)
@@ -336,30 +318,13 @@ namespace AutomationISE
             }
         }
 
-        /* 
-         * If the given exception means the user's token has expired, displays a MessageBox notifying the user IFF
-         *   this is the first time the exception is being encountered for the session. Relies on global bool tokenExpired.
-         * Returns true IFF the MessageBox was displayed.
-         */ 
-        private bool showTokenExpiredMessageIfApplicable(Exception exception)
-        {
-            int tokenExpiredResult = -2146233088;
-            if (exception.HResult == tokenExpiredResult && !tokenExpired)
-            {
-                tokenExpired = true;
-                MessageBox.Show(exception.Message, "Token Expired", MessageBoxButton.OK, MessageBoxImage.Error);
-                return true;
-            }
-            return false;
-        }
-
         private async void loginButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 UpdateStatusBox(configurationStatusTextBox, "Launching login window...");
                 iseClient.azureADAuthResult = AutomationISE.Model.AuthenticateHelper.GetInteractiveLogin(userNameTextBox.Text);
-                refreshTimer.Stop();
+                refreshAccountDataTimer.Stop();
 
                 beginBackgroundWork(Properties.Resources.RetrieveSubscriptions);
                 userNameTextBox.Text = iseClient.azureADAuthResult.UserInfo.DisplayableId;
@@ -375,13 +340,12 @@ namespace AutomationISE
                     subscriptionComboBox.DisplayMemberPath = "SubscriptionName";
                     subscriptionComboBox.SelectedItem = subscriptionComboBox.Items[0];
                     subscriptionComboBox.IsEnabled = true;
-                    refreshTimer.Start();
+                    refreshAuthTokenTimer.Start();
                 }
                 else
                 {
                     endBackgroundWork(Properties.Resources.NoSubscriptions);
                 }
-                tokenExpired = false;
             }
             catch (Microsoft.IdentityModel.Clients.ActiveDirectory.AdalServiceException Ex)
             {
@@ -411,7 +375,7 @@ namespace AutomationISE
             try
             {
                 accountsComboBox.IsEnabled = false;
-                refreshTimer.Stop();
+                refreshAccountDataTimer.Stop();
                 iseClient.currSubscription = (Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription)subscriptionComboBox.SelectedValue;
                 if (iseClient.currSubscription != null)
                 {
@@ -424,7 +388,6 @@ namespace AutomationISE
                         endBackgroundWork(Properties.Resources.FoundAutomationAccounts);
                         accountsComboBox.SelectedItem = accountsComboBox.Items[0];
                         accountsComboBox.IsEnabled = true;
-                        refreshTimer.Start();
                     }
                     else
                     {
@@ -445,7 +408,7 @@ namespace AutomationISE
             {
                 AutomationAccount account = (AutomationAccount)accountsComboBox.SelectedValue;
                 iseClient.currAccount = account;
-                refreshTimer.Stop();
+                refreshAccountDataTimer.Stop();
                 if (account != null)
                 {
                     /* Update Status */
@@ -503,7 +466,7 @@ namespace AutomationISE
                     string pathHint = Path.GetPathRoot(iseClient.currWorkspace) + "..." + Path.DirectorySeparatorChar + Path.GetFileName(iseClient.currWorkspace);
                     HostObject.CurrentPowerShellTab.Invoke("cd '" + iseClient.currWorkspace + "'" + ";function prompt {'PS " + pathHint + "> '}");
                     endBackgroundWork("Finished getting data for " + account.Name);
-                    refreshTimer.Start();
+                    refreshAccountDataTimer.Start();
                 }
             }
             catch (Exception exception)
@@ -520,8 +483,15 @@ namespace AutomationISE
 
         private async void assetsComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            assetListViewModel.Clear();
-            await refreshAssets();
+            try
+            {
+                assetListViewModel.Clear();
+                await refreshAssets();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Assets could not be refreshed.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void workspaceTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -586,33 +556,65 @@ namespace AutomationISE
 
         private async void ButtonDownloadAsset_Click(object sender, RoutedEventArgs e)
         {
-            beginBackgroundWork("Downloading selected assets...");
-            downloadAssets(getSelectedAssets());
-            await refreshAssets();
-            endBackgroundWork("Assets downloaded.");
+            try
+            {
+                beginBackgroundWork("Downloading selected assets...");
+                downloadAssets(getSelectedAssets());
+                await refreshAssets();
+                endBackgroundWork("Assets downloaded.");
+            }
+            catch (Exception ex)
+            {
+                endBackgroundWork("Error downloading assets.");
+                MessageBox.Show("Assets could not be downloaded.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private async void ButtonUploadAsset_Click(object sender, RoutedEventArgs e)
         {
-            beginBackgroundWork("Uploading selected assets...");
-            await uploadAssets(getSelectedAssets());
-            await refreshAssets();
-            endBackgroundWork("Assets uploaded.");
+            try
+            {
+                beginBackgroundWork("Uploading selected assets...");
+                await uploadAssets(getSelectedAssets());
+                await refreshAssets();
+                endBackgroundWork("Assets uploaded.");
+            }
+            catch (Exception ex)
+            {
+                endBackgroundWork("Error uploading assets.");
+                MessageBox.Show("Assets could not be uploaded.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private async void ButtonDeleteAsset_Click(object sender, RoutedEventArgs e)
         {
-            beginBackgroundWork("Deleting selected assets...");
-            deleteAssets(getSelectedAssets());
-            await refreshAssets();
-            endBackgroundWork("Assets deleted.");
+            try
+            {
+                beginBackgroundWork("Deleting selected assets...");
+                deleteAssets(getSelectedAssets());
+                await refreshAssets();
+                endBackgroundWork("Assets deleted.");
+            }
+            catch (Exception ex)
+            {
+                endBackgroundWork("Error deleting assets.");
+                MessageBox.Show("Assets could not be deleted.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private async void ButtonRefreshAssetList_Click(object sender, RoutedEventArgs e)
         {
-            beginBackgroundWork("Refreshing assets list...");
-            await refreshAssets();
-            endBackgroundWork("Refreshed assets list.");
+            try
+            {
+                beginBackgroundWork("Refreshing assets list...");
+                await refreshAssets();
+                endBackgroundWork("Refreshed assets list.");
+            }
+            catch (Exception ex)
+            {
+                endBackgroundWork("Error refreshing assets.");
+                MessageBox.Show("Assets could not be refreshed.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private bool ConfirmRunbookDownload(string name)
@@ -837,7 +839,6 @@ namespace AutomationISE
             foreach (AutomationRunbook curr in runbookListViewModel)
             {
                 curr.AuthoringState = runbookWithName[curr.Name].AuthoringState;
-                Debug.WriteLine(runbookWithName[curr.Name].AuthoringState);
                 curr.Parameters = runbookWithName[curr.Name].Parameters;
                 curr.Description = runbookWithName[curr.Name].Description;
                 curr.LastModifiedCloud = runbookWithName[curr.Name].LastModifiedCloud;
@@ -848,7 +849,6 @@ namespace AutomationISE
             foreach (String name in runbookWithName.Keys)
             {
                 runbookListViewModel.Add(runbookWithName[name]);
-                Debug.WriteLine(name);
             }
         }
 

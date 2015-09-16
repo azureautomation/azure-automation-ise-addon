@@ -72,7 +72,7 @@ namespace AutomationISE.Model
         }
 
         /// <summary>
-        /// Refreshes the token used to acccess azure automation.
+        /// Refreshes the token used to access azure automation.
         /// This is currently called from a timer that runs on the Constants.tokenRefreshInterval
         /// If it is about to expire (2 minutes from the next refresh, it will renew)
         /// </summary>
@@ -81,7 +81,7 @@ namespace AutomationISE.Model
             // Get the token for the tenant on this subscription and check if it is about to expire.
             // If it is, refresh it if possible.
             if (currSubscription == null) return;
-            if (azureARMAuthResult.ExpiresOn.ToLocalTime() < DateTime.Now.AddMinutes(Constants.tokenRefreshInternal + 2))
+            if (azureARMAuthResult.ExpiresOn.ToLocalTime() < DateTime.Now.AddMinutes(Constants.tokenRefreshInterval + 2))
             {
                 azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
                 subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, azureARMAuthResult.AccessToken);
