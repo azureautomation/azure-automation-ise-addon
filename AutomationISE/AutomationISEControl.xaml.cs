@@ -1044,6 +1044,9 @@ namespace AutomationISE
         {
             try
             {
+                var certDialog = new ChangeCertificateDialog(certificateThumbprint);
+                certDialog.ShowDialog();
+                certificateTextBox.Text = certDialog.updatedThumbprint;
                 /* Strip bad character that appears when you copy/paste from certmgr */
                 String cleanedString = certificateTextBox.Text.Trim(new char[] { '\u200E' });
                 /* Throw exception if the given thumbprint is not a valid certificate */
@@ -1054,6 +1057,7 @@ namespace AutomationISE
             }
             catch (Exception ex)
             {
+                certificateTextBox.Text = certificateThumbprint;
                 MessageBox.Show("The thumbprint could not be updated:\r\n" + ex.Message + ".", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
