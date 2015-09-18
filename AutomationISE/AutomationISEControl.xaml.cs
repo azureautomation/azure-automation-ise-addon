@@ -1046,14 +1046,17 @@ namespace AutomationISE
             {
                 var certDialog = new ChangeCertificateDialog(certificateThumbprint);
                 certDialog.ShowDialog();
-                certificateTextBox.Text = certDialog.updatedThumbprint;
-                /* Strip bad character that appears when you copy/paste from certmgr */
-                String cleanedString = certificateTextBox.Text.Trim(new char[] { '\u200E' });
-                /* Throw exception if the given thumbprint is not a valid certificate */
-                AutomationSelfSignedCertificate.GetCertificateWithThumbprint(cleanedString);
-                AutomationSelfSignedCertificate.SetCertificateInConfigFile(cleanedString);
-                certificateThumbprint = cleanedString;
-                UpdateStatusBox(configurationStatusTextBox, "Updated thumbprint of certificate used to encrypt local assets: " + certificateThumbprint);
+                if (certificateTextBox.Text != certDialog.updatedThumbprint)
+                {
+                    certificateTextBox.Text = certDialog.updatedThumbprint;
+                    /* Strip bad character that appears when you copy/paste from certmgr */
+                    String cleanedString = certificateTextBox.Text.Trim(new char[] { '\u200E' });
+                    /* Throw exception if the given thumbprint is not a valid certificate */
+                    AutomationSelfSignedCertificate.GetCertificateWithThumbprint(cleanedString);
+                    AutomationSelfSignedCertificate.SetCertificateInConfigFile(cleanedString);
+                    certificateThumbprint = cleanedString;
+                    UpdateStatusBox(configurationStatusTextBox, "Updated thumbprint of certificate used to encrypt local assets: " + certificateThumbprint);
+                }
             }
             catch (Exception ex)
             {

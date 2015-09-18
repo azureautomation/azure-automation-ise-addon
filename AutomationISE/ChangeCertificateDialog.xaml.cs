@@ -13,6 +13,7 @@
 // limitations under the License.
 // ----------------------------------------------------------------------------------
 
+using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 
 namespace AutomationISE
@@ -30,14 +31,28 @@ namespace AutomationISE
         {
             InitializeComponent();
             _updatedThumbprint = thumbprint;
-            ThumbprinttextBox.SelectedText = thumbprint;
-            ThumbprinttextBox.Focus();
+            browseCertificateButton.Focus();
         }
 
         private void OKbutton_Click(object sender, RoutedEventArgs e)
         {
             _updatedThumbprint = ThumbprinttextBox.Text;
             this.DialogResult = true;
+        }
+
+        private void browseCertificateButton_Click(object sender, RoutedEventArgs e)
+        {
+            var userStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+            userStore.Open(OpenFlags.ReadOnly);
+            var selectedCertificate = X509Certificate2UI.SelectFromCollection(
+                userStore.Certificates,
+                "Current user certificate store",
+                "Select certificate to use",
+                X509SelectionFlag.SingleSelection);
+            if (selectedCertificate.Count > 0)
+            {
+                ThumbprinttextBox.Text = selectedCertificate[0].Thumbprint;
+            }
         }
     }
 }
