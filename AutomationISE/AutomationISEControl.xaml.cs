@@ -466,6 +466,9 @@ namespace AutomationISE
                     string pathHint = Path.GetPathRoot(iseClient.currWorkspace) + "..." + Path.DirectorySeparatorChar + Path.GetFileName(iseClient.currWorkspace);
                     HostObject.CurrentPowerShellTab.Invoke("cd '" + iseClient.currWorkspace + "'" + ";function prompt {'PS " + pathHint + "> '}");
                     endBackgroundWork("Finished getting data for " + account.Name);
+                    UpdateStatusBox(configurationStatusTextBox, "Changing to account directory with shortened prompt for usability.");
+                    UpdateStatusBox(configurationStatusTextBox, "Run Get-Locaiton for location or below command to get full prompt.");
+                    UpdateStatusBox(configurationStatusTextBox, "Function Prompt {'PS ' + $(Get-Location) + '> '}");
                     refreshAccountDataTimer.Start();
                 }
             }
