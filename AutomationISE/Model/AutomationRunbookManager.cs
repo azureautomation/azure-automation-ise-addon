@@ -158,8 +158,22 @@ namespace AutomationISE.Model
 
         private static async Task<IList<Runbook>> DownloadRunbookMetadata(AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
         {
+            IList<Runbook> runbooks = new List<Runbook>();
             RunbookListResponse cloudRunbooks = await automationManagementClient.Runbooks.ListAsync(resourceGroupName, accountName);
-            return cloudRunbooks.Runbooks;
+            foreach (var runbook in cloudRunbooks.Runbooks)
+            {
+                runbooks.Add(runbook);
+            }
+
+            while (cloudRunbooks.NextLink != null)
+            {
+                cloudRunbooks = await automationManagementClient.Runbooks.ListNextAsync(cloudRunbooks.NextLink);
+                foreach (var runbook in cloudRunbooks.Runbooks)
+                {
+                    runbooks.Add(runbook);
+                }
+            }
+            return runbooks;
         }
     }
 }
