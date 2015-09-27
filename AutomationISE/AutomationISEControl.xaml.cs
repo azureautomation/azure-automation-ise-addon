@@ -374,7 +374,9 @@ namespace AutomationISE
         {
             try
             {
+                subscriptionComboBox.IsEnabled = false;
                 accountsComboBox.IsEnabled = false;
+                assetsComboBox.IsEnabled = false;
                 refreshAccountDataTimer.Stop();
                 iseClient.currSubscription = (Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription)subscriptionComboBox.SelectedValue;
                 if (iseClient.currSubscription != null)
@@ -398,6 +400,8 @@ namespace AutomationISE
             catch (Exception exception)
             {
                 endBackgroundWork("Couldn't retrieve Automation Accounts.");
+                subscriptionComboBox.IsEnabled = true;
+                assetsComboBox.IsEnabled = false;
                 var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
             }
         }
@@ -448,10 +452,13 @@ namespace AutomationISE
                     /* Update UI */
                     RunbooksListView.ItemsSource = runbookListViewModel;
                     assetsListView.ItemsSource = assetListViewModel;
+                    // Set credentials assets to be selected
+                    assetsComboBox.SelectedItem = assetsComboBox.Items[1];
                     setRunbookSelectionButtonState(false);
                     setRunbookAndAssetNonSelectionButtonState(true);
                     assetsComboBox.IsEnabled = true;
                     ButtonRefreshAssetList.IsEnabled = true;
+                    subscriptionComboBox.IsEnabled = true;
                     /* Enable source control sync in Azure Automation if it is set up for this automation account */
                     bool isSourceControlEnabled = await AutomationSourceControl.isSourceControlEnabled(iseClient.automationManagementClient,
                         iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
