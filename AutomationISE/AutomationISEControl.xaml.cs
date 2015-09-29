@@ -339,7 +339,7 @@ namespace AutomationISE
                     subscriptionComboBox.ItemsSource = subscriptions;
                     subscriptionComboBox.DisplayMemberPath = "SubscriptionName";
                     subscriptionComboBox.SelectedItem = subscriptionComboBox.Items[0];
-                    subscriptionComboBox.IsEnabled = true;
+                    subscriptionComboBox.IsEnabled = false;
                     refreshAuthTokenTimer.Start();
                 }
                 else

@@ -34,16 +34,24 @@ namespace AutomationISE.Model
             else
                 draftProperties = new RunbookCreateOrUpdateDraftProperties(Constants.RunbookType.PowerShellScript, new RunbookDraft());
 
-            draftProperties.Description = runbook.Description;
+            // Get current properties on the runbook and set these on the draft also so they are preserved.
+            RunbookGetResponse response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, account.Name, runbook.Name);
+            draftProperties.Description = response.Runbook.Properties.Description;
+
+            // Create draft properties and set the values from the existing runbook.
             RunbookCreateOrUpdateDraftParameters draftParams = new RunbookCreateOrUpdateDraftParameters(draftProperties);
-            draftParams.Name = runbook.Name;
+            draftParams.Name = response.Runbook.Name;
             draftParams.Location = account.Location;
+            draftParams.Tags = response.Runbook.Tags;
+            draftParams.Properties.LogProgress = response.Runbook.Properties.LogProgress;
+            draftParams.Properties.LogVerbose = response.Runbook.Properties.LogVerbose;
+
             await automationManagementClient.Runbooks.CreateOrUpdateWithDraftAsync(resourceGroupName, account.Name, draftParams);
             /* Update the runbook content from .ps1 file */
 
             RunbookDraftUpdateParameters draftUpdateParams = new RunbookDraftUpdateParameters()
             {
-                Name = runbook.Name,
+                Name = response.Runbook.Name,
                 Stream = PSScriptText
             };
             await automationManagementClient.RunbookDraft.UpdateAsync(resourceGroupName, account.Name, draftUpdateParams);
