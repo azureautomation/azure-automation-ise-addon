@@ -338,7 +338,14 @@ namespace AutomationISE
                     endBackgroundWork(Properties.Resources.FoundSubscriptions);
                     subscriptionComboBox.ItemsSource = subscriptions;
                     subscriptionComboBox.DisplayMemberPath = "SubscriptionName";
-                    subscriptionComboBox.SelectedItem = subscriptionComboBox.Items[0];
+                    foreach (Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription selectedSubscription in subscriptionComboBox.Items)
+                    {
+                        if (selectedSubscription.SubscriptionId == Properties.Settings.Default.lastSubscription.ToString())
+                        {
+                            subscriptionComboBox.SelectedItem = selectedSubscription;
+                        }
+                    }
+
                     subscriptionComboBox.IsEnabled = false;
                     refreshAuthTokenTimer.Start();
                 }
@@ -378,6 +385,15 @@ namespace AutomationISE
                 accountsComboBox.IsEnabled = false;
                 assetsComboBox.IsEnabled = false;
                 refreshAccountDataTimer.Stop();
+
+                // Save the last selected subscription so we default to this one next time the ISE is openend
+                var selectedSubscription = (Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription)subscriptionComboBox.SelectedValue;
+                if (selectedSubscription != null)
+                {
+                    Properties.Settings.Default.lastSubscription = selectedSubscription.SubscriptionId;
+                    Properties.Settings.Default.Save();
+                }
+
                 iseClient.currSubscription = (Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription)subscriptionComboBox.SelectedValue;
                 if (iseClient.currSubscription != null)
                 {
