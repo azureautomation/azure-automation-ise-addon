@@ -34,24 +34,33 @@ namespace AutomationISE.Model
             else
                 draftProperties = new RunbookCreateOrUpdateDraftProperties(Constants.RunbookType.PowerShellScript, new RunbookDraft());
 
-            // Get current properties on the runbook and set these on the draft also so they are preserved.
-            RunbookGetResponse response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, account.Name, runbook.Name);
-            draftProperties.Description = response.Runbook.Properties.Description;
+            // Get current properties if is not a new runbook and set these on the draft also so they are preserved.
+            RunbookGetResponse response = null;
+            if (runbook.SyncStatus != AutomationAuthoringItem.Constants.SyncStatus.LocalOnly)
+            {
+                response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, account.Name, runbook.Name);
+                draftProperties.Description = response.Runbook.Properties.Description;
+            }
 
-            // Create draft properties and set the values from the existing runbook.
+            // Create draft properties
             RunbookCreateOrUpdateDraftParameters draftParams = new RunbookCreateOrUpdateDraftParameters(draftProperties);
-            draftParams.Name = response.Runbook.Name;
+            draftParams.Name = runbook.Name;
             draftParams.Location = account.Location;
-            draftParams.Tags = response.Runbook.Tags;
-            draftParams.Properties.LogProgress = response.Runbook.Properties.LogProgress;
-            draftParams.Properties.LogVerbose = response.Runbook.Properties.LogVerbose;
+
+            // If this is not a new runbook, set the existing properties of the runbook
+            if (response != null)
+            {
+                draftParams.Tags = response.Runbook.Tags;
+                draftParams.Properties.LogProgress = response.Runbook.Properties.LogProgress;
+                draftParams.Properties.LogVerbose = response.Runbook.Properties.LogVerbose;
+            }
 
             await automationManagementClient.Runbooks.CreateOrUpdateWithDraftAsync(resourceGroupName, account.Name, draftParams);
             /* Update the runbook content from .ps1 file */
 
             RunbookDraftUpdateParameters draftUpdateParams = new RunbookDraftUpdateParameters()
             {
-                Name = response.Runbook.Name,
+                Name = runbook.Name,
                 Stream = PSScriptText
             };
             await automationManagementClient.RunbookDraft.UpdateAsync(resourceGroupName, account.Name, draftUpdateParams);
