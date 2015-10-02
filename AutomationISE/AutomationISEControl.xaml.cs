@@ -32,6 +32,7 @@ using System.Collections.ObjectModel;
 using System.Security.Cryptography.X509Certificates;
 using System.ComponentModel;
 using System.Windows.Media.Animation;
+using System.Text;
 
 namespace AutomationISE
 {
@@ -346,6 +347,10 @@ namespace AutomationISE
                         }
                     }
 
+                    if (subscriptionComboBox.SelectedItem == null)
+                    {
+                        subscriptionComboBox.SelectedItem = subscriptionComboBox.Items[0];
+                    }
                     subscriptionComboBox.IsEnabled = false;
                     refreshAuthTokenTimer.Start();
                 }
@@ -1190,6 +1195,31 @@ namespace AutomationISE
             assetsListView.Items.SortDescriptions.Add(newDescription);
             if (assetCurrSortProperty != "Name")
                 assetsListView.Items.SortDescriptions.Add(new SortDescription("Name", ListSortDirection.Ascending));
+        }
+
+        private void PortalButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                StringBuilder url = new StringBuilder();
+                url.Append(Constants.portalURL);
+                // Deep linking only works if there is one subscription at the moment.
+                // Will just go to the portal home page if there is more than one subscription until
+                // this is supported in the portal
+                if (iseClient.currAccount != null && subscriptionComboBox.Items.Count == 1)
+                { 
+                    url.Append(iseClient.currSubscription.SubscriptionId);
+                    url.Append("/resourceGroups/");
+                    url.Append(iseClient.accountResourceGroups[iseClient.currAccount].Name);
+                    url.Append("/providers/Microsoft.Automation/automationAccounts/");
+                    url.Append(iseClient.currAccount.Name);
+                }
+                Process.Start(url.ToString());
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Could not launch portal", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }

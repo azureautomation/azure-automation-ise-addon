@@ -34,6 +34,7 @@ namespace AutomationISE.Model
         // Runbook values
         public const String notExist = "N/A";
 
+        public const String portalURL = "https://ms.portal.azure.com/#resource/subscriptions/";
 
         public const bool encryptedTrue = true;
 
