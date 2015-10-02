@@ -118,14 +118,16 @@
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="35"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="1*"/>
                         <RowDefinition Height="35"/>
                         <RowDefinition Height="35"/>
                         <RowDefinition Height="5"/>
                     </Grid.RowDefinitions>
-                    <ComboBox x:Name="assetsComboBox" Margin="10,10,10,0" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" SelectionChanged="assetsComboBox_SelectionChanged"/>
-                    <ListView x:Name="assetsListView" Margin="10,10,10,0" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" SelectionChanged="assetsListView_SelectionChanged">
+                    <Label x:Name="assetsTypeLabel" Margin="5,0,0,0" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3">Asset Type</Label>
+                    <ComboBox x:Name="assetsComboBox" Margin="10,0,10,0" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" SelectionChanged="assetsComboBox_SelectionChanged"/>
+                    <ListView x:Name="assetsListView" Margin="10,10,10,0" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" SelectionChanged="assetsListView_SelectionChanged">
                         <ListView.ItemContainerStyle>
                             <Style TargetType="ListViewItem">
                                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -166,12 +168,12 @@
                             </GridView>
                         </ListView.View>
                     </ListView>
-                    <Button x:Name="ButttonNewAsset" Grid.Column="0" Grid.Row="2" Margin="5,10,5,0" Content="New" Click="ButtonNewAsset_Click" />
-                    <Button x:Name="ButtonEditAsset" Grid.Column="1" Grid.Row="2" Margin="5,10,5,0" Content="Edit Locally" Height="25" VerticalAlignment="Top" Click="ButtonEditAsset_Click" />
-                    <Button x:Name="ButtonRefreshAssetList" Grid.Column="2" Grid.Row="2" Margin="5,10,5,0" Content="Refresh" Click="ButtonRefreshAssetList_Click" />
-                    <Button x:Name="ButtonDownloadAsset" Grid.Column="0" Grid.Row="3" Margin="5,10,5,0" Content="Download" Click="ButtonDownloadAsset_Click" />
-                    <Button x:Name="ButtonUploadAsset" Grid.Column="1" Grid.Row="3" Margin="5,10,5,0" Content="Upload" Click="ButtonUploadAsset_Click" />
-                    <Button x:Name="ButtonDeleteAssets" Grid.Column="2" Grid.Row="3" Margin="5,10,5,0" Content="Delete" Click="ButtonDeleteAsset_Click" />
+                    <Button x:Name="ButttonNewAsset" Grid.Column="0" Grid.Row="3" Margin="5,10,5,0" Content="New" Click="ButtonNewAsset_Click" />
+                    <Button x:Name="ButtonEditAsset" Grid.Column="1" Grid.Row="3" Margin="5,10,5,0" Content="Edit Locally" Height="25" VerticalAlignment="Top" Click="ButtonEditAsset_Click" />
+                    <Button x:Name="ButtonRefreshAssetList" Grid.Column="2" Grid.Row="3" Margin="5,10,5,0" Content="Refresh" Click="ButtonRefreshAssetList_Click" />
+                    <Button x:Name="ButtonDownloadAsset" Grid.Column="0" Grid.Row="4" Margin="5,10,5,0" Content="Download" Click="ButtonDownloadAsset_Click" />
+                    <Button x:Name="ButtonUploadAsset" Grid.Column="1" Grid.Row="4" Margin="5,10,5,0" Content="Upload" Click="ButtonUploadAsset_Click" />
+                    <Button x:Name="ButtonDeleteAssets" Grid.Column="2" Grid.Row="4" Margin="5,10,5,0" Content="Delete" Click="ButtonDeleteAsset_Click" />
                 </Grid>
             </TabItem>
             <TabItem x:Name="feedbackTab" Header="Give Feedback">
