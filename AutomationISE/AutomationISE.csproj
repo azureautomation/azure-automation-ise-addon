@@ -133,6 +133,9 @@
     <Compile Include="ChooseNewAssetTypeDialog.xaml.cs">
       <DependentUpon>ChooseNewAssetTypeDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="CreateRunbookDialog.xaml.cs">
+      <DependentUpon>CreateRunbookDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Model\AutomationSelfSignedCertificate.cs" />
     <Compile Include="Model\AutomationSourceControl.cs" />
     <Compile Include="Model\Certificate.cs" />
@@ -163,6 +166,10 @@
     <Page Include="ChooseNewAssetTypeDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="CreateRunbookDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="NewOrEditVariableDialog.xaml">
       <Generator>MSBuild:Compile</Generator>

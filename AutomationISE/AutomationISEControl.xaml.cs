@@ -1243,5 +1243,34 @@ namespace AutomationISE
             }
             catch { }
         }
+
+        private async void ButtonCreateRunbook_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                ButtonCreateRunbook.IsEnabled = false;
+                CreateRunbookDialog createOptionsWindow = new CreateRunbookDialog();
+                bool? result = createOptionsWindow.ShowDialog();
+                if (result.HasValue && result.Value)
+                {
+                    //check if file exists...
+                    AutomationRunbookManager.CreateLocalRunbook(createOptionsWindow.runbookName, iseClient.currWorkspace, createOptionsWindow.runbookType);
+                    await refreshRunbooks();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Could not create the new runbook.\r\nError details: " + ex.Message);
+            } 
+            finally
+            {
+                ButtonCreateRunbook.IsEnabled = true;
+            }
+        }
+
+        private void ButtonDeleteRunbook_Click(object sender, RoutedEventArgs e)
+        {
+            
+        }
     }
 }

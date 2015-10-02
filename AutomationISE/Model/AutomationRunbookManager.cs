@@ -192,5 +192,24 @@ namespace AutomationISE.Model
             }
             return runbooks;
         }
+
+        public static void CreateLocalRunbook(string runbookName, string workspace, string runbookType)
+        {
+            String runbookFilePath = System.IO.Path.Combine(workspace, runbookName + ".ps1");
+            if (File.Exists(runbookFilePath))
+                throw new Exception("A runbook with that name already exists");
+            if (runbookType.Equals(Constants.RunbookType.Workflow))
+            {
+                File.WriteAllText(runbookFilePath, "workflow " + runbookName + "\r\n{\r\n}");
+            }
+            else if (runbookType.Equals(Constants.RunbookType.PowerShellScript))
+            {
+                File.Create(runbookFilePath);
+            }
+            else
+            {
+                throw new Exception("Cannot create local runbook of type " + runbookType);
+            }
+        }
     }
 }
