@@ -869,8 +869,14 @@ namespace AutomationISE
             {
                 runbookWithName.Add(runbook.Name, runbook);
             }
+            ISet<AutomationRunbook> runbooksToDelete = new SortedSet<AutomationRunbook>();
             foreach (AutomationRunbook curr in runbookListViewModel)
             {
+                if (!runbookWithName.ContainsKey(curr.Name))
+                {
+                    runbooksToDelete.Add(curr);
+                    continue;
+                }
                 curr.AuthoringState = runbookWithName[curr.Name].AuthoringState;
                 curr.Parameters = runbookWithName[curr.Name].Parameters;
                 curr.Description = runbookWithName[curr.Name].Description;
@@ -878,6 +884,10 @@ namespace AutomationISE
                 curr.LastModifiedLocal = runbookWithName[curr.Name].LastModifiedLocal;
                 curr.UpdateSyncStatus();
                 runbookWithName.Remove(curr.Name);
+            }
+            foreach (AutomationRunbook runbook in runbooksToDelete)
+            {
+                runbookListViewModel.Remove(runbook);
             }
             foreach (String name in runbookWithName.Keys)
             {
@@ -1253,7 +1263,6 @@ namespace AutomationISE
                 bool? result = createOptionsWindow.ShowDialog();
                 if (result.HasValue && result.Value)
                 {
-                    //check if file exists...
                     AutomationRunbookManager.CreateLocalRunbook(createOptionsWindow.runbookName, iseClient.currWorkspace, createOptionsWindow.runbookType);
                     await refreshRunbooks();
                 }
@@ -1268,9 +1277,30 @@ namespace AutomationISE
             }
         }
 
-        private void ButtonDeleteRunbook_Click(object sender, RoutedEventArgs e)
+        private async void ButtonDeleteRunbook_Click(object sender, RoutedEventArgs e)
         {
-            
+            try
+            {
+                ButtonDeleteRunbook.IsEnabled = false;
+                foreach (Object obj in RunbooksListView.SelectedItems)
+                {
+                    AutomationRunbook runbook = (AutomationRunbook)obj;
+                    if (runbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.CloudOnly)
+                        continue;
+                    if (runbook.localFileInfo != null && !File.Exists(runbook.localFileInfo.FullName))
+                        continue;
+                    AutomationRunbookManager.DeleteLocalRunbook(runbook);
+                }
+                await refreshRunbooks();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Could not delete the selected runbook(s).\r\nError details: " + ex.Message);
+            }
+            finally
+            {
+                ButtonDeleteRunbook.IsEnabled = true;
+            }
         }
     }
 }

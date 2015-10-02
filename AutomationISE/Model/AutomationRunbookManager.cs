@@ -211,5 +211,9 @@ namespace AutomationISE.Model
                 throw new Exception("Cannot create local runbook of type " + runbookType);
             }
         }
+        public static void DeleteLocalRunbook(AutomationRunbook runbook)
+        {
+            File.Delete(runbook.localFileInfo.FullName);
+        }
     }
 }
