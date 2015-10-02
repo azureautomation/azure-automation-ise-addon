@@ -56,6 +56,7 @@ namespace AutomationISE
         private Storyboard progressSpinnerStoryboardReverse;
         private Storyboard miniProgressSpinnerStoryboard;
         private Storyboard miniProgressSpinnerStoryboardReverse;
+        private bool promptShortened;
         private string certificateThumbprint;
         public ObjectModelRoot HostObject { get; set; }
 
@@ -82,6 +83,7 @@ namespace AutomationISE
                     Properties.Settings.Default.Save();
                 }
                 iseClient.baseWorkspace = localWorkspace;
+                promptShortened = false;
 
                 /* Initialize Timers */
                 refreshAccountDataTimer = new System.Timers.Timer();
@@ -493,6 +495,7 @@ namespace AutomationISE
                     accountPathTextBox.Text = iseClient.currWorkspace;
                     string pathHint = Path.GetPathRoot(iseClient.currWorkspace) + "..." + Path.DirectorySeparatorChar + Path.GetFileName(iseClient.currWorkspace);
                     HostObject.CurrentPowerShellTab.Invoke("cd '" + iseClient.currWorkspace + "'" + ";function prompt {'PS " + pathHint + "> '}");
+                    promptShortened = true;
                     endBackgroundWork("Finished getting data for " + account.Name);
                     UpdateStatusBox(configurationStatusTextBox, "Changing to account directory with shortened prompt for usability.");
                     UpdateStatusBox(configurationStatusTextBox, "Run Get-Locaiton for location or below command to get full prompt.");
@@ -1220,6 +1223,26 @@ namespace AutomationISE
             {
                 MessageBox.Show(exception.Message, "Could not launch portal", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void togglePromptButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (promptShortened)
+                {
+                    HostObject.CurrentPowerShellTab.Invoke("cd '" + iseClient.currWorkspace + "'" + ";function prompt {'PS ' + $(Get-Location) + '> '}");
+                    promptShortened = false;
+                }
+                else
+                {
+                    //TODO: factor this into the iseClient
+                    string pathHint = Path.GetPathRoot(iseClient.currWorkspace) + "..." + Path.DirectorySeparatorChar + Path.GetFileName(iseClient.currWorkspace);
+                    HostObject.CurrentPowerShellTab.Invoke("cd '" + iseClient.currWorkspace + "'" + ";function prompt {'PS " + pathHint + "> '}");
+                    promptShortened = true;
+                }
+            }
+            catch { }
         }
     }
 }

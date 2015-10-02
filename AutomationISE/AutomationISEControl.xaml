@@ -42,8 +42,11 @@
                     <Label x:Name="subscriptionLabel" Content="Subscription" Grid.Row="2" Grid.Column="0"  HorizontalAlignment="Left" VerticalAlignment="Top"/>
                     <Label x:Name="automationAccountLabel" Content="Automation Account"  HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="3" Grid.Column="0"/>
                     <Label x:Name="accountPathLabel" Content="Account content location" Padding="5,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.ColumnSpan="2" Grid.Row="4" />
-                    <TextBox x:Name="accountPathTextBox" Margin="5" IsReadOnly="True" VerticalAlignment="Bottom" TextWrapping="Wrap" Grid.Column="0" Grid.Row="5"/>
-                    <Button x:Name="accountPathButton" Content="Open" Margin="5" VerticalAlignment="Top" Click="accountPathButton_Click" Grid.Column="1" Grid.Row="5"/>
+                    <TextBox x:Name="accountPathTextBox" Margin="5" IsReadOnly="True" VerticalAlignment="Stretch" TextWrapping="Wrap" Grid.Column="0" Grid.Row="5"/>
+                    <StackPanel Grid.Column="1" Grid.Row="5">
+                        <Button x:Name="accountPathButton" Content="Open" Margin="5" VerticalAlignment="Top" Click="accountPathButton_Click" Grid.Column="1" Grid.Row="5"/>
+                        <Button x:Name="togglePromptButton" Content="Toggle Prompt" Margin="5,0,5,5" VerticalAlignment="Bottom" Click="togglePromptButton_Click" Grid.Column="1" Grid.Row="5"/>
+                    </StackPanel>
                     <Label x:Name="certificateStatusLabel" Content="Certificate thumbprint to encrypt local assets" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2"/>
                     <TextBox x:Name="certificateTextBox" Margin="5" VerticalAlignment="Bottom" Grid.Column="0" Grid.Row="6"/>
                     <Button x:Name="certificateButton" Content="Change" Margin="5" VerticalAlignment="Bottom" Click="certificateButton_Click" Grid.Column="1" Grid.Row="6"/>
