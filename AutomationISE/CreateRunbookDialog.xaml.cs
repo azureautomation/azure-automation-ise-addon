@@ -26,6 +26,7 @@ namespace AutomationISE
         public CreateRunbookDialog()
         {
             InitializeComponent();
+            NameTextBox.Focus();
         }
 
         private void ScriptButton_Click(object sender, RoutedEventArgs e)
