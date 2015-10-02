@@ -497,9 +497,6 @@ namespace AutomationISE
                     HostObject.CurrentPowerShellTab.Invoke("cd '" + iseClient.currWorkspace + "'" + ";function prompt {'PS " + pathHint + "> '}");
                     promptShortened = true;
                     endBackgroundWork("Finished getting data for " + account.Name);
-                    UpdateStatusBox(configurationStatusTextBox, "Changing to account directory with shortened prompt for usability.");
-                    UpdateStatusBox(configurationStatusTextBox, "Run Get-Locaiton for location or below command to get full prompt.");
-                    UpdateStatusBox(configurationStatusTextBox, "Function Prompt {'PS ' + $(Get-Location) + '> '}");
                     refreshAccountDataTimer.Start();
                 }
             }
@@ -702,6 +699,8 @@ namespace AutomationISE
                 else endBackgroundWork("Downloaded " + count + " runbooks.");
                 ButtonOpenRunbook.IsEnabled = true;
                 ButtonUploadRunbook.IsEnabled = true;
+                ButtonTestRunbook.IsEnabled = true;
+                ButtonPublishRunbook.IsEnabled = true;
             }
             catch (Exception ex)
             {
