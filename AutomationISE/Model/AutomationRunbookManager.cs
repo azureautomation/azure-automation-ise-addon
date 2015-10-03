@@ -215,5 +215,10 @@ namespace AutomationISE.Model
         {
             File.Delete(runbook.localFileInfo.FullName);
         }
+
+        public static async Task DeleteCloudRunbook(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
+        {
+            await automationManagementClient.Runbooks.DeleteAsync(resourceGroupName, accountName, runbook.Name);
+        }
     }
 }

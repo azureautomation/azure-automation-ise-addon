@@ -164,8 +164,8 @@ namespace AutomationISE.Model
                 public const String LocalOnly = "Local Only";
                 public const String InSync = "In Sync";
                 public const String CloudOnly = "Cloud Only";
-                public const String UpdatedInCloud = "Updated in cloud";
-                public const String UpdatedLocally = "Updated locally";
+                public const String UpdatedInCloud = "Updated in Cloud";
+                public const String UpdatedLocally = "Updated Locally";
             }
         }
     }

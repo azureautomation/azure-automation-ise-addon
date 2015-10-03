@@ -136,6 +136,9 @@
     <Compile Include="CreateRunbookDialog.xaml.cs">
       <DependentUpon>CreateRunbookDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="DeleteRunbookDialog.xaml.cs">
+      <DependentUpon>DeleteRunbookDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Model\AutomationSelfSignedCertificate.cs" />
     <Compile Include="Model\AutomationSourceControl.cs" />
     <Compile Include="Model\Certificate.cs" />
@@ -168,6 +171,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="CreateRunbookDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DeleteRunbookDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

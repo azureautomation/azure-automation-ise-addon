@@ -139,6 +139,7 @@ namespace AutomationISE
 
         public void setRunbookSelectionButtonState(bool enabled)
         {
+            ButtonDeleteRunbook.IsEnabled = enabled;
             ButtonDownloadRunbook.IsEnabled = enabled;
             ButtonOpenRunbook.IsEnabled = enabled;
             ButtonUploadRunbook.IsEnabled = enabled;
@@ -765,6 +766,7 @@ namespace AutomationISE
                 setRunbookSelectionButtonState(false);
                 return;
             }
+            ButtonDeleteRunbook.IsEnabled = true;
             /* Set Download button status */
             if (selectedRunbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.LocalOnly)
                 ButtonDownloadRunbook.IsEnabled = false;
@@ -1259,6 +1261,7 @@ namespace AutomationISE
             try
             {
                 ButtonCreateRunbook.IsEnabled = false;
+                beginBackgroundWork("Creating new runbook...");
                 CreateRunbookDialog createOptionsWindow = new CreateRunbookDialog();
                 bool? result = createOptionsWindow.ShowDialog();
                 if (result.HasValue && result.Value)
@@ -1273,6 +1276,7 @@ namespace AutomationISE
             } 
             finally
             {
+                endBackgroundWork();
                 ButtonCreateRunbook.IsEnabled = true;
             }
         }
@@ -1281,15 +1285,40 @@ namespace AutomationISE
         {
             try
             {
-                ButtonDeleteRunbook.IsEnabled = false;
+                beginBackgroundWork("Deleting selected runbooks...");
                 foreach (Object obj in RunbooksListView.SelectedItems)
                 {
                     AutomationRunbook runbook = (AutomationRunbook)obj;
                     if (runbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.CloudOnly)
-                        continue;
-                    if (runbook.localFileInfo != null && !File.Exists(runbook.localFileInfo.FullName))
-                        continue;
-                    AutomationRunbookManager.DeleteLocalRunbook(runbook);
+                    {
+                        await AutomationRunbookManager.DeleteCloudRunbook(runbook, iseClient.automationManagementClient,
+                            iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                    }
+                    else if (runbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.LocalOnly)
+                    {
+                        if (runbook.localFileInfo != null && File.Exists(runbook.localFileInfo.FullName))
+                            AutomationRunbookManager.DeleteLocalRunbook(runbook);
+                    }
+                    else
+                    {
+                        DeleteRunbookDialog deleteOptionsWindow = new DeleteRunbookDialog();
+                        bool? result = deleteOptionsWindow.ShowDialog();
+                        if (result.HasValue && result.Value)
+                        {
+                            if (deleteOptionsWindow.deleteLocalOnly)
+                            {
+                                if (runbook.localFileInfo != null && File.Exists(runbook.localFileInfo.FullName))
+                                    AutomationRunbookManager.DeleteLocalRunbook(runbook);
+                            }
+                            else
+                            {
+                                await AutomationRunbookManager.DeleteCloudRunbook(runbook, iseClient.automationManagementClient,
+                                    iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                                if (runbook.localFileInfo != null && File.Exists(runbook.localFileInfo.FullName))
+                                    AutomationRunbookManager.DeleteLocalRunbook(runbook);
+                            }
+                        }
+                    }
                 }
                 await refreshRunbooks();
             }
@@ -1299,7 +1328,7 @@ namespace AutomationISE
             }
             finally
             {
-                ButtonDeleteRunbook.IsEnabled = true;
+                endBackgroundWork();
             }
         }
     }
