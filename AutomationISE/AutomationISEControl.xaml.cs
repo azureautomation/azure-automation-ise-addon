@@ -881,6 +881,7 @@ namespace AutomationISE
                 ButtonDownloadRunbook.IsEnabled = true;
                 ButtonUploadRunbook.IsEnabled = true;
                 ButtonPublishRunbook.Content = "Publish Draft";
+                await refreshRunbooks();
             }
         }
 
