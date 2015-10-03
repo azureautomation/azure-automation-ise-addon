@@ -153,6 +153,7 @@ namespace AutomationISE
             ButtonEditAsset.IsEnabled = enabled;
             ButtonDeleteAssets.IsEnabled = enabled;
             ButtonUploadAsset.IsEnabled = enabled;
+            ButtonInsertAssets.IsEnabled = enabled;
         }
 
         public IList<AutomationAsset> getSelectedAssets()
@@ -631,6 +632,27 @@ namespace AutomationISE
             {
                 endBackgroundWork("Error deleting assets.");
                 MessageBox.Show("Assets could not be deleted.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ButtonInsertAsset_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var asset = getSelectedAssets().ElementAt(0);
+
+                if (asset is AutomationCredential)
+                {
+                    HostObject.CurrentPowerShellTab.Files.SelectedFile.Editor.InsertText("Get-AutomationPSCredential -Name " + asset.Name);
+                }
+                else if (asset is AutomationVariable)
+                {
+                    HostObject.CurrentPowerShellTab.Files.SelectedFile.Editor.InsertText("Get-AutomationVariable -Name " + asset.Name);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Asset could not be inserted.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
