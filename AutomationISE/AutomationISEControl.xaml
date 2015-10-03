@@ -45,7 +45,7 @@
                     <TextBox x:Name="accountPathTextBox" Margin="5" IsReadOnly="True" VerticalAlignment="Stretch" TextWrapping="Wrap" Grid.Column="0" Grid.Row="5"/>
                     <StackPanel Grid.Column="1" Grid.Row="5">
                         <Button x:Name="accountPathButton" Content="Open" Margin="5" VerticalAlignment="Top" Click="accountPathButton_Click" Grid.Column="1" Grid.Row="5"/>
-                        <Button x:Name="togglePromptButton" Content="Toggle Prompt" Margin="5,0,5,5" VerticalAlignment="Bottom" Click="togglePromptButton_Click" Grid.Column="1" Grid.Row="5"/>
+                        <Button x:Name="togglePromptButton" Content="Toggle Prompt" Margin="5" VerticalAlignment="Bottom" Click="togglePromptButton_Click" Grid.Column="1" Grid.Row="5"/>
                     </StackPanel>
                     <Label x:Name="certificateStatusLabel" Content="Certificate thumbprint to encrypt local assets" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2"/>
                     <TextBox x:Name="certificateTextBox" Margin="5" VerticalAlignment="Bottom" Grid.Column="0" Grid.Row="6"/>
