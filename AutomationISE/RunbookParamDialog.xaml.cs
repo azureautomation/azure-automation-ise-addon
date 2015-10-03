@@ -51,7 +51,16 @@ namespace AutomationISE
                 Label parameterNameLabel = new Label();
                 parameterNameLabel.Content = paramName;
                 Label parameterTypeLabel = new Label();
-                parameterTypeLabel.Content = "(" + parameterDict[paramName].Type + "): ";
+                parameterTypeLabel.Content = "(" + parameterDict[paramName].Type + ")\t";
+                if (parameterDict[paramName].IsMandatory)
+                {
+                    parameterTypeLabel.Content += "[REQUIRED]";
+                }
+                else
+                {
+                    parameterTypeLabel.Content += "[OPTIONAL]";
+                }
+                
                 Grid.SetRow(parameterNameLabel, count * 2);
                 Grid.SetRow(parameterTypeLabel, count * 2);
                 Grid.SetColumn(parameterNameLabel, 0);
