@@ -64,6 +64,12 @@ namespace AutomationISE.Model
             public const String PowerShellScript = "PowerShell";
         }
 
+        public class AssetType
+        {
+            public const String Variable = "Variable";
+            public const String Credential = "Credential";
+        }
+
         public class AutomationAccountState
         {
             public const string Ready = "Ready";

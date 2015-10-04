@@ -1039,6 +1039,9 @@ namespace AutomationISE
 
         private async Task createOrUpdateCredentialAsset(string credentialAssetName, AutomationCredential credToEdit)
         {
+            var asset = await AutomationAssetManager.GetAsset(credentialAssetName, Constants.AssetType.Credential, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
+            if (asset != null) throw new Exception("Credential with that name already exists");
+
             var dialog = new NewOrEditCredentialDialog(credToEdit);
 
             if (dialog.ShowDialog() == true)
@@ -1055,6 +1058,10 @@ namespace AutomationISE
 
         private async Task createOrUpdateVariableAsset(string variableAssetName, AutomationVariable variableToEdit)
         {
+            // Check if variable already exists before creating one.
+            var asset = await AutomationAssetManager.GetAsset(variableAssetName, Constants.AssetType.Variable, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
+            if (asset != null) throw new Exception("Variable with that name already exists");
+
             var dialog = new NewOrEditVariableDialog(variableToEdit);
 
             if (dialog.ShowDialog() == true)
@@ -1063,7 +1070,6 @@ namespace AutomationISE
 
                 var newVariable = new AutomationVariable(variableAssetName, dialog.value, dialog.encrypted);
                 assetsToSave.Add(newVariable);
-
                 AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint());
                 await refreshAssets();
             }
@@ -1071,26 +1077,35 @@ namespace AutomationISE
 
         private async void ButtonNewAsset_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new ChooseNewAssetTypeDialog();
-
-            if (dialog.ShowDialog() == true)
+            try
             {
-                if (dialog.newAssetType == AutomationISE.Model.Constants.assetVariable)
-                {
-                    await createOrUpdateVariableAsset(dialog.newAssetName, null);
-                }
-                else if (dialog.newAssetType == AutomationISE.Model.Constants.assetCredential)
-                {
-                    await createOrUpdateCredentialAsset(dialog.newAssetName, null);
-                }
-                else if (dialog.newAssetType == AutomationISE.Model.Constants.assetConnection)
-                {
+                var dialog = new ChooseNewAssetTypeDialog();
 
-                }
-                else if (dialog.newAssetType == AutomationISE.Model.Constants.assetCertificate)
+                if (dialog.ShowDialog() == true)
                 {
+                    if (dialog.newAssetType == AutomationISE.Model.Constants.assetVariable)
+                    {
+                        await createOrUpdateVariableAsset(dialog.newAssetName, null);
+                        assetsComboBox.SelectedItem = assetsComboBox.Items[0];
+                    }
+                    else if (dialog.newAssetType == AutomationISE.Model.Constants.assetCredential)
+                    {
+                        await createOrUpdateCredentialAsset(dialog.newAssetName, null);
+                        assetsComboBox.SelectedItem = assetsComboBox.Items[1];
+                    }
+                    else if (dialog.newAssetType == AutomationISE.Model.Constants.assetConnection)
+                    {
 
+                    }
+                    else if (dialog.newAssetType == AutomationISE.Model.Constants.assetCertificate)
+                    {
+
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

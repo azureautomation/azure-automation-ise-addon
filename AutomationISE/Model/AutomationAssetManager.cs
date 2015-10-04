@@ -23,7 +23,7 @@ using System.Text;
 
 namespace AutomationISE.Model
 {
-    public class AutomationAssetManager 
+    public class AutomationAssetManager
     {
         public static async Task DownloadAllFromCloud(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, String encryptionCertThumbprint)
         {
@@ -54,7 +54,7 @@ namespace AutomationISE.Model
         public static async Task UploadToCloud(ICollection<AutomationAsset> assetsToUpload, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
         {
             var jss = new JavaScriptSerializer();
-            
+
             foreach (var assetToUpload in assetsToUpload)
             {
                 if (assetToUpload is AutomationVariable)
@@ -67,7 +67,7 @@ namespace AutomationISE.Model
                     var stringBuilder = new StringBuilder();
                     jss.Serialize(asset.getValue(), stringBuilder);
                     properties.Value = stringBuilder.ToString();
-                    
+
                     await automationApi.Variables.CreateOrUpdateAsync(resourceGroupName, automationAccountName, new VariableCreateOrUpdateParameters(asset.Name, properties));
                 }
                 else if(assetToUpload is AutomationCredential)
@@ -192,5 +192,75 @@ namespace AutomationISE.Model
 
             return automationAssets;
         }
+
+        /// <summary>
+        /// Returns if the asset exists locally or in the cloud
+        /// </summary>
+        /// <param name="assetName"></param>
+        /// <param name="assetType"></param>
+        /// <param name="localWorkspacePath"></param>
+        /// <param name="automationApi"></param>
+        /// <param name="resourceGroupName"></param>
+        /// <param name="automationAccountName"></param>
+        /// <param name="encryptionCertThumbprint"></param>
+        /// <returns>null if the asset does not exist or else returns the asset</returns>
+        public static async Task<AutomationAsset> GetAsset(String assetName, String assetType,  String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, string encryptionCertThumbprint)
+        {
+            AutomationAsset automationAsset = null;
+
+            // Get local assets
+            LocalAssets localAssets = LocalAssetsStore.Get(localWorkspacePath, encryptionCertThumbprint);
+
+            // Search for variables
+            if (assetType == Constants.AssetType.Variable)
+            {
+                // Check local asset store first
+                var localVariable = localAssets.Variables.Find(asset => asset.Name == assetName);
+                if (localVariable != null)
+                {
+                    automationAsset = new AutomationVariable(localVariable);
+                }
+                else
+                {
+                    try
+                    {
+                        // Check cloud. Catch execption if it doesn't exist
+                        VariableGetResponse cloudVariable = await automationApi.Variables.GetAsync(resourceGroupName, automationAccountName, assetName);
+                        automationAsset = new AutomationVariable(cloudVariable.Variable);
+                    }
+                    catch (Exception e)
+                    {
+                        // If the exception is not found, don't throw new exception as this is expected
+                        if (e.HResult != -2146233088) throw e;
+                    }
+                }
+            }
+            // Search for credentials
+            if (assetType == Constants.AssetType.Credential)
+            {
+                // Check local asset store first
+                var localCredential = localAssets.PSCredentials.Find(asset => asset.Name == assetName);
+                if (localCredential != null)
+                {
+                    automationAsset = new AutomationCredential(localCredential);
+                }
+                else
+                {
+                    try
+                    {
+                        // Check cloud. Catch execption if it doesn't exist
+                        CredentialGetResponse cloudVariable = await automationApi.PsCredentials.GetAsync(resourceGroupName, automationAccountName, assetName);
+                        automationAsset = new AutomationCredential(cloudVariable.Credential);
+                    }
+                    catch (Exception e)
+                    {
+                        // If the exception is not found, don't throw new exception as this is expected
+                        if (e.HResult != -2146233088) throw e;
+                    }
+                }
+            }
+            return automationAsset;
+        }
+
     }
 }
