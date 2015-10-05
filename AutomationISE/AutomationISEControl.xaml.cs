@@ -1037,10 +1037,13 @@ namespace AutomationISE
             return true;
         }
 
-        private async Task createOrUpdateCredentialAsset(string credentialAssetName, AutomationCredential credToEdit)
+        private async Task createOrUpdateCredentialAsset(string credentialAssetName, AutomationCredential credToEdit, bool newAsset = false)
         {
-            var asset = await AutomationAssetManager.GetAsset(credentialAssetName, Constants.AssetType.Credential, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
-            if (asset != null) throw new Exception("Credential with that name already exists");
+            if (newAsset)
+            {
+                var asset = await AutomationAssetManager.GetAsset(credentialAssetName, Constants.AssetType.Credential, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
+                if (asset != null) throw new Exception("Credential with that name already exists");
+            }
 
             var dialog = new NewOrEditCredentialDialog(credToEdit);
 
@@ -1056,11 +1059,14 @@ namespace AutomationISE
             }
         }
 
-        private async Task createOrUpdateVariableAsset(string variableAssetName, AutomationVariable variableToEdit)
+        private async Task createOrUpdateVariableAsset(string variableAssetName, AutomationVariable variableToEdit, bool newAsset = false)
         {
-            // Check if variable already exists before creating one.
-            var asset = await AutomationAssetManager.GetAsset(variableAssetName, Constants.AssetType.Variable, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
-            if (asset != null) throw new Exception("Variable with that name already exists");
+            if (newAsset)
+            {
+                // Check if variable already exists before creating one.
+                var asset = await AutomationAssetManager.GetAsset(variableAssetName, Constants.AssetType.Variable, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
+                if (asset != null) throw new Exception("Variable with that name already exists");
+            }
 
             var dialog = new NewOrEditVariableDialog(variableToEdit);
 
@@ -1090,7 +1096,7 @@ namespace AutomationISE
                     }
                     else if (dialog.newAssetType == AutomationISE.Model.Constants.assetCredential)
                     {
-                        await createOrUpdateCredentialAsset(dialog.newAssetName, null);
+                        await createOrUpdateCredentialAsset(dialog.newAssetName, null,true);
                         assetsComboBox.SelectedItem = assetsComboBox.Items[1];
                     }
                     else if (dialog.newAssetType == AutomationISE.Model.Constants.assetConnection)
@@ -1111,15 +1117,22 @@ namespace AutomationISE
 
         private async void ButtonEditAsset_Click(object sender, RoutedEventArgs e)
         {
-            var asset = getSelectedAssets().ElementAt(0);
+            try
+            {
+                var asset = getSelectedAssets().ElementAt(0);
 
-            if (asset is AutomationCredential)
-            {
-                await createOrUpdateCredentialAsset(asset.Name, (AutomationCredential)asset);
+                if (asset is AutomationCredential)
+                {
+                    await createOrUpdateCredentialAsset(asset.Name, (AutomationCredential)asset);
+                }
+                else if (asset is AutomationVariable)
+                {
+                    await createOrUpdateVariableAsset(asset.Name, (AutomationVariable)asset);
+                }
             }
-            else if (asset is AutomationVariable)
+            catch (Exception ex)
             {
-                await createOrUpdateVariableAsset(asset.Name, (AutomationVariable)asset);
+                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
