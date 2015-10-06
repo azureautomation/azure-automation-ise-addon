@@ -868,6 +868,7 @@ namespace AutomationISE
                 }
                 if (count == 1) endBackgroundWork("Published " + name);
                 else endBackgroundWork("Published " + count + " runbooks.");
+                await refreshRunbooks();
             }
             catch (Exception ex)
             {
@@ -881,7 +882,6 @@ namespace AutomationISE
                 ButtonDownloadRunbook.IsEnabled = true;
                 ButtonUploadRunbook.IsEnabled = true;
                 ButtonPublishRunbook.Content = "Publish Draft";
-                await refreshRunbooks();
             }
         }
 
