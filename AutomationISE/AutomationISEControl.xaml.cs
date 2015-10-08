@@ -825,6 +825,10 @@ namespace AutomationISE
                 foreach (Object obj in RunbooksListView.SelectedItems)
                 {
                     AutomationRunbook selectedRunbook = (AutomationRunbook)obj;
+                    var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == selectedRunbook.localFileInfo.FullName);
+                    // If the file is opened and is not saved, an exception will be thrown here and the user notified that the file is unsaved
+                    // If we want to give a dialog to the user later to force reload and discard changes, we could add a force flag to the Remove function.
+                    if (currentFile.Count() != 0) HostObject.CurrentPowerShellTab.Files.Remove(currentFile.First());
                     HostObject.CurrentPowerShellTab.Files.Add(selectedRunbook.localFileInfo.FullName);
                 }
             }
@@ -1020,10 +1024,11 @@ namespace AutomationISE
         /// <returns>false if the user clicks cancel or else returns true to continue with upload of unsaved file</returns>
         private Boolean checkIfFileIsSaved(AutomationRunbook runbook)
         {
-            var iseFiles = HostObject.CurrentPowerShellTab.Files;
-            foreach (var file in iseFiles)
-            {
-                if ((file.DisplayName == (runbook.Name + ".ps1*")) && (file.IsSaved == false))
+            var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == runbook.localFileInfo.FullName);
+
+            if (currentFile.Count() != 0)
+                {
+                if (currentFile.First().IsSaved == false)
                 {
                     String message = "The file " + runbook.Name + ".ps1 is currently unsaved in the ISE";
                     message += "\r\nCancel and save the file or click OK to upload the unsaved file";
