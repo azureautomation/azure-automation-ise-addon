@@ -55,6 +55,8 @@ namespace AutomationISE.Model
 
         protected abstract bool isReadyForLocalUse();
 
+        public abstract String getGetCommand();
+
         /// <summary>
         /// The value of the asset
         /// </summary>

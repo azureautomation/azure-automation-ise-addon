@@ -83,6 +83,11 @@ namespace AutomationISE.Model
             return this.getValue() != null;
         }
 
+        public override String getGetCommand()
+        {
+            return ("Get-AutomationVariable -Name \"" + this.Name + "\"");
+        }
+
         /// <summary>
         /// Whether the automation variable is encrypted or not.
         /// </summary>

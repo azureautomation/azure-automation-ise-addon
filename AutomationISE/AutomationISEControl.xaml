@@ -128,7 +128,6 @@
                         <RowDefinition Height="1*"/>
                         <RowDefinition Height="35"/>
                         <RowDefinition Height="35"/>
-                        <RowDefinition Height="35"/>
                         <RowDefinition Height="5"/>
                     </Grid.RowDefinitions>
                     <Label x:Name="assetsTypeLabel" Margin="5,0,0,0" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3">Asset Type</Label>
@@ -174,13 +173,13 @@
                             </GridView>
                         </ListView.View>
                     </ListView>
+                    
                     <Button x:Name="ButttonNewAsset" Grid.Column="0" Grid.Row="3" Margin="5,10,5,0" Content="New" Click="ButtonNewAsset_Click" />
                     <Button x:Name="ButtonEditAsset" Grid.Column="1" Grid.Row="3" Margin="5,10,5,0" Content="Edit Locally" Height="25" VerticalAlignment="Top" Click="ButtonEditAsset_Click" />
-                    <Button x:Name="ButtonRefreshAssetList" Grid.Column="2" Grid.Row="3" Margin="5,10,5,0" Content="Refresh" Click="ButtonRefreshAssetList_Click" />
+                    <Button x:Name="ButtonDeleteAssets" Grid.Column="2" Grid.Row="3" Margin="5,10,5,0" Content="Delete" Click="ButtonDeleteAsset_Click" />
                     <Button x:Name="ButtonDownloadAsset" Grid.Column="0" Grid.Row="4" Margin="5,10,5,0" Content="Download" Click="ButtonDownloadAsset_Click" />
                     <Button x:Name="ButtonUploadAsset" Grid.Column="1" Grid.Row="4" Margin="5,10,5,0" Content="Upload" Click="ButtonUploadAsset_Click" />
-                    <Button x:Name="ButtonDeleteAssets" Grid.Column="2" Grid.Row="4" Margin="5,10,5,0" Content="Delete" Click="ButtonDeleteAsset_Click" />
-                    <Button x:Name="ButtonInsertAssets" Grid.Column="0" Grid.Row="5" Margin="5,10,5,0" Content="Insert" Click="ButtonInsertAsset_Click" />
+                    <Button x:Name="ButtonInsertAssets" Grid.Column="2" Grid.Row="4" Margin="5,10,5,0" Content="Insert" Click="ButtonInsertAsset_Click" />
 
                 </Grid>
             </TabItem>

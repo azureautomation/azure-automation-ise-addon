@@ -76,6 +76,11 @@ namespace AutomationISE.Model
             // TODO: implement this
             return true;
         }
+
+        public override String getGetCommand()
+        {
+            return ("Get-AutomationConnection -Name \"" + this.Name + "\"");
+        }
     }
 
     public class ConnectionJson : AssetJson {

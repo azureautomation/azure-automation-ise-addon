@@ -133,7 +133,6 @@ namespace AutomationISE
 
         public void setRunbookAndAssetNonSelectionButtonState(bool enabled)
         {
-            ButtonRefreshAssetList.IsEnabled = enabled;
             ButttonNewAsset.IsEnabled = enabled;
         }
 
@@ -482,7 +481,6 @@ namespace AutomationISE
                     setRunbookSelectionButtonState(false);
                     setRunbookAndAssetNonSelectionButtonState(true);
                     assetsComboBox.IsEnabled = true;
-                    ButtonRefreshAssetList.IsEnabled = true;
                     subscriptionComboBox.IsEnabled = true;
                     /* Enable source control sync in Azure Automation if it is set up for this automation account */
                     bool isSourceControlEnabled = await AutomationSourceControl.isSourceControlEnabled(iseClient.automationManagementClient,
@@ -640,34 +638,11 @@ namespace AutomationISE
             try
             {
                 var asset = getSelectedAssets().ElementAt(0);
-
-                if (asset is AutomationCredential)
-                {
-                    HostObject.CurrentPowerShellTab.Files.SelectedFile.Editor.InsertText("Get-AutomationPSCredential -Name " + asset.Name);
-                }
-                else if (asset is AutomationVariable)
-                {
-                    HostObject.CurrentPowerShellTab.Files.SelectedFile.Editor.InsertText("Get-AutomationVariable -Name " + asset.Name);
-                }
+                HostObject.CurrentPowerShellTab.Files.SelectedFile.Editor.InsertText(asset.getGetCommand());
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Asset could not be inserted.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private async void ButtonRefreshAssetList_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                beginBackgroundWork("Refreshing assets list...");
-                await refreshAssets();
-                endBackgroundWork("Refreshed assets list.");
-            }
-            catch (Exception ex)
-            {
-                endBackgroundWork("Error refreshing assets.");
-                MessageBox.Show("Assets could not be refreshed.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

@@ -85,6 +85,11 @@ namespace AutomationISE.Model
         {
             return this.getPassword() != null;
         }
+
+        public override String getGetCommand()
+        {
+            return ("Get-AutomationPSCredential -Name \"" + this.Name + "\"");
+        }
     }
 
     public class CredentialJson : AssetJson {
