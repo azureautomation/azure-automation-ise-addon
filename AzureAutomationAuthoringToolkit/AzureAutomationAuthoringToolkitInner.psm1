@@ -9,6 +9,20 @@ $script:SecureLocalAssetsPath = "$PSScriptRoot\SecureLocalAssets.json"
 $script:StartProfileSnippetForPowerShellToLoadAzureAutomationISEAddOn = "# Start AzureAutomationISEAddOn snippet"
 $script:EndProfileSnippetForPowerShellToLoadAzureAutomationISEAddOn = "# End AzureAutomationISEAddOn snippet"
 
+$script:IseAddonPath = "\ISEaddon\AutomationISE.dll"
+
+$script:PowerShellToLoadAzureAutomationIseAddOnGeneric = @"
+`n
+# Start AzureAutomationISEAddOn snippet
+if(`$PSIse) {{
+        Add-Type -Path {1} | Out-Null
+        `$PSIse.CurrentPowerShellTab.VerticalAddOnTools.Add('Azure Automation ISE add-on', [AutomationISE.AutomationISEControl], `$True) | Out-Null
+}}
+# End AzureAutomationISEAddOn snippet
+"@
+
+$script:IseProfileFileName = "Microsoft.PowerShellISE_profile.ps1"
+
 function _findObjectByName {
     param(
         [object] $ObjectArray,
@@ -105,10 +119,33 @@ function _EncryptValue {
 
 <#
     .SYNOPSIS
+        Sets up the Azure Automation ISE add-on for use in the PowerShell ISE.
+#>
+function Install-AzureAutomationIseAddOn {
+    $IsRunningInISE = (Split-Path $Profile -Leaf) -eq $script:IseProfileFileName
+    $IseProfilePath = Join-Path (Split-Path $Profile) $script:IseProfileFileName
+    
+    # add loading of the ISE add-on into the PS ISE Profile so it is automatically loaded each time the ISE is opened
+    $IseAddOnModulePath = $PSScriptRoot
+    $IseAddOnDllPath = Join-Path $IseAddOnModulePath $script:IseAddonPath
+    
+    $PowerShellToLoadAzureAutomationIseAddOnWithPath = $script:PowerShellToLoadAzureAutomationIseAddOnGeneric -f $IseAddOnModulePath, $IseAddOnDllPath
+    
+    Add-Content $IseProfilePath $PowerShellToLoadAzureAutomationISEAddOnWithPath
+
+    if($IsRunningInISE) {
+        # load the ISE add-on into the PS ISE session already open
+        Invoke-Expression $PowerShellToLoadAzureAutomationIseAddOnWithPath
+    }
+}
+
+<#
+    .SYNOPSIS
         Removes the Azure Automation ISE add-on from the PowerShell ISE.
 #>
 function Uninstall-AzureAutomationIseAddOn {
-    $ProfileContent = Get-Content $Profile -Raw
+    $IseProfilePath = Join-Path (Split-Path $Profile) $script:IseProfileFileName
+    $ProfileContent = Get-Content $IseProfilePath -Raw
     
     $StartProfileSnippetIndex = $ProfileContent.IndexOf($script:StartProfileSnippetForPowerShellToLoadAzureAutomationISEAddOn)
     $EndProfileSnippetIndex = $ProfileContent.IndexOf($script:EndProfileSnippetForPowerShellToLoadAzureAutomationISEAddOn)
@@ -117,7 +154,7 @@ function Uninstall-AzureAutomationIseAddOn {
         $NewProfileContent = $ProfileContent.Substring(0, $StartProfileSnippetIndex)
         $NewProfileContent += $ProfileContent.Substring($EndProfileSnippetIndex + $script:EndProfileSnippetForPowerShellToLoadAzureAutomationISEAddOn.Length)
 
-        $NewProfileContent | Set-Content $Profile
+        $NewProfileContent | Set-Content $IseProfilePath
     }
 }
 
