@@ -77,8 +77,8 @@ namespace AutomationISE
                 String localWorkspace = Properties.Settings.Default["localWorkspace"].ToString();
                 if (localWorkspace == "")
                 {
-                    String systemDrive = Environment.GetEnvironmentVariable("SystemDrive") + "\\";
-                    localWorkspace = System.IO.Path.Combine(systemDrive, "AutomationWorkspace");
+                    String userProfile = Environment.GetEnvironmentVariable("USERPROFILE") + "\\";
+                    localWorkspace = System.IO.Path.Combine(userProfile, "AutomationWorkspace");
                     Properties.Settings.Default["localWorkspace"] = localWorkspace;
                     Properties.Settings.Default.Save();
                 }
