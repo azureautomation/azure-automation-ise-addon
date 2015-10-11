@@ -36,6 +36,7 @@ To build from source:
 
 ## Uninstallation
 
-* Open the PowerShell ISE, and run `Uninstall-AzureAutomationIseAddOn`
-* Restart the Powershell ISE
+* Open PowerShell console
+* Run `Uninstall-AzureAutomationIseAddOn`
+* If the PowerShell ISE was open, reopen it
 * From now on, opening the PowerShell ISE will no longer cause the Azure Automation ISE add-on to be loaded
