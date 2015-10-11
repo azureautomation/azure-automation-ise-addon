@@ -17,6 +17,12 @@ The Azure Automation PowerShell ISE add on makes it easy to author and test your
 ## Installation
 To install the latest build of the add-on, follow the instructions for our [Early adopter release](https://github.com/azureautomation/azure-automation-ise-addon/releases/tag/v0.2.2)
 
+To install from PowerShell Gallery:
+* Open the PowerShell console as an administrator
+* Run `Install-Module AzureAutomationAuthoringToolkit`
+* Run `Install-AzureAutomationIseAddOn`
+* From now on, opening the PowerShell ISE should automatically load the Azure Automation ISE add-on
+
 To build from source:
 * [Download](https://github.com/azureautomation/azure-automation-ise-addon/archive/master.zip) or clone this repository, and extract from zip if necessary
 * Open AutomationISE/AutomationISE.sln in Visual Studio

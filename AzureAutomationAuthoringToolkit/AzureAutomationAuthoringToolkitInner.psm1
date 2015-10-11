@@ -15,7 +15,7 @@ $script:PowerShellToLoadAzureAutomationIseAddOnGeneric = @"
 `n
 # Start AzureAutomationISEAddOn snippet
 if(`$PSIse) {{
-        Add-Type -Path {1} | Out-Null
+        Add-Type -Path '{1}' | Out-Null
         `$PSIse.CurrentPowerShellTab.VerticalAddOnTools.Add('Azure Automation ISE add-on', [AutomationISE.AutomationISEControl], `$True) | Out-Null
 }}
 # End AzureAutomationISEAddOn snippet
