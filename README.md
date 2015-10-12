@@ -24,7 +24,7 @@ To install from PowerShell Gallery:
 * Open the PowerShell console as an administrator
 * Run `Install-Module AzureAutomationAuthoringToolkit`
 * Run `Install-AzureAutomationIseAddOn`
-* From now on, opening the PowerShell ISE should automatically load the Azure Automation ISE add-on
+* From now on, opening the PowerShell ISE should automatically load the Azure Automation ISE add-on. Please make sure to run the PowerShell ISE as an administrator.
 
 ### From Source
 To build from source:
