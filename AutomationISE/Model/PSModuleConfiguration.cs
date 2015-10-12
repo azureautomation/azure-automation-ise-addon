@@ -57,7 +57,18 @@ namespace AutomationISE.Model
                 String possibleModulePath = System.IO.Path.Combine(moduleLocation, ModuleData.ModuleName);
                 if (Directory.Exists(possibleModulePath))
                 {
-                    return possibleModulePath;
+                    if(!File.Exists(System.IO.Path.Combine(possibleModulePath, ModuleData.ConfigFileName))) 
+                    {
+                        // config file for module is not directly under module folder -- module contents is probably under a PSv5 version
+                        // folder under module folder, so return highest version folder path
+                        var versionFolders = Directory.EnumerateDirectories(possibleModulePath);
+                        return versionFolders.ElementAt(versionFolders.Count() - 1);
+                    }
+                    else
+                    {
+                        // config file for module is directly under module folder -- module contents is directly under module folder
+                        return possibleModulePath;
+                    }
                 }
             }
             return null;
