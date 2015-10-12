@@ -32,7 +32,8 @@ To build from source:
 * Open AutomationISE/AutomationISE.sln in Visual Studio
 * Build the solution. NuGet will pull the required packages.
 * Put the resulting binaries in the AzureAutomationAuthoringToolkit/ISEaddon directory
-* Open the PowerShell ISE, and run the `Install-AzureAutomationIseAddOn.ps1` PowerShell script
+* Place the AzureAutomationAuthoringToolkit folder somewhere in your PSModulePath, ex: `C:\Users\<USERNAME>\Documents\WindowsPowerShell\Modules`
+* Open the PowerShell ISE, and run `Install-AzureAutomationIseAddOn`
 * The Azure Automation ISE add-on should appear on the right side of the PowerShell ISE:
 ![alt text](https://github.com/azureautomation/azure-automation-ise-addon/blob/master/Screenshots/Automation-Add-On.png " Azure Automation Add-On")
 * From now on, opening the PowerShell ISE should automatically load the Azure Automation ISE add-on
