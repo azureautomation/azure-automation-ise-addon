@@ -407,7 +407,8 @@ namespace AutomationISE
                 {
                     beginBackgroundWork(Properties.Resources.RetrieveAutomationAccounts);
                     IList<AutomationAccount> automationAccounts = await iseClient.GetAutomationAccounts();
-                    accountsComboBox.ItemsSource = automationAccounts;
+                    var accountList = automationAccounts.OrderBy(x => x.Name);
+                    accountsComboBox.ItemsSource = accountList;
                     accountsComboBox.DisplayMemberPath = "Name";
                     if (accountsComboBox.HasItems)
                     {
