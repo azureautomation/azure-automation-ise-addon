@@ -1,0 +1,14 @@
+﻿[
+    {
+    	"Name": "LocalAssetsPath",
+    	"Value": "default"
+    },
+    {
+    	"Name": "SecureLocalAssetsPath",
+    	"Value": "default"
+    },
+    {
+    	"Name": "EncryptionCertificateThumbprint",
+    	"Value": "none"
+    }
+]

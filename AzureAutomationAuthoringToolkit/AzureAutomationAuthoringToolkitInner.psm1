@@ -2,7 +2,8 @@
     Learn more here: http://aka.ms/azureautomationauthoringtoolkit
 #>
 
-$script:ConfigurationPath = "$PSScriptRoot\Config.json"
+$script:ConfigurationFileName = "AzureAutomationAuthoringToolkitConfig.json"
+$script:ConfigurationPath = "$env:USERPROFILE\$script:ConfigurationFileName"
 $script:LocalAssetsPath = "$PSScriptRoot\LocalAssets.json"
 $script:SecureLocalAssetsPath = "$PSScriptRoot\SecureLocalAssets.json"
 
@@ -15,7 +16,15 @@ $script:PowerShellToLoadAzureAutomationIseAddOnGeneric = @"
 `n
 # Start AzureAutomationISEAddOn snippet
 if(`$PSIse) {{
-        Add-Type -Path '{1}' | Out-Null
+        # find latest version of AzureAutomationAuthoring Toolkit module
+        `$VersionFolders = Get-Item -Path "{0}\*"
+        `$LatestVersionFolder = `$VersionFolders[`$VersionFolders.Length - 1]
+
+        # construct path to ISE add on DLL in latest AzureAutomationAuthoring module version
+        `$AddOnDllPath = Join-Path `$LatestVersionFolder.FullName "{1}"
+
+        # load ISE add on
+        Add-Type -Path `$AddOnDllPath | Out-Null
         `$PSIse.CurrentPowerShellTab.VerticalAddOnTools.Add('Azure Automation ISE add-on', [AutomationISE.AutomationISEControl], `$True) | Out-Null
 }}
 # End AzureAutomationISEAddOn snippet
@@ -122,20 +131,43 @@ function _EncryptValue {
         Sets up the Azure Automation ISE add-on for use in the PowerShell ISE.
 #>
 function Install-AzureAutomationIseAddOn {
-    $IsRunningInISE = (Split-Path $Profile -Leaf) -eq $script:IseProfileFileName
     $IseProfilePath = Join-Path (Split-Path $Profile) $script:IseProfileFileName
-    
-    # add loading of the ISE add-on into the PS ISE Profile so it is automatically loaded each time the ISE is opened
-    $IseAddOnModulePath = $PSScriptRoot
-    $IseAddOnDllPath = Join-Path $IseAddOnModulePath $script:IseAddonPath
-    
-    $PowerShellToLoadAzureAutomationIseAddOnWithPath = $script:PowerShellToLoadAzureAutomationIseAddOnGeneric -f $IseAddOnModulePath, $IseAddOnDllPath
-    
-    Add-Content $IseProfilePath $PowerShellToLoadAzureAutomationISEAddOnWithPath
+    $ProfileContent = Get-Content $IseProfilePath -Raw
+    $StartProfileSnippetIndex = $ProfileContent.IndexOf($script:StartProfileSnippetForPowerShellToLoadAzureAutomationISEAddOn)
 
-    if($IsRunningInISE) {
-        # load the ISE add-on into the PS ISE session already open
-        Invoke-Expression $PowerShellToLoadAzureAutomationIseAddOnWithPath
+    # add content to PS ISE profile to load ISe add on on start up
+    Write-Verbose "AzureAutomationAuthoringToolkit: Adding content to '$IseProfilePath' to cause ISE add-on to load on PowerShell ISE start up"
+
+    if($StartProfileSnippetIndex -eq -1) {
+        $IsRunningInISE = (Split-Path $Profile -Leaf) -eq $script:IseProfileFileName
+    
+        # add loading of the ISE add-on into the PS ISE Profile so it is automatically loaded each time the ISE is opened
+        $IseAddOnModuleFolderPath = Split-Path $PSScriptRoot -Parent
+    
+        $PowerShellToLoadAzureAutomationIseAddOnWithPath = $script:PowerShellToLoadAzureAutomationIseAddOnGeneric -f $IseAddOnModuleFolderPath, $script:IseAddonPath
+    
+        Add-Content $IseProfilePath $PowerShellToLoadAzureAutomationISEAddOnWithPath
+
+        if($IsRunningInISE) {
+            # load the ISE add-on into the PS ISE session already open
+            Write-Verbose "AzureAutomationAuthoringToolkit: Loading ISE add-on into this PowerShell ISE session"
+            Invoke-Expression $PowerShellToLoadAzureAutomationIseAddOnWithPath
+        }
+    }
+    else {
+         Write-Verbose "AzureAutomationAuthoringToolkit: Content already present. Not adding any content."
+    }
+
+    # copy configuration file for AzureAutomationAuthoringToolkit to user's profile directory
+    Write-Verbose "AzureAutomationAuthoringToolkit: Copying '$script:ConfigurationFileName' configuration file to '$script:ConfigurationPath'"
+
+    $ConfigurationFile = Get-Item -Path $script:ConfigurationPath -ErrorAction SilentlyContinue
+
+    if(!$ConfigurationFile) {
+        Copy-Item -Path (Join-Path $PSScriptRoot $script:ConfigurationFileName) -Destination $script:ConfigurationPath
+    }
+    else {
+        Write-Verbose "AzureAutomationAuthoringToolkit: '$script:ConfigurationPath' already present. Not copying file."
     }
 }
 
@@ -151,6 +183,8 @@ function Uninstall-AzureAutomationIseAddOn {
     $EndProfileSnippetIndex = $ProfileContent.IndexOf($script:EndProfileSnippetForPowerShellToLoadAzureAutomationISEAddOn)
 
     if($StartProfileSnippetIndex -gt -1 -and $EndProfileSnippetIndex -gt -1) {
+        Write-Verbose "AzureAutomationAuthoringToolkit: Removing content from '$IseProfilePath' to cause ISE add-on to no longer load on PowerShell ISE start up"
+        
         $NewProfileContent = $ProfileContent.Substring(0, $StartProfileSnippetIndex)
         $NewProfileContent += $ProfileContent.Substring($EndProfileSnippetIndex + $script:EndProfileSnippetForPowerShellToLoadAzureAutomationISEAddOn.Length)
 
@@ -320,7 +354,7 @@ function Get-AzureAutomationAuthoringToolkitConfiguration {
     '$script:ConfigurationPath' is incorrect. Make sure the file exists, contains valid JSON, and contains 'LocalAssetsPath', 
     'SecureLocalAssetsPath', and 'EncryptionCertificateThumbprint' settings."
 
-    Write-Verbose "AzureAutomationAuthoringToolkit: Grabbing AzureAutomationAuthoringToolkit configuration."
+    Write-Verbose "AzureAutomationAuthoringToolkit: Grabbing AzureAutomationAuthoringToolkit configuration from '$script:ConfigurationPath'"
 
     try {
         $ConfigurationTemp = Get-Content $script:ConfigurationPath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
