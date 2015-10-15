@@ -51,27 +51,7 @@ namespace AutomationISE.Model
 
         public static string findModulePath()
         {
-            String[] moduleLocations = Environment.GetEnvironmentVariable(ModuleData.EnvPSModulePath).Split(';');
-            foreach (String moduleLocation in moduleLocations)
-            {
-                String possibleModulePath = System.IO.Path.Combine(moduleLocation, ModuleData.ModuleName);
-                if (Directory.Exists(possibleModulePath))
-                {
-                    if(!File.Exists(System.IO.Path.Combine(possibleModulePath, ModuleData.ConfigFileName))) 
-                    {
-                        // config file for module is not directly under module folder -- module contents is probably under a PSv5 version
-                        // folder under module folder, so return highest version folder path
-                        var versionFolders = Directory.EnumerateDirectories(possibleModulePath);
-                        return versionFolders.ElementAt(versionFolders.Count() - 1);
-                    }
-                    else
-                    {
-                        // config file for module is directly under module folder -- module contents is directly under module folder
-                        return possibleModulePath;
-                    }
-                }
-            }
-            return null;
+            return System.Environment.GetEnvironmentVariable("USERPROFILE");
         }
 
         public class PSModuleConfigurationItem
@@ -83,7 +63,7 @@ namespace AutomationISE.Model
         public static class ModuleData
         {
             public const string ModuleName = "AzureAutomationAuthoringToolkit";
-            public const string ConfigFileName = "Config.json";
+            public const string ConfigFileName = "AzureAutomationAuthoringToolkitConfig.json";
             public const string LocalAssetsPath_FieldName = "LocalAssetsPath";
             public const string SecureLocalAssetsPath_FieldName = "SecureLocalAssetsPath";
             public const string EncryptionCertificateThumbprint_FieldName = "EncryptionCertificateThumbprint";
