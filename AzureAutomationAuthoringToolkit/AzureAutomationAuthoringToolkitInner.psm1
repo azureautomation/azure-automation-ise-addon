@@ -132,7 +132,14 @@ function _EncryptValue {
 #>
 function Install-AzureAutomationIseAddOn {
     $IseProfilePath = Join-Path (Split-Path $Profile) $script:IseProfileFileName
+
+    if(!(Test-Path $IseProfilePath)) {
+        Write-Verbose "AzureAutomationAuthoringToolkit: '$IseProfilePath' does not exist, creating it"
+        New-Item -Path $IseProfilePath -ItemType File | Out-Null
+    }
+
     $ProfileContent = Get-Content $IseProfilePath -Raw
+    if(!$ProfileContent) { $ProfileContent = "" }
     $StartProfileSnippetIndex = $ProfileContent.IndexOf($script:StartProfileSnippetForPowerShellToLoadAzureAutomationISEAddOn)
 
     # add content to PS ISE profile to load ISe add on on start up
