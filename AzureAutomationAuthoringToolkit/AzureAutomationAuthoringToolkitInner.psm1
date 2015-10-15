@@ -135,7 +135,7 @@ function Install-AzureAutomationIseAddOn {
 
     if(!(Test-Path $IseProfilePath)) {
         Write-Verbose "AzureAutomationAuthoringToolkit: '$IseProfilePath' does not exist, creating it"
-        New-Item -Path $IseProfilePath -ItemType File | Out-Null
+        New-Item -Path $IseProfilePath -ItemType File -Force | Out-Null
     }
 
     $ProfileContent = Get-Content $IseProfilePath -Raw
