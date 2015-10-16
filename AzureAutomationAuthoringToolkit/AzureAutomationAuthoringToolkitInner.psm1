@@ -131,6 +131,8 @@ function _EncryptValue {
         Sets up the Azure Automation ISE add-on for use in the PowerShell ISE.
 #>
 function Install-AzureAutomationIseAddOn {
+    [CmdletBinding(HelpUri='http://aka.ms/azureautomationauthoringtoolkit')]
+    
     $IseProfilePath = Join-Path (Split-Path $Profile) $script:IseProfileFileName
 
     if(!(Test-Path $IseProfilePath)) {
@@ -183,6 +185,8 @@ function Install-AzureAutomationIseAddOn {
         Removes the Azure Automation ISE add-on from the PowerShell ISE.
 #>
 function Uninstall-AzureAutomationIseAddOn {
+    [CmdletBinding(HelpUri='http://aka.ms/azureautomationauthoringtoolkit')]
+    
     $IseProfilePath = Join-Path (Split-Path $Profile) $script:IseProfileFileName
     $ProfileContent = Get-Content $IseProfilePath -Raw
     
