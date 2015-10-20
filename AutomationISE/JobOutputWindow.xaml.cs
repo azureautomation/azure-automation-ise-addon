@@ -25,7 +25,7 @@ namespace AutomationISE
         private AutomationISEClient iseClient;
         private String runbookName;
         private Timer refreshTimer;
-        /* These values are the defaults for the settings visible using >(Get-Host).PrivateData */
+        /* These values are the defaults for the settings visible using PS>(Get-Host).PrivateData */
         public static String ErrorForegroundColorCode = "#FFFF0000";
         public static String ErrorBackgroundColorCode = "#00FFFFFF";
         public static String WarningForegroundColorCode = "#FFFF8C00";
@@ -40,7 +40,7 @@ namespace AutomationISE
             AdditionalInformation.Text = "Tip: not seeing Verbose output? Add the line \"$VerbosePreference='Continue'\" to your runbook.";
             runbookName = name;
             iseClient = client;
-            Task t = checkTestJob();
+            Task t = checkTestJob(true);
             refreshTimer = new Timer();
             refreshTimer.Interval = 30000;
             refreshTimer.Elapsed += new ElapsedEventHandler(refresh);
@@ -63,11 +63,20 @@ namespace AutomationISE
             refreshTimer.Elapsed += new ElapsedEventHandler(refresh);
         }
 
-        private async Task checkTestJob()
+        private async Task checkTestJob(bool showWarning = false)
         {
             TestJobGetResponse response = await iseClient.automationManagementClient.TestJobs.GetAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
                                                 iseClient.currAccount.Name, runbookName, new System.Threading.CancellationToken());
-            JobDetails.Content = runbookName + " test job created at " + response.TestJob.CreationTime.LocalDateTime;
+            if (showWarning)
+            {
+                JobDetails.FontWeight = FontWeights.Bold;
+                JobDetails.Content = "This is a past test job for " + runbookName + " created at " + response.TestJob.CreationTime.LocalDateTime;
+            }
+            else
+            {
+                JobDetails.FontWeight = FontWeights.Normal;
+                JobDetails.Content = runbookName + " test job created at " + response.TestJob.CreationTime.LocalDateTime;
+            }
             JobDetails.Content += "\r\nLast refreshed at " + DateTime.Now;
             JobStatus.Content = response.TestJob.Status;
             if (response.TestJob.Status == "Failed")
@@ -255,6 +264,7 @@ namespace AutomationISE
                 if (response != null)
                 {
                     OutputTextBlockParagraph.Inlines.Clear();
+                    JobDetails.FontWeight = FontWeights.Regular;
                     JobDetails.Content = runbookName + " test job created at " + response.TestJob.CreationTime.LocalDateTime;
                     JobStatus.Content = response.TestJob.Status;
                 }
