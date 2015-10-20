@@ -87,7 +87,7 @@ namespace AutomationISE.Model
         public static class AuthoringStates
         {
             public const String New = "New";
-            public const String InEdit = "In Edit";
+            public const String InEdit = "Edit";
             public const String Published = "Published";
         }
     }
