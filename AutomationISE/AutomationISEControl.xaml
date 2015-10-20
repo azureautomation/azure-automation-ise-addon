@@ -70,7 +70,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <ListView x:Name="RunbooksListView" SelectionMode="Extended" Margin="10,10,10,0" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" SelectionChanged="RunbooksListView_SelectionChanged">
+                    <ListView x:Name="RunbooksListView" SelectionMode="Extended" Margin="10,10,10,0" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" SelectionChanged="RunbooksListView_SelectionChanged" MouseDoubleClick="RunbooksListView_MouseDoubleClick">
                         <ListView.View>
                             <GridView>
                                 <GridView.ColumnHeaderContextMenu>
@@ -132,7 +132,7 @@
                     </Grid.RowDefinitions>
                     <Label x:Name="assetsTypeLabel" Margin="5,0,0,0" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3">Asset Type</Label>
                     <ComboBox x:Name="assetsComboBox" Margin="10,0,10,0" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" SelectionChanged="assetsComboBox_SelectionChanged"/>
-                    <ListView x:Name="assetsListView" Margin="10,10,10,0" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" SelectionChanged="assetsListView_SelectionChanged">
+                    <ListView x:Name="assetsListView" Margin="10,10,10,0" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" SelectionChanged="assetsListView_SelectionChanged" MouseDoubleClick="assetsListView_MouseDoubleClick">
                         <ListView.ItemContainerStyle>
                             <Style TargetType="ListViewItem">
                                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/>

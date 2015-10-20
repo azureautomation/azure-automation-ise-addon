@@ -1386,5 +1386,31 @@ namespace AutomationISE
                 endBackgroundWork();
             }
         }
+
+        private void RunbooksListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            try
+            {
+                AutomationRunbook runbook = ((FrameworkElement)e.OriginalSource).DataContext as AutomationRunbook;
+                if (runbook != null)
+                {
+                    ButtonOpenRunbook_Click(null, null);
+                }
+            }
+            catch { }
+        }
+
+        private void assetsListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            try
+            {
+                AutomationAsset item = ((FrameworkElement)e.OriginalSource).DataContext as AutomationAsset;
+                if (item != null)
+                {
+                    ButtonEditAsset_Click(null, null);
+                }
+            }
+            catch { }
+        }
     }
 }
