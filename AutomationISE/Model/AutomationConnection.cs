@@ -28,15 +28,24 @@ namespace AutomationISE.Model
         public AutomationConnection(Connection cloudConnection)
             : base(cloudConnection.Name, null, cloudConnection.Properties.LastModifiedTime.LocalDateTime)
         {
+            // TODO: Azure Automation SDK (probably REST API) is not returning values as JSON, everthing is a simple string
+            // This makes it ambiguous as to the types of different fields, such as when 'False' or '3333' is returned.
+            // For now, trying to parse as JSON, and if fails, using simple string as the value.
+            
+            JavaScriptSerializer jss = new JavaScriptSerializer();
             this.ValueFields = new Dictionary<string, Object>();
-            foreach (var key in cloudConnection.Properties.FieldDefinitionValues.Keys)
-            {
-                string jsonValue = "null";
-                cloudConnection.Properties.FieldDefinitionValues.TryGetValue(key, out jsonValue);
 
-                JavaScriptSerializer jss = new JavaScriptSerializer();
-                var value = jss.DeserializeObject(jsonValue);
-                this.ValueFields.Add(key, value);
+            foreach(KeyValuePair<string, string> field in cloudConnection.Properties.FieldDefinitionValues)
+            {
+                try
+                {
+                    var value = jss.DeserializeObject(field.Value);
+                    this.ValueFields.Add(field.Key, value);
+                }
+                catch(Exception e)
+                {
+                    this.ValueFields.Add(field.Key, field.Value);
+                }
             }
         }
         
@@ -73,7 +82,14 @@ namespace AutomationISE.Model
 
         protected override bool isReadyForLocalUse()
         {
-            // TODO: implement this
+            foreach (KeyValuePair<string, object> field in this.getFields())
+            {
+                if (field.Value == null)
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
 

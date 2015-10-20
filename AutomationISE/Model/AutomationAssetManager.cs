@@ -82,8 +82,21 @@ namespace AutomationISE.Model
                 }
                 else if (assetToUpload is AutomationConnection)
                 {
-                    // TODO: implement this and certificates
+                    var asset = (AutomationConnection)assetToUpload;
+
+                    var properties = new ConnectionCreateOrUpdateProperties();
+                    var connectionFieldsAsJson = new Dictionary<string, string>();
+
+                    foreach(KeyValuePair<string, object> field in asset.getFields())
+                    {
+                        connectionFieldsAsJson.Add(field.Key, jss.Serialize(field.Value));
+                    }
+
+                    properties.FieldDefinitionValues = connectionFieldsAsJson;
+
+                    await automationApi.Connections.CreateOrUpdateAsync(resourceGroupName, automationAccountName, new ConnectionCreateOrUpdateParameters(asset.Name, properties));
                 }
+                // TODO: implement certificates
             }
         }
 
@@ -125,9 +138,15 @@ namespace AutomationISE.Model
         {
             VariableListResponse cloudVariables = await automationApi.Variables.ListAsync(resourceGroupName, automationAccountName);
             CredentialListResponse cloudCredentials = await automationApi.PsCredentials.ListAsync(resourceGroupName, automationAccountName);
+            ConnectionListResponse cloudConnections = await automationApi.Connections.ListAsync(resourceGroupName, automationAccountName);
 
-            // TODO: need to get one at a time to get values. values currently comes back as empty
-            //ConnectionListResponse cloudConnections = await automationApi.Connections.ListAsync(resourceGroupName, automationAccountName);
+            // need to get connections one at a time to get each connection's values. Values currently come back as empty in list call
+            var connectionAssetsWithValues = new HashSet<Connection>();
+            foreach (var connection in cloudConnections.Connection)
+            {
+                var connectionResponse = await automationApi.Connections.GetAsync(resourceGroupName, automationAccountName, connection.Name);
+                connectionAssetsWithValues.Add(connectionResponse.Connection);
+            }
 
             LocalAssets localAssets = LocalAssetsStore.Get(localWorkspacePath, encryptionCertThumbprint);
 
@@ -172,7 +191,7 @@ namespace AutomationISE.Model
             }
 
             // Compare cloud connections to local
-            /*foreach (var cloudAsset in cloudConnections.Connection)
+            foreach (var cloudAsset in connectionAssetsWithValues)
             {
                 var localAsset = localAssets.Connections.Find(asset => asset.Name == cloudAsset.Name);
 
@@ -188,7 +207,7 @@ namespace AutomationISE.Model
             {
                 var automationAsset = new AutomationConnection(localAsset);
                 automationAssets.Add(automationAsset);
-            }*/
+            }
 
             return automationAssets;
         }
@@ -235,6 +254,7 @@ namespace AutomationISE.Model
                     }
                 }
             }
+            
             // Search for credentials
             if (assetType == Constants.AssetType.Credential)
             {
@@ -259,6 +279,32 @@ namespace AutomationISE.Model
                     }
                 }
             }
+
+            // Search for connections
+            if (assetType == Constants.AssetType.Connection)
+            {
+                // Check local asset store first
+                var localConnection = localAssets.Connections.Find(asset => asset.Name == assetName);
+                if (localConnection != null)
+                {
+                    automationAsset = new AutomationConnection(localConnection);
+                }
+                else
+                {
+                    try
+                    {
+                        // Check cloud. Catch execption if it doesn't exist
+                        ConnectionGetResponse cloudConnection = await automationApi.Connections.GetAsync(resourceGroupName, automationAccountName, assetName);
+                        automationAsset = new AutomationConnection(cloudConnection.Connection);
+                    }
+                    catch (Exception e)
+                    {
+                        // If the exception is not found, don't throw new exception as this is expected
+                        if (e.HResult != -2146233088) throw e;
+                    }
+                }
+            }
+
             return automationAsset;
         }
 

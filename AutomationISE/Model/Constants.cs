@@ -67,6 +67,7 @@ namespace AutomationISE.Model
         public class AssetType
         {
             public const String Variable = "Variable";
+            public const String Connection = "Connection";
             public const String Credential = "Credential";
         }
 

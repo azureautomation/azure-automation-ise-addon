@@ -326,7 +326,7 @@ function Get-AzureAutomationAuthoringToolkitLocalAsset {
              # Convert PSCustomObject to Hashtable
             $Temp = @{}
 
-            $Asset.psobject.properties | ForEach-Object {
+            $Asset.ValueFields.psobject.properties | ForEach-Object {
                 if($_.Name -ne "Name" -and $_.Name -ne "LastModified") {
                     $Temp."$($_.Name)" = $_.Value
                 }

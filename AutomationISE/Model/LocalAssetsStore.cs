@@ -112,16 +112,31 @@ namespace AutomationISE.Model
 
                 else if (assetToAffect is AutomationConnection)
                 {
-                    // TODO: support carry over of null fields from previous local asset
-
+                    var connectionToAffect = (AutomationConnection)assetToAffect;
+                    
                     if (assetToDelete != null)
                     {
-                        localAssets.Connections.Remove((ConnectionJson)assetToDelete);
+                        var connectionToDelete = (ConnectionJson)assetToDelete;
+
+                        // Connection assets returned from the cloud have null values for their encrypted fields,
+                        // so keep the old local asset encrypted field values instead of overwriting the local asset encrypted field values with null
+                        foreach (KeyValuePair<string, object> field in connectionToAffect.getFields())
+                        {
+                            if (field.Value == null)
+                            {
+                                Object fieldValue = null;
+                                connectionToDelete.ValueFields.TryGetValue(field.Key, out fieldValue);
+
+                                connectionToAffect.getFields()[field.Key] = fieldValue;
+                            }
+                        }
+
+                        localAssets.Connections.Remove(connectionToDelete);
                     }
 
                     if (replace)
                     {
-                        localAssets.Connections.Add(new ConnectionJson((AutomationConnection)assetToAffect));
+                        localAssets.Connections.Add(new ConnectionJson(connectionToAffect));
                     }
                 }
             }
@@ -277,6 +292,15 @@ namespace AutomationISE.Model
                                 localCredAsset.Password = (string)decryptedValue;
                             }
                         }
+
+                        foreach (var localConnectionAsset in localAssetsSecure.Connection)
+                        {
+                            foreach (KeyValuePair<string, object> field in localConnectionAsset.ValueFields)
+                            {
+                                //localConnectionAsset.ValueFields[field.Key] = Decrypt(field.Value, encryptionCertThumbprint);
+                                // TODO: re-add this line when encrypt line stops causing crash
+                            }
+                        }
                     }
 
                     return localAssetsSecure;
@@ -311,6 +335,15 @@ namespace AutomationISE.Model
                     foreach (var localCredAsset in localAssetsSecure.PSCredential)
                     {
                         localCredAsset.Password = Encrypt(localCredAsset.Password, encryptionCertThumbprint);
+                    }
+
+                    foreach (var localConnectionAsset in localAssetsSecure.Connection)
+                    {
+                        foreach (KeyValuePair<string, object> field in localConnectionAsset.ValueFields)
+                        {
+                            //localConnectionAsset.ValueFields[field.Key] = Encrypt(field.Value, encryptionCertThumbprint);
+                            //TODO: why is this causing crash?
+                        }
                     }
                 }
 

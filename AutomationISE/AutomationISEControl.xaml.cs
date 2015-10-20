@@ -102,8 +102,8 @@ namespace AutomationISE
 
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetVariable);
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCredential);
+                assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetConnection);
                 //assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCertificate);
-                //assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetConnection);
 
                 setRunbookAndAssetNonSelectionButtonState(false);
                 setAssetSelectionButtonState(false);
@@ -1062,6 +1062,28 @@ namespace AutomationISE
             }
         }
 
+        private async Task createOrUpdateConnectionAsset(string connectionAssetName, AutomationConnection connectionToEdit, bool newAsset = false)
+        {
+            if (newAsset)
+            {
+                // Check if connection already exists before creating one.
+                var asset = await AutomationAssetManager.GetAsset(connectionAssetName, Constants.AssetType.Connection, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
+                if (asset != null) throw new Exception("Connection with that name already exists");
+            }
+
+            /*var dialog = new NewOrEditConnectionDialog(connectionToEdit);
+
+            if (dialog.ShowDialog() == true)
+            {
+                var assetsToSave = new List<AutomationAsset>();
+
+                var newConnection = new AutomationConnection(connectionAssetName, dialog.value, dialog.encrypted);
+                assetsToSave.Add(newConnection);
+                AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint());
+                await refreshAssets();
+            }*/
+        }
+
         private async void ButtonNewAsset_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -1082,7 +1104,8 @@ namespace AutomationISE
                     }
                     else if (dialog.newAssetType == AutomationISE.Model.Constants.assetConnection)
                     {
-
+                        await createOrUpdateConnectionAsset(dialog.newAssetName, null,true);
+                        assetsComboBox.SelectedItem = assetsComboBox.Items[2];
                     }
                     else if (dialog.newAssetType == AutomationISE.Model.Constants.assetCertificate)
                     {

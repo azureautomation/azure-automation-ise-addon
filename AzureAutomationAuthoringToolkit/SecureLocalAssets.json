@@ -22,8 +22,10 @@
     "Connection":  [
                        {
                            "Name":  "SampleConnection",
-                           "SomeFieldName":  "SomeFieldValue",
-                           "SomeOtherFieldName":  321,
+                           "ValueFields": {
+                              "SomeFieldName":  "SomeFieldValue",
+                              "SomeOtherFieldName":  321
+                            },
                            "LastModified": "2014-05-26 17:01:38Z"
                        }
                    ]
