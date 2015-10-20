@@ -79,6 +79,12 @@ namespace AutomationISE.Model
                 PublishedBy = "ISE User: " + System.Security.Principal.WindowsIdentity.GetCurrent().Name
             };
             LongRunningOperationResultResponse resultResponse = await automationManagementClient.RunbookDraft.PublishAsync(resourceGroupName, accountName, publishParams);
+            /* Ensure the correct sync status is detected */
+            RunbookGetResponse response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, accountName, runbook.Name);
+            runbook.localFileInfo.LastWriteTime = response.Runbook.Properties.LastModifiedTime.LocalDateTime;
+            runbook.LastModifiedLocal = response.Runbook.Properties.LastModifiedTime.LocalDateTime;
+            runbook.LastModifiedCloud = response.Runbook.Properties.LastModifiedTime.LocalDateTime;
+            /* Return the publish response */
             return resultResponse;
         }
 
