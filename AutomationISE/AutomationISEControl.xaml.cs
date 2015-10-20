@@ -674,7 +674,8 @@ namespace AutomationISE
                 foreach (Object obj in RunbooksListView.SelectedItems)
                 {
                     AutomationRunbook runbook = (AutomationRunbook)obj;
-                    if (runbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.LocalOnly)
+                    if (runbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.LocalOnly ||
+                        runbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.InSync)
                         continue;
                     if (runbook.localFileInfo != null && File.Exists(runbook.localFileInfo.FullName) && !ConfirmRunbookDownload(runbook.Name))
                         continue;
@@ -695,7 +696,8 @@ namespace AutomationISE
                     }
                 }
                 if (count == 1) endBackgroundWork("Downloaded " + name + ".");
-                else endBackgroundWork("Downloaded " + count + " runbooks.");
+                else if (count > 1) endBackgroundWork("Downloaded " + count + " runbooks.");
+                else endBackgroundWork();
                 ButtonOpenRunbook.IsEnabled = true;
                 ButtonUploadRunbook.IsEnabled = true;
                 ButtonTestRunbook.IsEnabled = true;
