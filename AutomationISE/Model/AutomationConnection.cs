@@ -42,7 +42,7 @@ namespace AutomationISE.Model
                     var value = jss.DeserializeObject(field.Value);
                     this.ValueFields.Add(field.Key, value);
                 }
-                catch(Exception e)
+                catch
                 {
                     this.ValueFields.Add(field.Key, field.Value);
                 }

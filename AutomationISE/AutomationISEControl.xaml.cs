@@ -696,6 +696,7 @@ namespace AutomationISE
                         MessageBox.Show("The runbook " + runbook.Name + " could not be downloaded.\r\nError details: " + ex.Message);
                     }
                 }
+                await refreshRunbooks();
                 if (count == 1) endBackgroundWork("Downloaded " + name + ".");
                 else if (count > 1) endBackgroundWork("Downloaded " + count + " runbooks.");
                 else endBackgroundWork();
@@ -790,7 +791,8 @@ namespace AutomationISE
                 ButtonTestRunbook.IsEnabled = true;
             }
             /* Set Publish button status */
-            if (selectedRunbook.AuthoringState == AutomationRunbook.AuthoringStates.Published)
+            if (selectedRunbook.AuthoringState == AutomationRunbook.AuthoringStates.Published || 
+                selectedRunbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.LocalOnly)
             {
                 ButtonPublishRunbook.IsEnabled = false;
             }
@@ -925,28 +927,6 @@ namespace AutomationISE
             }
         }
 
-        private async void ButtonRefreshRunbookList_Click(object sender, RoutedEventArgs e)
-        {
-            ButtonRefreshRunbookList.IsEnabled = false;
-            ButtonRefreshRunbookList.Content = "Refreshing...";
-            try
-            {
-                beginBackgroundWork("Refreshing runbook data...");
-                await refreshRunbooks();
-                endBackgroundWork("Refreshed runbook data.");
-            }
-            catch (Exception ex)
-            {
-                endBackgroundWork("Error refreshing runbook data.");
-                MessageBox.Show("The runbook list could not be refreshed.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                ButtonRefreshRunbookList.IsEnabled = true;
-                ButtonRefreshRunbookList.Content = "Refresh";
-            }
-        }
-
         private async void ButtonUploadRunbook_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -980,6 +960,7 @@ namespace AutomationISE
                         MessageBox.Show("The runbook " + selectedRunbook.Name + " could not be uploaded.\r\nError details: " + ex.Message);
                     }
                 }
+                await refreshRunbooks();
                 if (count == 1) endBackgroundWork("Uploaded " + name);
                 else endBackgroundWork("Uploaded " + count + " runbooks.");
             }
