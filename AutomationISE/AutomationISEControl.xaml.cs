@@ -1377,13 +1377,25 @@ namespace AutomationISE
                     AutomationRunbook runbook = (AutomationRunbook)obj;
                     if (runbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.CloudOnly)
                     {
-                        await AutomationRunbookManager.DeleteCloudRunbook(runbook, iseClient.automationManagementClient,
-                            iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                        String message = "Are you sure you wish to delete the cloud copy of " + runbook.Name + "?  ";
+                        message += "There is no local copy.";
+                        MessageBoxResult result = MessageBox.Show(message, "Confirm Runbook Deletion", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            await AutomationRunbookManager.DeleteCloudRunbook(runbook, iseClient.automationManagementClient,
+                                iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                        }
                     }
                     else if (runbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.LocalOnly)
                     {
-                        if (runbook.localFileInfo != null && File.Exists(runbook.localFileInfo.FullName))
-                            AutomationRunbookManager.DeleteLocalRunbook(runbook);
+                        String message = "Are you sure you wish to delete the local copy of " + runbook.Name + "?  ";
+                        message += "There is no cloud copy.";
+                        MessageBoxResult result = MessageBox.Show(message, "Confirm Runbook Deletion", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            if (runbook.localFileInfo != null && File.Exists(runbook.localFileInfo.FullName))
+                                AutomationRunbookManager.DeleteLocalRunbook(runbook);
+                        }
                     }
                     else
                     {
