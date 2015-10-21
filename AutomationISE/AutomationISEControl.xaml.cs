@@ -105,10 +105,10 @@ namespace AutomationISE
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetConnection);
                 //assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCertificate);
 
-                setRunbookAndAssetNonSelectionButtonState(false);
-                setAssetSelectionButtonState(false);
+                setCreationButtonStatesTo(false);
+                setAllAssetButtonStatesTo(false);
                 assetsComboBox.IsEnabled = false;
-                setRunbookSelectionButtonState(false);
+                setAllRunbookButtonStatesTo(false);
 
                 // Generate self-signed certificate for encrypting local assets in the current user store Cert:\CurrentUser\My\
                 var certObj = new AutomationSelfSignedCertificate();
@@ -131,12 +131,13 @@ namespace AutomationISE
             return certificateThumbprint;
         }
 
-        public void setRunbookAndAssetNonSelectionButtonState(bool enabled)
+        public void setCreationButtonStatesTo(bool enabled)
         {
-            ButttonNewAsset.IsEnabled = enabled;
+            ButtonNewAsset.IsEnabled = enabled;
+            ButtonCreateRunbook.IsEnabled = enabled;
         }
 
-        public void setRunbookSelectionButtonState(bool enabled)
+        public void setAllRunbookButtonStatesTo(bool enabled)
         {
             ButtonDeleteRunbook.IsEnabled = enabled;
             ButtonDownloadRunbook.IsEnabled = enabled;
@@ -146,7 +147,7 @@ namespace AutomationISE
             ButtonPublishRunbook.IsEnabled = enabled;
         }
 
-        public void setAssetSelectionButtonState(bool enabled)
+        public void setAllAssetButtonStatesTo(bool enabled)
         {
             ButtonDownloadAsset.IsEnabled = enabled;
             ButtonEditAsset.IsEnabled = enabled;
@@ -479,8 +480,8 @@ namespace AutomationISE
                     assetsListView.ItemsSource = assetListViewModel;
                     // Set credentials assets to be selected
                     assetsComboBox.SelectedItem = assetsComboBox.Items[1];
-                    setRunbookSelectionButtonState(false);
-                    setRunbookAndAssetNonSelectionButtonState(true);
+                    setAllRunbookButtonStatesTo(false);
+                    setCreationButtonStatesTo(true);
                     assetsComboBox.IsEnabled = true;
                     subscriptionComboBox.IsEnabled = true;
                     /* Enable source control sync in Azure Automation if it is set up for this automation account */
@@ -510,7 +511,7 @@ namespace AutomationISE
 
         private void assetsListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            setAssetSelectionButtonState(assetsListView.SelectedItems.Count > 0);
+            setAllAssetButtonStatesTo(assetsListView.SelectedItems.Count > 0);
         }
 
         private async void assetsComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -758,12 +759,12 @@ namespace AutomationISE
             miniProgressSpinnerStoryboardReverse.Pause(this);
         }
 
-        private void RunbooksListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void SetButtonStatesForSelectedRunbook()
         {
             AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
             if (selectedRunbook == null)
             {
-                setRunbookSelectionButtonState(false);
+                setAllRunbookButtonStatesTo(false);
                 return;
             }
             ButtonDeleteRunbook.IsEnabled = true;
@@ -801,6 +802,11 @@ namespace AutomationISE
             {
                 ButtonPublishRunbook.IsEnabled = true;
             }
+        }
+
+        private void RunbooksListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            SetButtonStatesForSelectedRunbook();
         }
 
         private void ButtonOpenRunbook_Click(object sender, RoutedEventArgs e)

@@ -174,7 +174,7 @@
                         </ListView.View>
                     </ListView>
                     
-                    <Button x:Name="ButttonNewAsset" Grid.Column="0" Grid.Row="3" Margin="5,10,5,0" Content="New" Click="ButtonNewAsset_Click" />
+                    <Button x:Name="ButtonNewAsset" Grid.Column="0" Grid.Row="3" Margin="5,10,5,0" Content="New" Click="ButtonNewAsset_Click" />
                     <Button x:Name="ButtonEditAsset" Grid.Column="1" Grid.Row="3" Margin="5,10,5,0" Content="Edit Locally" Height="25" VerticalAlignment="Top" Click="ButtonEditAsset_Click" />
                     <Button x:Name="ButtonDeleteAssets" Grid.Column="2" Grid.Row="3" Margin="5,10,5,0" Content="Delete" Click="ButtonDeleteAsset_Click" />
                     <Button x:Name="ButtonDownloadAsset" Grid.Column="0" Grid.Row="4" Margin="5,10,5,0" Content="Download" Click="ButtonDownloadAsset_Click" />
