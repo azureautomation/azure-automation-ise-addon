@@ -71,6 +71,42 @@ namespace AutomationISE.Model
             runbook.LastModifiedCloud = draft.LastModifiedTime.LocalDateTime;
         }
 
+        /* This is the only way I can see to "check out" a runbook (get it from Published to Edit state) using the SDK. */
+        public static async Task CheckOutRunbook(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, AutomationAccount account)
+        {
+            RunbookGetResponse response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, account.Name, runbook.Name);
+            if (response.Runbook.Properties.State != "Published")
+                return;
+            RunbookContentResponse runbookContentResponse = await automationManagementClient.Runbooks.ContentAsync(resourceGroupName, account.Name, runbook.Name);
+            // Create draft properties
+            RunbookCreateOrUpdateDraftParameters draftParams = new RunbookCreateOrUpdateDraftParameters();
+            draftParams.Properties = new RunbookCreateOrUpdateDraftProperties();
+            draftParams.Properties.Description = response.Runbook.Properties.Description;
+            draftParams.Properties.LogProgress = response.Runbook.Properties.LogProgress;
+            draftParams.Properties.LogVerbose = response.Runbook.Properties.LogVerbose;
+            draftParams.Properties.RunbookType = response.Runbook.Properties.RunbookType;
+            draftParams.Properties.Draft = new RunbookDraft();
+            draftParams.Tags = response.Runbook.Tags;
+            draftParams.Name = runbook.Name;
+            draftParams.Location = account.Location;
+            
+            await automationManagementClient.Runbooks.CreateOrUpdateWithDraftAsync(resourceGroupName, account.Name, draftParams);
+            RunbookDraftUpdateParameters draftUpdateParams = new RunbookDraftUpdateParameters()
+            {
+                Name = runbook.Name,
+                Stream = runbookContentResponse.Stream.ToString()
+            };
+            await automationManagementClient.RunbookDraft.UpdateAsync(resourceGroupName, account.Name, draftUpdateParams);
+            /* Ensure the correct sync status is detected */
+            if (runbook.localFileInfo != null)
+            {
+                RunbookDraft draft = await GetRunbookDraft(runbook.Name, automationManagementClient, resourceGroupName, account.Name);
+                runbook.localFileInfo.LastWriteTime = draft.LastModifiedTime.LocalDateTime;
+                runbook.LastModifiedLocal = draft.LastModifiedTime.LocalDateTime;
+                runbook.LastModifiedCloud = draft.LastModifiedTime.LocalDateTime;
+            }
+        }
+
         public static async Task<LongRunningOperationResultResponse> PublishRunbook(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
         {
             RunbookDraftPublishParameters publishParams = new RunbookDraftPublishParameters
@@ -80,10 +116,13 @@ namespace AutomationISE.Model
             };
             LongRunningOperationResultResponse resultResponse = await automationManagementClient.RunbookDraft.PublishAsync(resourceGroupName, accountName, publishParams);
             /* Ensure the correct sync status is detected */
-            RunbookGetResponse response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, accountName, runbook.Name);
-            runbook.localFileInfo.LastWriteTime = response.Runbook.Properties.LastModifiedTime.LocalDateTime;
-            runbook.LastModifiedLocal = response.Runbook.Properties.LastModifiedTime.LocalDateTime;
-            runbook.LastModifiedCloud = response.Runbook.Properties.LastModifiedTime.LocalDateTime;
+            if (runbook.localFileInfo != null)
+            {
+                RunbookGetResponse response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, accountName, runbook.Name);
+                runbook.localFileInfo.LastWriteTime = response.Runbook.Properties.LastModifiedTime.LocalDateTime;
+                runbook.LastModifiedLocal = response.Runbook.Properties.LastModifiedTime.LocalDateTime;
+                runbook.LastModifiedCloud = response.Runbook.Properties.LastModifiedTime.LocalDateTime;
+            }
             /* Return the publish response */
             return resultResponse;
         }

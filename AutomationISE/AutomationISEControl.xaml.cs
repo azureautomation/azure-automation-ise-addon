@@ -783,15 +783,22 @@ namespace AutomationISE
                 ButtonOpenRunbook.IsEnabled = false;
                 ButtonUploadRunbook.IsEnabled = false;
             }
-            /* Set Test and Publish button status */
-            if (selectedRunbook.AuthoringState == AutomationRunbook.AuthoringStates.Published || selectedRunbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.LocalOnly)
+            /* Set Test button status */
+            if (selectedRunbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.LocalOnly)
             {
                 ButtonTestRunbook.IsEnabled = false;
-                ButtonPublishRunbook.IsEnabled = false;
             }
             else
             {
                 ButtonTestRunbook.IsEnabled = true;
+            }
+            /* Set Publish button status */
+            if (selectedRunbook.AuthoringState == AutomationRunbook.AuthoringStates.Published)
+            {
+                ButtonPublishRunbook.IsEnabled = false;
+            }
+            else
+            {
                 ButtonPublishRunbook.IsEnabled = true;
             }
         }
@@ -974,7 +981,7 @@ namespace AutomationISE
             }
         }
 
-        private void ButtonTestRunbook_Click(object sender, RoutedEventArgs e)
+        private async void ButtonTestRunbook_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -985,13 +992,25 @@ namespace AutomationISE
                     MessageBox.Show(message, "Test Job Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
+                ButtonTestRunbook.IsEnabled = false;
                 AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
+                if (selectedRunbook.AuthoringState == AutomationRunbook.AuthoringStates.Published)
+                {
+                    beginBackgroundWork();
+                    await AutomationRunbookManager.CheckOutRunbook(selectedRunbook, iseClient.automationManagementClient,
+                        iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
+                }
                 JobOutputWindow jobWindow = new JobOutputWindow(selectedRunbook.Name, iseClient);
                 jobWindow.Show();
             }
             catch (Exception exception)
             {
                 MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                ButtonTestRunbook.IsEnabled = true;
+                endBackgroundWork();
             }
         }
 
