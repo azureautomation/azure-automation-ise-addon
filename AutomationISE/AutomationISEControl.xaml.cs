@@ -699,10 +699,6 @@ namespace AutomationISE
                 if (count == 1) endBackgroundWork("Downloaded " + name + ".");
                 else if (count > 1) endBackgroundWork("Downloaded " + count + " runbooks.");
                 else endBackgroundWork();
-                ButtonOpenRunbook.IsEnabled = true;
-                ButtonUploadRunbook.IsEnabled = true;
-                ButtonTestRunbook.IsEnabled = true;
-                ButtonPublishRunbook.IsEnabled = true;
             }
             catch (Exception ex)
             {
@@ -711,7 +707,7 @@ namespace AutomationISE
             }
             finally
             {
-                ButtonDownloadRunbook.IsEnabled = true;
+                SetButtonStatesForSelectedRunbook();
             }
         }
 
@@ -873,10 +869,8 @@ namespace AutomationISE
             finally
             {
                 /* Update UI */
-                ButtonPublishRunbook.IsEnabled = true;
-                ButtonDownloadRunbook.IsEnabled = true;
-                ButtonUploadRunbook.IsEnabled = true;
                 ButtonPublishRunbook.Content = "Publish Draft";
+                SetButtonStatesForSelectedRunbook();
             }
         }
 
@@ -972,9 +966,6 @@ namespace AutomationISE
                 }
                 if (count == 1) endBackgroundWork("Uploaded " + name);
                 else endBackgroundWork("Uploaded " + count + " runbooks.");
-                ButtonPublishRunbook.IsEnabled = true;
-                ButtonTestRunbook.IsEnabled = true;
-                ButtonDownloadRunbook.IsEnabled = true;
             }
             catch (Exception ex)
             {
@@ -983,7 +974,8 @@ namespace AutomationISE
             }
             finally
             {
-                ButtonUploadRunbook.IsEnabled = true;
+
+                SetButtonStatesForSelectedRunbook();
             }
         }
 
