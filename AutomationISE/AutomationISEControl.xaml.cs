@@ -812,10 +812,26 @@ namespace AutomationISE
                 foreach (Object obj in RunbooksListView.SelectedItems)
                 {
                     AutomationRunbook selectedRunbook = (AutomationRunbook)obj;
+                    if (selectedRunbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.CloudOnly)
+                    {
+                        MessageBox.Show("There is no local copy of " + selectedRunbook.localFileInfo.Name + " to open.",
+                                "No Local Runbook", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        continue;
+                    }
                     var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == selectedRunbook.localFileInfo.FullName);
-                    // If the file is opened and is not saved, an exception will be thrown here and the user notified that the file is unsaved
-                    // If we want to give a dialog to the user later to force reload and discard changes, we could add a force flag to the Remove function.
-                    if (currentFile.Count() != 0) HostObject.CurrentPowerShellTab.Files.Remove(currentFile.First());
+                    if (currentFile.Count() > 0)
+                    {
+                        try
+                        {
+                            // If the file is opened but not saved, an exception will be thrown here
+                            HostObject.CurrentPowerShellTab.Files.Remove(currentFile.First());
+                        }
+                        catch
+                        {
+                            MessageBox.Show("There are unsaved changes to " + selectedRunbook.localFileInfo.Name + ", so it cannot be re-opened.",
+                                "Unsaved Runbook Changes", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        }
+                    }
                     HostObject.CurrentPowerShellTab.Files.Add(selectedRunbook.localFileInfo.FullName);
                 }
             }
@@ -974,7 +990,6 @@ namespace AutomationISE
             }
             finally
             {
-
                 SetButtonStatesForSelectedRunbook();
             }
         }
@@ -1007,7 +1022,7 @@ namespace AutomationISE
             }
             finally
             {
-                ButtonTestRunbook.IsEnabled = true;
+                SetButtonStatesForSelectedRunbook();
                 endBackgroundWork();
             }
         }
