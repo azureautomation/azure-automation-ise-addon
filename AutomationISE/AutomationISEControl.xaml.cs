@@ -1022,18 +1022,15 @@ namespace AutomationISE
         private Boolean checkIfFileIsSaved(AutomationRunbook runbook)
         {
             var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == runbook.localFileInfo.FullName);
-
             if (currentFile.Count() != 0)
                 {
                 if (currentFile.First().IsSaved == false)
                 {
-                    String message = "The file " + runbook.Name + ".ps1 is currently unsaved in the ISE";
-                    message += "\r\nCancel and save the file or click OK to upload the unsaved file";
-                    String header = "Upload Warning";
-                    System.Windows.Forms.DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(message, header,
-                        System.Windows.Forms.MessageBoxButtons.OKCancel, System.Windows.Forms.MessageBoxIcon.Warning);
-                    if (dialogResult == System.Windows.Forms.DialogResult.Cancel)
-                        return false;
+                    String message = "The file " + runbook.localFileInfo.Name + " has unsaved changes.";
+                    message += "\r\nPlease save your changes before uploading.";
+                    System.Windows.Forms.DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(message, "Upload Warning",
+                        System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                    return false;
                 }
             }
             return true;
