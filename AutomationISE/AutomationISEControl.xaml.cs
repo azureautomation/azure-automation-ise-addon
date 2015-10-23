@@ -256,7 +256,9 @@ namespace AutomationISE
         {
             try
             {
+                refreshAuthTokenTimer.Stop();
                 iseClient.RefreshAutomationClientwithNewToken();
+                refreshAuthTokenTimer.Start();
             }
             catch (Exception exception)
             {
