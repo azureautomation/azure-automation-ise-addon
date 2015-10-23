@@ -15,6 +15,7 @@
 using System;
 using System.Globalization;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Management.Automation;
 using Microsoft.Azure.Management.Automation.Models;
@@ -25,6 +26,8 @@ namespace AutomationISE.Model
 {
     public class AutomationAssetManager
     {
+        private static int TIMEOUT_MS = 10000;
+
         public static async Task DownloadAllFromCloud(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, String encryptionCertThumbprint)
         {
             var assets = await AutomationAssetManager.GetAll(null, automationApi, resourceGroupName, automationAccountName, encryptionCertThumbprint);
@@ -57,6 +60,8 @@ namespace AutomationISE.Model
 
             foreach (var assetToUpload in assetsToUpload)
             {
+                CancellationTokenSource cts = new CancellationTokenSource();
+                cts.CancelAfter(TIMEOUT_MS);
                 if (assetToUpload is AutomationVariable)
                 {
                     var asset = (AutomationVariable)assetToUpload;
@@ -68,7 +73,7 @@ namespace AutomationISE.Model
                     jss.Serialize(asset.getValue(), stringBuilder);
                     properties.Value = stringBuilder.ToString();
 
-                    await automationApi.Variables.CreateOrUpdateAsync(resourceGroupName, automationAccountName, new VariableCreateOrUpdateParameters(asset.Name, properties));
+                    await automationApi.Variables.CreateOrUpdateAsync(resourceGroupName, automationAccountName, new VariableCreateOrUpdateParameters(asset.Name, properties), cts.Token);
                 }
                 else if(assetToUpload is AutomationCredential)
                 {
@@ -78,7 +83,7 @@ namespace AutomationISE.Model
                     properties.UserName = asset.getUsername();
                     properties.Password = asset.getPassword();
 
-                    await automationApi.PsCredentials.CreateOrUpdateAsync(resourceGroupName, automationAccountName, new CredentialCreateOrUpdateParameters(asset.Name, properties));
+                    await automationApi.PsCredentials.CreateOrUpdateAsync(resourceGroupName, automationAccountName, new CredentialCreateOrUpdateParameters(asset.Name, properties), cts.Token);
                 }
                 else if (assetToUpload is AutomationConnection)
                 {
@@ -94,7 +99,7 @@ namespace AutomationISE.Model
 
                     properties.FieldDefinitionValues = connectionFieldsAsJson;
 
-                    await automationApi.Connections.CreateOrUpdateAsync(resourceGroupName, automationAccountName, new ConnectionCreateOrUpdateParameters(asset.Name, properties));
+                    await automationApi.Connections.CreateOrUpdateAsync(resourceGroupName, automationAccountName, new ConnectionCreateOrUpdateParameters(asset.Name, properties), cts.Token);
                 }
                 // TODO: implement certificates
             }
@@ -121,7 +126,6 @@ namespace AutomationISE.Model
                         // asset is local only, no need to delete it from cloud
                         continue;
                     }
-
                     if (assetToDelete is AutomationVariable)
                     {
                         automationApi.Variables.Delete(resourceGroupName, automationAccountName, assetToDelete.Name);
@@ -136,15 +140,23 @@ namespace AutomationISE.Model
 
         public static async Task<ISet<AutomationAsset>> GetAll(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, string encryptionCertThumbprint)
         {
-            VariableListResponse cloudVariables = await automationApi.Variables.ListAsync(resourceGroupName, automationAccountName);
-            CredentialListResponse cloudCredentials = await automationApi.PsCredentials.ListAsync(resourceGroupName, automationAccountName);
-            ConnectionListResponse cloudConnections = await automationApi.Connections.ListAsync(resourceGroupName, automationAccountName);
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
+            VariableListResponse cloudVariables = await automationApi.Variables.ListAsync(resourceGroupName, automationAccountName, cts.Token);
+            cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
+            CredentialListResponse cloudCredentials = await automationApi.PsCredentials.ListAsync(resourceGroupName, automationAccountName, cts.Token);
+            cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
+            ConnectionListResponse cloudConnections = await automationApi.Connections.ListAsync(resourceGroupName, automationAccountName, cts.Token);
 
             // need to get connections one at a time to get each connection's values. Values currently come back as empty in list call
             var connectionAssetsWithValues = new HashSet<Connection>();
             foreach (var connection in cloudConnections.Connection)
             {
-                var connectionResponse = await automationApi.Connections.GetAsync(resourceGroupName, automationAccountName, connection.Name);
+                cts = new CancellationTokenSource();
+                cts.CancelAfter(TIMEOUT_MS);
+                var connectionResponse = await automationApi.Connections.GetAsync(resourceGroupName, automationAccountName, connection.Name, cts.Token);
                 connectionAssetsWithValues.Add(connectionResponse.Connection);
             }
 
@@ -231,6 +243,8 @@ namespace AutomationISE.Model
             LocalAssets localAssets = LocalAssetsStore.Get(localWorkspacePath, encryptionCertThumbprint);
 
             // Search for variables
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
             if (assetType == Constants.AssetType.Variable)
             {
                 // Check local asset store first
@@ -243,8 +257,8 @@ namespace AutomationISE.Model
                 {
                     try
                     {
-                        // Check cloud. Catch execption if it doesn't exist
-                        VariableGetResponse cloudVariable = await automationApi.Variables.GetAsync(resourceGroupName, automationAccountName, assetName);
+                        // Check cloud. Catch exception if it doesn't exist
+                        VariableGetResponse cloudVariable = await automationApi.Variables.GetAsync(resourceGroupName, automationAccountName, assetName, cts.Token);
                         automationAsset = new AutomationVariable(cloudVariable.Variable);
                     }
                     catch (Exception e)
@@ -254,9 +268,8 @@ namespace AutomationISE.Model
                     }
                 }
             }
-            
             // Search for credentials
-            if (assetType == Constants.AssetType.Credential)
+            else if (assetType == Constants.AssetType.Credential)
             {
                 // Check local asset store first
                 var localCredential = localAssets.PSCredentials.Find(asset => asset.Name == assetName);
@@ -269,7 +282,7 @@ namespace AutomationISE.Model
                     try
                     {
                         // Check cloud. Catch execption if it doesn't exist
-                        CredentialGetResponse cloudVariable = await automationApi.PsCredentials.GetAsync(resourceGroupName, automationAccountName, assetName);
+                        CredentialGetResponse cloudVariable = await automationApi.PsCredentials.GetAsync(resourceGroupName, automationAccountName, assetName, cts.Token);
                         automationAsset = new AutomationCredential(cloudVariable.Credential);
                     }
                     catch (Exception e)
@@ -279,9 +292,8 @@ namespace AutomationISE.Model
                     }
                 }
             }
-
             // Search for connections
-            if (assetType == Constants.AssetType.Connection)
+            else if (assetType == Constants.AssetType.Connection)
             {
                 // Check local asset store first
                 var localConnection = localAssets.Connections.Find(asset => asset.Name == assetName);
@@ -294,7 +306,7 @@ namespace AutomationISE.Model
                     try
                     {
                         // Check cloud. Catch execption if it doesn't exist
-                        ConnectionGetResponse cloudConnection = await automationApi.Connections.GetAsync(resourceGroupName, automationAccountName, assetName);
+                        ConnectionGetResponse cloudConnection = await automationApi.Connections.GetAsync(resourceGroupName, automationAccountName, assetName, cts.Token);
                         automationAsset = new AutomationConnection(cloudConnection.Connection);
                     }
                     catch (Exception e)
@@ -304,9 +316,7 @@ namespace AutomationISE.Model
                     }
                 }
             }
-
             return automationAsset;
         }
-
     }
 }

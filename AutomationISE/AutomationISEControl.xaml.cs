@@ -690,6 +690,10 @@ namespace AutomationISE
                         name = runbook.Name;
                         runbook.UpdateSyncStatus();
                     }
+                    catch (OperationCanceledException)
+                    {
+                        endBackgroundWork("Downloading " + runbook.Name + " timed out.");
+                    }
                     catch (Exception ex)
                     {
                         endBackgroundWork("Error downloading runbook " + runbook.Name);
