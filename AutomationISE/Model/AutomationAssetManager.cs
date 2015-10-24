@@ -193,11 +193,12 @@ namespace AutomationISE.Model
             // Compare cloud connections to local
             foreach (var cloudAsset in connectionAssetsWithValues)
             {
+                ConnectionTypeGetResponse connectionType = await automationApi.ConnectionTypes.GetAsync(resourceGroupName, automationAccountName, cloudAsset.Properties.ConnectionType.Name); 
                 var localAsset = localAssets.Connections.Find(asset => asset.Name == cloudAsset.Name);
 
                 var automationAsset = (localAsset != null) ?
                         new AutomationConnection(localAsset, cloudAsset) :
-                        new AutomationConnection(cloudAsset);
+                        new AutomationConnection(cloudAsset, connectionType.ConnectionType);
 
                 automationAssets.Add(automationAsset);
             }
@@ -295,7 +296,8 @@ namespace AutomationISE.Model
                     {
                         // Check cloud. Catch execption if it doesn't exist
                         ConnectionGetResponse cloudConnection = await automationApi.Connections.GetAsync(resourceGroupName, automationAccountName, assetName);
-                        automationAsset = new AutomationConnection(cloudConnection.Connection);
+                        ConnectionTypeGetResponse connectionType =  await automationApi.ConnectionTypes.GetAsync(resourceGroupName, automationAccountName, cloudConnection.Connection.Properties.ConnectionType.Name);
+                        automationAsset = new AutomationConnection(cloudConnection.Connection, connectionType.ConnectionType);
                     }
                     catch (Exception e)
                     {
@@ -306,6 +308,19 @@ namespace AutomationISE.Model
             }
 
             return automationAsset;
+        }
+
+        public static async Task<ISet<ConnectionType>> GetConnectionTypes(AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
+        {
+            var connectionTypeListResponse = await automationApi.ConnectionTypes.ListAsync(resourceGroupName, automationAccountName);
+            var connectionTypes = new HashSet<ConnectionType>();
+
+            foreach (var connectionType in connectionTypeListResponse.ConnectionTypes)
+            {
+                connectionTypes.Add(connectionType);
+            }
+
+            return connectionTypes;
         }
 
     }

@@ -46,6 +46,7 @@ namespace AutomationISE
         private AutomationISEClient iseClient;
         private ObservableCollection<AutomationRunbook> runbookListViewModel;
         private ObservableCollection<AutomationAsset> assetListViewModel;
+        private ISet<ConnectionType> connectionTypes;
         private ListSortDirection runbookCurrSortDir;
         private string runbookCurrSortProperty;
         private ListSortDirection assetCurrSortDir;
@@ -183,6 +184,11 @@ namespace AutomationISE
             return (SortedSet<AutomationAsset>)await AutomationAssetManager.GetAll(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
         }
 
+        public async Task<ISet<ConnectionType>> getConnectionTypes()
+        {
+            return await AutomationAssetManager.GetConnectionTypes(iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+        }
+
         public async Task<SortedSet<AutomationAsset>> getAssetsOfType(String type)
         {
             var assets = await getAssetsInfo();
@@ -314,6 +320,8 @@ namespace AutomationISE
                 mergeAssetListWith(await getAssetsOfType("AutomationCertificate"));
             }
             setSelectedAssets(selectedAssets);
+
+            connectionTypes = await getConnectionTypes();
         }
 
         private void mergeAssetListWith(ICollection<AutomationAsset> newAssetCollection)
@@ -1085,17 +1093,17 @@ namespace AutomationISE
                 if (asset != null) throw new Exception("Connection with that name already exists");
             }
 
-            /*var dialog = new NewOrEditConnectionDialog(connectionToEdit);
+            var dialog = new NewOrEditConnectionDialog(connectionToEdit, connectionTypes);
 
             if (dialog.ShowDialog() == true)
             {
                 var assetsToSave = new List<AutomationAsset>();
 
-                var newConnection = new AutomationConnection(connectionAssetName, dialog.value, dialog.encrypted);
+                var newConnection = new AutomationConnection(connectionAssetName, dialog.connectionFields, dialog.connectionType);
                 assetsToSave.Add(newConnection);
                 AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint());
                 await refreshAssets();
-            }*/
+            }
         }
 
         private async void ButtonNewAsset_Click(object sender, RoutedEventArgs e)

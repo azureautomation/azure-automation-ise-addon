@@ -25,35 +25,41 @@ namespace AutomationISE.Model
     public class AutomationConnection : AutomationAsset
     {
         // cloud only
-        public AutomationConnection(Connection cloudConnection)
+        public AutomationConnection(Connection cloudConnection, ConnectionType cloudConnectionType)
             : base(cloudConnection.Name, null, cloudConnection.Properties.LastModifiedTime.LocalDateTime)
         {
-            // TODO: Azure Automation SDK (probably REST API) is not returning values as JSON, everthing is a simple string
-            // This makes it ambiguous as to the types of different fields, such as when 'False' or '3333' is returned.
-            // For now, trying to parse as JSON, and if fails, using simple string as the value.
+            this.ConnectionType = cloudConnectionType.Name;
             
             JavaScriptSerializer jss = new JavaScriptSerializer();
             this.ValueFields = new Dictionary<string, Object>();
 
             foreach(KeyValuePair<string, string> field in cloudConnection.Properties.FieldDefinitionValues)
             {
-                try
-                {
-                    var value = jss.DeserializeObject(field.Value);
-                    this.ValueFields.Add(field.Key, value);
-                }
-                catch
+                if(cloudConnectionType.Properties.FieldDefinitions[field.Key].Type.Equals("System.String"))
                 {
                     this.ValueFields.Add(field.Key, field.Value);
+                }
+                else
+                {
+                    try
+                    {
+                        var value = jss.DeserializeObject(field.Value.ToLower());
+                        this.ValueFields.Add(field.Key, value);
+                    }
+                    catch(Exception e)
+                    {
+                        this.ValueFields.Add(field.Key, field.Value);
+                    }
                 }
             }
         }
         
         // local only - new
-        public AutomationConnection(String name, IDictionary<string, Object> valueFields)
+        public AutomationConnection(String name, IDictionary<string, Object> valueFields, string connectionType)
             : base(name, DateTime.Now, null)
         {
             this.ValueFields = valueFields;
+            this.ConnectionType = connectionType;
         }
 
         // local only - from json
@@ -61,6 +67,7 @@ namespace AutomationISE.Model
             : base(localJson, null)
         {
             this.ValueFields = localJson.ValueFields;
+            this.ConnectionType = localJson.ConnectionType;
         }
 
         // both cloud and local
@@ -68,6 +75,7 @@ namespace AutomationISE.Model
             : base(localJson, cloudCredential.Properties.LastModifiedTime.LocalDateTime)
         {
             this.ValueFields = localJson.ValueFields;
+            this.ConnectionType = localJson.ConnectionType;
         }
 
         public IDictionary<string, Object> getFields()
@@ -97,6 +105,11 @@ namespace AutomationISE.Model
         {
             return ("Get-AutomationConnection -Name \"" + this.Name + "\"");
         }
+
+        /// <summary>
+        /// The connection type of the connection
+        /// </summary>
+        public string ConnectionType { get; set; }
     }
 
     public class ConnectionJson : AssetJson {
@@ -106,8 +119,10 @@ namespace AutomationISE.Model
             : base(connection)
         {
             this.ValueFields = connection.getFields();
+            this.ConnectionType = connection.ConnectionType;
         }
 
-        public IDictionary<string,Object> ValueFields { get; set; }
+        public IDictionary<string, Object> ValueFields { get; set; }
+        public string ConnectionType { get; set;  }
     }
 }
