@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Management.Automation;
 using Microsoft.Azure.Management.Automation.Models;
-
-using System.Diagnostics;
 
 namespace AutomationISE.Model
 {
@@ -16,6 +16,8 @@ namespace AutomationISE.Model
      */
     public static class AutomationRunbookManager
     {
+        private static int TIMEOUT_MS = 10000;
+
         public static async Task UploadRunbookAsDraft(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, AutomationAccount account)
         {
             RunbookCreateOrUpdateDraftProperties draftProperties;
@@ -36,9 +38,11 @@ namespace AutomationISE.Model
 
             // Get current properties if is not a new runbook and set these on the draft also so they are preserved.
             RunbookGetResponse response = null;
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
             if (runbook.SyncStatus != AutomationAuthoringItem.Constants.SyncStatus.LocalOnly)
             {
-                response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, account.Name, runbook.Name);
+                response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, account.Name, runbook.Name, cts.Token);
                 draftProperties.Description = response.Runbook.Properties.Description;
             }
 
@@ -54,8 +58,9 @@ namespace AutomationISE.Model
                 draftParams.Properties.LogProgress = response.Runbook.Properties.LogProgress;
                 draftParams.Properties.LogVerbose = response.Runbook.Properties.LogVerbose;
             }
-
-            await automationManagementClient.Runbooks.CreateOrUpdateWithDraftAsync(resourceGroupName, account.Name, draftParams);
+            cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
+            await automationManagementClient.Runbooks.CreateOrUpdateWithDraftAsync(resourceGroupName, account.Name, draftParams, cts.Token);
             /* Update the runbook content from .ps1 file */
 
             RunbookDraftUpdateParameters draftUpdateParams = new RunbookDraftUpdateParameters()
@@ -63,7 +68,9 @@ namespace AutomationISE.Model
                 Name = runbook.Name,
                 Stream = PSScriptText
             };
-            await automationManagementClient.RunbookDraft.UpdateAsync(resourceGroupName, account.Name, draftUpdateParams);
+            cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
+            await automationManagementClient.RunbookDraft.UpdateAsync(resourceGroupName, account.Name, draftUpdateParams, cts.Token);
             /* Ensure the correct sync status is detected */
             RunbookDraft draft = await GetRunbookDraft(runbook.Name, automationManagementClient, resourceGroupName, account.Name);
             runbook.localFileInfo.LastWriteTime = draft.LastModifiedTime.LocalDateTime;
@@ -74,10 +81,14 @@ namespace AutomationISE.Model
         /* This is the only way I can see to "check out" a runbook (get it from Published to Edit state) using the SDK. */
         public static async Task CheckOutRunbook(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, AutomationAccount account)
         {
-            RunbookGetResponse response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, account.Name, runbook.Name);
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
+            RunbookGetResponse response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, account.Name, runbook.Name, cts.Token);
             if (response.Runbook.Properties.State != "Published")
                 return;
-            RunbookContentResponse runbookContentResponse = await automationManagementClient.Runbooks.ContentAsync(resourceGroupName, account.Name, runbook.Name);
+            cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
+            RunbookContentResponse runbookContentResponse = await automationManagementClient.Runbooks.ContentAsync(resourceGroupName, account.Name, runbook.Name, cts.Token);
             // Create draft properties
             RunbookCreateOrUpdateDraftParameters draftParams = new RunbookCreateOrUpdateDraftParameters();
             draftParams.Properties = new RunbookCreateOrUpdateDraftProperties();
@@ -89,14 +100,18 @@ namespace AutomationISE.Model
             draftParams.Tags = response.Runbook.Tags;
             draftParams.Name = runbook.Name;
             draftParams.Location = account.Location;
-            
-            await automationManagementClient.Runbooks.CreateOrUpdateWithDraftAsync(resourceGroupName, account.Name, draftParams);
+
+            cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
+            await automationManagementClient.Runbooks.CreateOrUpdateWithDraftAsync(resourceGroupName, account.Name, draftParams, cts.Token);
             RunbookDraftUpdateParameters draftUpdateParams = new RunbookDraftUpdateParameters()
             {
                 Name = runbook.Name,
                 Stream = runbookContentResponse.Stream.ToString()
             };
-            await automationManagementClient.RunbookDraft.UpdateAsync(resourceGroupName, account.Name, draftUpdateParams);
+            cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
+            await automationManagementClient.RunbookDraft.UpdateAsync(resourceGroupName, account.Name, draftUpdateParams, cts.Token);
             /* Ensure the correct sync status is detected */
             if (runbook.localFileInfo != null)
             {
@@ -114,11 +129,15 @@ namespace AutomationISE.Model
                 Name = runbook.Name,
                 PublishedBy = "ISE User: " + System.Security.Principal.WindowsIdentity.GetCurrent().Name
             };
-            LongRunningOperationResultResponse resultResponse = await automationManagementClient.RunbookDraft.PublishAsync(resourceGroupName, accountName, publishParams);
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
+            LongRunningOperationResultResponse resultResponse = await automationManagementClient.RunbookDraft.PublishAsync(resourceGroupName, accountName, publishParams, cts.Token);
             /* Ensure the correct sync status is detected */
             if (runbook.localFileInfo != null)
             {
-                RunbookGetResponse response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, accountName, runbook.Name);
+                cts = new CancellationTokenSource();
+                cts.CancelAfter(TIMEOUT_MS);
+                RunbookGetResponse response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, accountName, runbook.Name, cts.Token);
                 runbook.localFileInfo.LastWriteTime = response.Runbook.Properties.LastModifiedTime.LocalDateTime;
                 runbook.LastModifiedLocal = response.Runbook.Properties.LastModifiedTime.LocalDateTime;
                 runbook.LastModifiedCloud = response.Runbook.Properties.LastModifiedTime.LocalDateTime;
@@ -129,17 +148,23 @@ namespace AutomationISE.Model
 
         public static async Task DownloadRunbook(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string workspace, string resourceGroupName, AutomationAccount account)
         {
-            RunbookGetResponse response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, account.Name, runbook.Name);
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
+            RunbookGetResponse response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, account.Name, runbook.Name, cts.Token);
             RunbookDraftGetResponse draftResponse = null;
             RunbookContentResponse runbookContentResponse = null;
+            cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
             if (response.Runbook.Properties.State == "Published")
             {
-                runbookContentResponse = await automationManagementClient.Runbooks.ContentAsync(resourceGroupName, account.Name, runbook.Name);
+                runbookContentResponse = await automationManagementClient.Runbooks.ContentAsync(resourceGroupName, account.Name, runbook.Name, cts.Token);
             }
             else
             {
-                runbookContentResponse = await automationManagementClient.RunbookDraft.ContentAsync(resourceGroupName, account.Name, runbook.Name);
-                draftResponse = await automationManagementClient.RunbookDraft.GetAsync(resourceGroupName, account.Name, runbook.Name);
+                runbookContentResponse = await automationManagementClient.RunbookDraft.ContentAsync(resourceGroupName, account.Name, runbook.Name, cts.Token);
+                cts = new CancellationTokenSource();
+                cts.CancelAfter(TIMEOUT_MS);
+                draftResponse = await automationManagementClient.RunbookDraft.GetAsync(resourceGroupName, account.Name, runbook.Name, cts.Token);
             }
             String runbookFilePath = System.IO.Path.Combine(workspace, runbook.Name + ".ps1");
             File.WriteAllText(runbookFilePath, runbookContentResponse.Stream.ToString());
@@ -150,7 +175,9 @@ namespace AutomationISE.Model
             if (response.Runbook.Properties.State == "Published")
             {
                 await UploadRunbookAsDraft(runbook, automationManagementClient, resourceGroupName, account);
-                draftResponse = await automationManagementClient.RunbookDraft.GetAsync(resourceGroupName, account.Name, runbook.Name);
+                cts = new CancellationTokenSource();
+                cts.CancelAfter(TIMEOUT_MS);
+                draftResponse = await automationManagementClient.RunbookDraft.GetAsync(resourceGroupName, account.Name, runbook.Name, cts.Token);
             }
             /* Ensures the correct sync status is detected */
             if (draftResponse != null)
@@ -163,7 +190,7 @@ namespace AutomationISE.Model
 
         public static async Task<ISet<AutomationRunbook>> GetAllRunbookMetadata(AutomationManagementClient automationManagementClient, string workspace, string resourceGroupName, string accountName)
         {
-            ISet<AutomationRunbook> result = new SortedSet<AutomationRunbook>();
+            ISet<AutomationRunbook> result = new SortedSet<AutomationRunbook>();            
             IList<Runbook> cloudRunbooks = await DownloadRunbookMetadata(automationManagementClient, resourceGroupName, accountName);
             
             /* Create a Dictionary of (filename, filepath) tuples found on disk. This will come in handy */
@@ -185,7 +212,9 @@ namespace AutomationISE.Model
                     RunbookDraftGetResponse draftResponse;
                     try
                     {
-                        draftResponse = await automationManagementClient.RunbookDraft.GetAsync(resourceGroupName, accountName, cloudRunbook.Name);
+                        CancellationTokenSource cts = new CancellationTokenSource();
+                        cts.CancelAfter(TIMEOUT_MS);
+                        draftResponse = await automationManagementClient.RunbookDraft.GetAsync(resourceGroupName, accountName, cloudRunbook.Name, cts.Token);
                     }
                     catch
                     {
@@ -215,14 +244,18 @@ namespace AutomationISE.Model
         
         public static async Task<RunbookDraft> GetRunbookDraft(string runbookName, AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
         {
-            RunbookDraftGetResponse response = await automationManagementClient.RunbookDraft.GetAsync(resourceGroupName, accountName, runbookName);
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
+            RunbookDraftGetResponse response = await automationManagementClient.RunbookDraft.GetAsync(resourceGroupName, accountName, runbookName, cts.Token);
             return response.RunbookDraft;
         }
 
         private static async Task<IList<Runbook>> DownloadRunbookMetadata(AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
         {
             IList<Runbook> runbooks = new List<Runbook>();
-            RunbookListResponse cloudRunbooks = await automationManagementClient.Runbooks.ListAsync(resourceGroupName, accountName);
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
+            RunbookListResponse cloudRunbooks = await automationManagementClient.Runbooks.ListAsync(resourceGroupName, accountName, cts.Token);
             foreach (var runbook in cloudRunbooks.Runbooks)
             {
                 runbooks.Add(runbook);
@@ -230,7 +263,9 @@ namespace AutomationISE.Model
 
             while (cloudRunbooks.NextLink != null)
             {
-                cloudRunbooks = await automationManagementClient.Runbooks.ListNextAsync(cloudRunbooks.NextLink);
+                cts = new CancellationTokenSource();
+                cts.CancelAfter(TIMEOUT_MS);
+                cloudRunbooks = await automationManagementClient.Runbooks.ListNextAsync(cloudRunbooks.NextLink, cts.Token);
                 foreach (var runbook in cloudRunbooks.Runbooks)
                 {
                     runbooks.Add(runbook);
@@ -264,7 +299,9 @@ namespace AutomationISE.Model
 
         public static async Task DeleteCloudRunbook(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, string accountName)
         {
-            await automationManagementClient.Runbooks.DeleteAsync(resourceGroupName, accountName, runbook.Name);
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
+            await automationManagementClient.Runbooks.DeleteAsync(resourceGroupName, accountName, runbook.Name, cts.Token);
         }
     }
 }

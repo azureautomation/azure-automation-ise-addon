@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -24,7 +25,8 @@ namespace AutomationISE
         private JobCreateResponse jobCreateResponse = null;
         private AutomationISEClient iseClient;
         private String runbookName;
-        private Timer refreshTimer;
+        private System.Timers.Timer refreshTimer;
+        private static int TIMEOUT_MS = 10000;
         /* These values are the defaults for the settings visible using PS>(Get-Host).PrivateData */
         public static String ErrorForegroundColorCode = "#FFFF0000";
         public static String ErrorBackgroundColorCode = "#00FFFFFF";
@@ -41,7 +43,7 @@ namespace AutomationISE
             runbookName = name;
             iseClient = client;
             Task t = checkTestJob(true);
-            refreshTimer = new Timer();
+            refreshTimer = new System.Timers.Timer();
             refreshTimer.Interval = 30000;
             refreshTimer.Elapsed += new ElapsedEventHandler(refresh);
         }
@@ -58,15 +60,17 @@ namespace AutomationISE
             jobCreateResponse = response;
             iseClient = client;
             Task t = checkJob();
-            refreshTimer = new Timer();
+            refreshTimer = new System.Timers.Timer();
             refreshTimer.Interval = 30000;
             refreshTimer.Elapsed += new ElapsedEventHandler(refresh);
         }
 
         private async Task checkTestJob(bool showWarning = false)
         {
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
             TestJobGetResponse response = await iseClient.automationManagementClient.TestJobs.GetAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
-                                                iseClient.currAccount.Name, runbookName, new System.Threading.CancellationToken());
+                                                iseClient.currAccount.Name, runbookName, cts.Token);
             if (showWarning)
             {
                 JobDetails.FontWeight = FontWeights.Bold;
@@ -86,13 +90,17 @@ namespace AutomationISE
             }
             else
             {
+                cts = new CancellationTokenSource();
+                cts.CancelAfter(TIMEOUT_MS);
                 JobStreamListResponse jslResponse = await iseClient.automationManagementClient.JobStreams.ListTestJobStreamsAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
-                    iseClient.currAccount.Name, runbookName, null, new System.Threading.CancellationToken());
+                    iseClient.currAccount.Name, runbookName, null, cts.Token);
                 /* Write out each stream's output */
                 foreach (JobStream stream in jslResponse.JobStreams)
                 {
+                    cts = new CancellationTokenSource();
+                    cts.CancelAfter(TIMEOUT_MS);
                     var jslStream = await iseClient.automationManagementClient.JobStreams.GetTestJobStreamAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
-                            iseClient.currAccount.Name, runbookName, stream.Properties.JobStreamId, new System.Threading.CancellationToken());
+                            iseClient.currAccount.Name, runbookName, stream.Properties.JobStreamId, cts.Token);
                     updateJobOutputTextBlock(jslStream);
                 }
                 if (response.TestJob.Status == "Suspended")
@@ -107,20 +115,26 @@ namespace AutomationISE
 
         private async Task checkJob()
         {
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
             JobGetResponse response = await iseClient.automationManagementClient.Jobs.GetAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
-                                                iseClient.currAccount.Name, jobCreateResponse.Job.Properties.JobId, new System.Threading.CancellationToken());
+                                                iseClient.currAccount.Name, jobCreateResponse.Job.Properties.JobId, cts.Token);
 
             JobDetails.Content = runbookName + " test job created at " + response.Job.Properties.CreationTime.LocalDateTime;
             JobDetails.Content += "\r\nLast refreshed at " + DateTime.Now;
             JobStatus.Content = response.Job.Properties.Status;
 
+            cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
             JobStreamListResponse jslResponse = await iseClient.automationManagementClient.JobStreams.ListAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
-                iseClient.currAccount.Name, jobCreateResponse.Job.Properties.JobId, null, new System.Threading.CancellationToken());
+                iseClient.currAccount.Name, jobCreateResponse.Job.Properties.JobId, null, cts.Token);
 
             foreach (JobStream stream in jslResponse.JobStreams)
             {
+                cts = new CancellationTokenSource();
+                cts.CancelAfter(TIMEOUT_MS);
                 var jslStream = await iseClient.automationManagementClient.JobStreams.GetAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
-                        iseClient.currAccount.Name, jobCreateResponse.Job.Properties.JobId, stream.Properties.JobStreamId, new System.Threading.CancellationToken());
+                        iseClient.currAccount.Name, jobCreateResponse.Job.Properties.JobId, stream.Properties.JobStreamId, cts.Token);
                 updateJobOutputTextBlock(jslStream);
             }
         }
@@ -220,9 +234,11 @@ namespace AutomationISE
             {
                 StopJobButton.IsEnabled = false;
                 StopJobButton.Content = "Stopping...";
+                CancellationTokenSource cts = new CancellationTokenSource();
+                cts.CancelAfter(TIMEOUT_MS);
                 Microsoft.Azure.AzureOperationResponse response = await iseClient.automationManagementClient.TestJobs.StopAsync(
                     iseClient.accountResourceGroups[iseClient.currAccount].Name,
-                    iseClient.currAccount.Name, runbookName, new System.Threading.CancellationToken());
+                    iseClient.currAccount.Name, runbookName, cts.Token);
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
                     throw new Exception("The job couldn't be stopped.\r\nReceived status code: " + response.StatusCode);
                 JobStatus.Content = "Submitted job stop request";
@@ -242,8 +258,10 @@ namespace AutomationISE
         private async Task<IDictionary<string, string>> GetTestJobParams()
         {
             try {
+                CancellationTokenSource cts = new CancellationTokenSource();
+                cts.CancelAfter(TIMEOUT_MS);
                 TestJobGetResponse response = await iseClient.automationManagementClient.TestJobs.GetAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
-                                        iseClient.currAccount.Name, runbookName, new System.Threading.CancellationToken());
+                                        iseClient.currAccount.Name, runbookName, cts.Token);
                 IDictionary<string, string> jobParams = response.TestJob.Parameters;
                 return jobParams;
             }
@@ -298,9 +316,11 @@ namespace AutomationISE
                     return null;
             }
             /* start the test job */
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(TIMEOUT_MS);
             TestJobCreateResponse jobResponse = await iseClient.automationManagementClient.TestJobs.CreateAsync(
                             iseClient.accountResourceGroups[iseClient.currAccount].Name,
-                            iseClient.currAccount.Name, jobCreationParams, new System.Threading.CancellationToken());
+                            iseClient.currAccount.Name, jobCreationParams, cts.Token);
             if (jobResponse == null || jobResponse.StatusCode != System.Net.HttpStatusCode.Created)
                 throw new Exception("The test job could not be created: received HTTP status code " + jobResponse.StatusCode);
             return jobResponse;
