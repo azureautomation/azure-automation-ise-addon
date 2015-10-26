@@ -51,8 +51,8 @@ namespace AutomationISE.Model
                 }
             }
         }
-
 	    public Dictionary<AutomationAccount, ResourceGroupExtended> accountResourceGroups { get; set; }
+        private static int TIMEOUT_MS = 20000;
 
         public AutomationISEClient()
         {
@@ -118,7 +118,9 @@ namespace AutomationISE.Model
             IList<ResourceGroupExtended> resourceGroups = await this.GetResourceGroups();
             foreach (ResourceGroupExtended resourceGroup in resourceGroups)
             {
-                AutomationAccountListResponse accountListResponse = await automationManagementClient.AutomationAccounts.ListAsync(resourceGroup.Name);
+                CancellationTokenSource cts = new CancellationTokenSource();
+                cts.CancelAfter(TIMEOUT_MS);
+                AutomationAccountListResponse accountListResponse = await automationManagementClient.AutomationAccounts.ListAsync(resourceGroup.Name, cts.Token);
                 foreach (AutomationAccount account in accountListResponse.AutomationAccounts)
                 {
                     result.Add(account);
