@@ -1,7 +1,7 @@
 ﻿<Window x:Class="AutomationISE.NewOrEditConnectionDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="" Width="325"  SizeToContent="Height"  WindowStartupLocation="CenterScreen">
+        Title="" Width="525"  SizeToContent="Height"  WindowStartupLocation="CenterScreen">
     
     <Grid Name="ParametersGrid" Margin="15">
         <Grid.ColumnDefinitions>
@@ -13,7 +13,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Label>Connection Type:</Label>
-        <ComboBox x:Name="connectionTypeComboBox" Margin="0,0,0,10" Grid.Column="1" />
+        <ComboBox x:Name="connectionTypeComboBox" Margin="0,0,0,10" Grid.Column="1" SelectionChanged="connectionTypeComboBox_SelectionChanged" />
         <WrapPanel Grid.Row="2" Name="ButtonsPanel" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="0,15,0,0">
             <Button Click="OkButton_Click" IsDefault="True" Name="OkButton" MinWidth="60" Margin="0,0,10,0">OK</Button>
             <Button IsCancel="True" MinWidth="60">Cancel</Button>

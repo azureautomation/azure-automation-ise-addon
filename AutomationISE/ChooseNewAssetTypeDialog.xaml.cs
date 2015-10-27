@@ -21,9 +21,9 @@ namespace AutomationISE
         {
             InitializeComponent();
             
-            assetTypeComboBox.Items.Add(AutomationISE.Model.Constants.assetVariable);
-            assetTypeComboBox.Items.Add(AutomationISE.Model.Constants.assetCredential);
             assetTypeComboBox.Items.Add(AutomationISE.Model.Constants.assetConnection);
+            assetTypeComboBox.Items.Add(AutomationISE.Model.Constants.assetCredential);
+            assetTypeComboBox.Items.Add(AutomationISE.Model.Constants.assetVariable);
             //assetTypeComboBox.Items.Add(AutomationISE.Model.Constants.assetCertificate);
         }
 

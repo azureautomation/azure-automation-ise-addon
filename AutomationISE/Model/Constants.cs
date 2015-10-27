@@ -64,6 +64,15 @@ namespace AutomationISE.Model
             public const String PowerShellScript = "PowerShell";
         }
 
+        public class ConnectionTypeFieldType
+        {
+            public const String String = "System.String";
+
+            public const String Int = "System.Int32";
+
+            public const String Boolean = "System.Boolean";
+        }
+
         public class AssetType
         {
             public const String Variable = "Variable";

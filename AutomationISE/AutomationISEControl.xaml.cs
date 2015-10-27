@@ -101,9 +101,9 @@ namespace AutomationISE
                 subscriptionComboBox.IsEnabled = false;
                 accountsComboBox.IsEnabled = false;
 
-                assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetVariable);
-                assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCredential);
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetConnection);
+                assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCredential);
+                assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetVariable);
                 //assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCertificate);
 
                 setCreationButtonStatesTo(false);
@@ -1158,6 +1158,10 @@ namespace AutomationISE
                 else if (asset is AutomationVariable)
                 {
                     await createOrUpdateVariableAsset(asset.Name, (AutomationVariable)asset);
+                }
+                else if (asset is AutomationConnection)
+                {
+                    await createOrUpdateConnectionAsset(asset.Name, (AutomationConnection)asset);
                 }
             }
             catch (Exception ex)

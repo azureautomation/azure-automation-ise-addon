@@ -35,7 +35,7 @@ namespace AutomationISE.Model
 
             foreach(KeyValuePair<string, string> field in cloudConnection.Properties.FieldDefinitionValues)
             {
-                if(cloudConnectionType.Properties.FieldDefinitions[field.Key].Type.Equals("System.String"))
+                if(cloudConnectionType.Properties.FieldDefinitions[field.Key].Type.Equals(AutomationISE.Model.Constants.ConnectionTypeFieldType.String))
                 {
                     this.ValueFields.Add(field.Key, field.Value);
                 }
