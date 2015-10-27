@@ -776,9 +776,11 @@ namespace AutomationISE
             if (selectedRunbook == null)
             {
                 setAllRunbookButtonStatesTo(false);
+                ButtonCreateRunbook.IsEnabled = true;
                 return;
             }
             ButtonDeleteRunbook.IsEnabled = true;
+            ButtonCreateRunbook.IsEnabled = true;
             /* Set Download button status */
             if (selectedRunbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.LocalOnly)
                 ButtonDownloadRunbook.IsEnabled = false;
@@ -1353,6 +1355,16 @@ namespace AutomationISE
                 {
                     AutomationRunbookManager.CreateLocalRunbook(createOptionsWindow.runbookName, iseClient.currWorkspace, createOptionsWindow.runbookType);
                     await refreshRunbooks();
+                    /* Now, select and open the newly-created runbook */
+                    foreach (AutomationRunbook runbook in runbookListViewModel)
+                    {
+                        if (runbook.Name.Equals(createOptionsWindow.runbookName))
+                        {
+                            RunbooksListView.SelectedItem = runbook;
+                            ButtonOpenRunbook_Click(null, null);
+                            break;
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -1362,7 +1374,7 @@ namespace AutomationISE
             finally
             {
                 endBackgroundWork();
-                ButtonCreateRunbook.IsEnabled = true;
+                SetButtonStatesForSelectedRunbook();
             }
         }
 
