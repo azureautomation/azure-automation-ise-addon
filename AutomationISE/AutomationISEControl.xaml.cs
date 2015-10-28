@@ -31,6 +31,7 @@ using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography.X509Certificates;
 using System.ComponentModel;
+using System.Windows.Data;
 using System.Windows.Media.Animation;
 using System.Text;
 
@@ -487,6 +488,8 @@ namespace AutomationISE
                     }
                     /* Update UI */
                     RunbooksListView.ItemsSource = runbookListViewModel;
+                    CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(RunbooksListView.ItemsSource);
+                    view.Filter = FilterRunbook;
                     assetsListView.ItemsSource = assetListViewModel;
                     // Set credentials assets to be selected
                     assetsComboBox.SelectedItem = assetsComboBox.Items[1];
@@ -1465,6 +1468,23 @@ namespace AutomationISE
                 }
             }
             catch { }
+        }
+
+        private void RunbookFilter_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            CollectionViewSource.GetDefaultView(RunbooksListView.ItemsSource).Refresh();
+        }
+
+        private bool FilterRunbook(object item)
+        {
+            if (String.IsNullOrEmpty(RunbookFilterTextBox.Text))
+            {
+                return true;
+            }
+            else
+            {
+                return ((item as AutomationRunbook).Name.IndexOf(RunbookFilterTextBox.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+            }
         }
     }
 }
