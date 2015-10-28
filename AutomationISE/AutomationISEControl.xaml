@@ -36,7 +36,7 @@
                     <Button x:Name="workspaceButton" Content=" Browse " Margin="5" VerticalAlignment="Bottom" Click="workspaceButton_Click" Grid.Column="1" Grid.Row="0"/>
                     <TextBox x:Name="userNameTextBox" Margin="5" VerticalAlignment="Bottom" Grid.Column="0" Grid.Row="1" IsReadOnly="True" IsReadOnlyCaretVisible="True" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"/>
                     <Button x:Name="loginButton" Content="Sign In" Margin="5" VerticalAlignment="Bottom" Click="loginButton_Click" Grid.Column="1" Grid.Row="1"/>
-                    <ComboBox x:Name="subscriptionComboBox" Margin="5" Grid.Row="2" Grid.Column="0"  VerticalAlignment="Bottom" SelectionChanged="SubscriptionComboBox_SelectionChanged" Grid.ColumnSpan="2" />
+                    <ComboBox x:Name="subscriptionComboBox" Margin="5" Grid.Row="2" Grid.Column="0"  VerticalAlignment="Bottom" SelectionChanged="SubscriptionComboBox_SelectionChanged" Grid.ColumnSpan="1" />
                     <ComboBox x:Name="accountsComboBox" Margin="5" VerticalAlignment="Bottom" SelectionChanged="accountsComboBox_SelectionChanged" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="1"/>
                     <Label x:Name="signinLabel" Content="Sign in to Azure Automation" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="1" Grid.Column="0"/>
                     <Label x:Name="subscriptionLabel" Content="Subscription" Grid.Row="2" Grid.Column="0"  HorizontalAlignment="Left" VerticalAlignment="Top"/>
