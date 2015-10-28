@@ -49,16 +49,17 @@ namespace AutomationISE
 
         private void AddConnectionFieldInputs(string connectionTypeName, AutomationConnection startingConnection)
         {
-            IDictionary<string, FieldDefinition> connectionFields = new Dictionary<string, FieldDefinition>();
+            IDictionary<string, FieldDefinition> connectionFieldDefinitions = new Dictionary<string, FieldDefinition>();
             foreach (var connectionType in _connectionTypes)
             {
                 if (connectionType.Name.Equals(connectionTypeName))
                 {
-                    connectionFields = connectionType.Properties.FieldDefinitions;
+                    connectionFieldDefinitions = connectionType.Properties.FieldDefinitions;
                 }
             }
             
             /* Remove old added params */
+            // TODO: doesn't work?
             if (ParametersGrid.RowDefinitions.Count > 2)
             {
                 ParametersGrid.RowDefinitions.RemoveRange(1, ParametersGrid.RowDefinitions.Count - 2);
@@ -66,7 +67,7 @@ namespace AutomationISE
             }
 
             /* Update the UI Grid to fit everything */
-            for (int i = 0; i < connectionFields.Count * 2; i++)
+            for (int i = 0; i < connectionFieldDefinitions.Count * 2; i++)
             {
                 RowDefinition rowDef = new RowDefinition();
                 rowDef.Height = System.Windows.GridLength.Auto;
@@ -76,15 +77,15 @@ namespace AutomationISE
 
             /* Fill the UI with parameter data */
             int count = 0;
-            foreach (string paramName in connectionFields.Keys)
+            foreach (string paramName in connectionFieldDefinitions.Keys)
             {
                 /* Parameter Name and Type */
                 Label parameterNameLabel = new Label();
                 parameterNameLabel.Content = paramName;
 
                 Label parameterTypeLabel = new Label();
-                parameterTypeLabel.Content = "(" + connectionFields[paramName].Type + ")\t";
-                if (!connectionFields[paramName].IsOptional)
+                parameterTypeLabel.Content = "(" + connectionFieldDefinitions[paramName].Type + ")\t";
+                if (!connectionFieldDefinitions[paramName].IsOptional)
                 {
                     parameterTypeLabel.Content += "[REQUIRED]";
                 }
@@ -109,11 +110,11 @@ namespace AutomationISE
                 }
                
                 if (
-                    connectionFields[paramName].Type.Equals(Constants.ConnectionTypeFieldType.String) || 
-                    connectionFields[paramName].Type.Equals(Constants.ConnectionTypeFieldType.Int)
+                    connectionFieldDefinitions[paramName].Type.Equals(Constants.ConnectionTypeFieldType.String) || 
+                    connectionFieldDefinitions[paramName].Type.Equals(Constants.ConnectionTypeFieldType.Int)
                 )
                 {
-                    if (connectionFields[paramName].IsEncrypted)
+                    if (connectionFieldDefinitions[paramName].IsEncrypted)
                     {
                         parameterValueBox = new PasswordBox();
                         if(paramValue != null)
@@ -130,7 +131,7 @@ namespace AutomationISE
                         }
                     }
                 }
-                else if (connectionFields[paramName].Type.Equals(Constants.ConnectionTypeFieldType.Boolean))
+                else if (connectionFieldDefinitions[paramName].Type.Equals(Constants.ConnectionTypeFieldType.Boolean))
                 {
                     parameterValueBox = new ComboBox();
                     ((ComboBox)parameterValueBox).Items.Add("True");
@@ -180,13 +181,104 @@ namespace AutomationISE
             AddConnectionFieldInputs((string)connectionTypeComboBox.SelectedValue, null);
         }
 
+        /* 
+         * This method assumes that:
+         *   1. The window has already been populated with the parameter fields
+         *   2. Each input field (text box) has the same name as the parameter it is for
+         * 
+         */
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            //_username = UsernameTextbox.Text;
-
             _connectionType = (String)connectionTypeComboBox.SelectedValue;
 
-            this.DialogResult = true;
+            IDictionary<string, FieldDefinition> connectionFieldDefinitions = new Dictionary<string, FieldDefinition>();
+            foreach (var connectionType in _connectionTypes)
+            {
+                if (connectionType.Name.Equals(_connectionType))
+                {
+                    connectionFieldDefinitions = connectionType.Properties.FieldDefinitions;
+                    break;
+                }
+            }
+
+            _connectionFields = new Dictionary<string, Object>();
+            string validationErrors = null;
+
+            /* Validate parameters and return */
+            foreach (UIElement element in ParametersGrid.Children)
+            {
+                try
+                {
+                    Control inputField = (Control)element;
+                    var fieldName = inputField.Name;
+
+                    if (connectionFieldDefinitions[fieldName] == null)
+                    {
+                        // not one of the connection field inputs, skip it
+                        continue;
+                    }
+
+                    if (
+                        connectionFieldDefinitions[fieldName].Type.Equals(Constants.ConnectionTypeFieldType.String) ||
+                        connectionFieldDefinitions[fieldName].Type.Equals(Constants.ConnectionTypeFieldType.Int)
+                    )
+                    {
+                        if (connectionFieldDefinitions[fieldName].IsEncrypted)
+                        {
+                            _connectionFields[fieldName] = ((PasswordBox)inputField).Password;
+                        }
+                        else
+                        {
+                            _connectionFields[fieldName] = ((TextBox)inputField).Text;
+                        }
+
+                        if (_connectionFields[fieldName].ToString().Length == 0)
+                        {
+                            _connectionFields[fieldName] = null;
+
+                            if (!connectionFieldDefinitions[fieldName].IsOptional)
+                            {
+                                validationErrors += ("Connection field '" + fieldName + "' is required. ");
+                                continue;
+                            }
+                        }
+
+                        if (_connectionFields[fieldName] != null && connectionFieldDefinitions[fieldName].Type.Equals(Constants.ConnectionTypeFieldType.Int))
+                        {
+                            try
+                            {
+                                _connectionFields[fieldName] = Int32.Parse((string)_connectionFields[fieldName]);
+                            }
+                            catch
+                            {
+                                var valToShow = "The value '" + _connectionFields[fieldName] + "'";
+
+                                if (connectionFieldDefinitions[fieldName].IsEncrypted)
+                                {
+                                    valToShow = "The entered value";
+                                }
+
+                                validationErrors += (valToShow + " for connection field '" + fieldName + "' is not an integer. ");
+                                continue;
+                            }
+                        }
+                    }
+                    else if (connectionFieldDefinitions[fieldName].Type.Equals(Constants.ConnectionTypeFieldType.Boolean))
+                    {
+                        _connectionFields[fieldName] = ((ComboBox)inputField).SelectedValue.Equals("True") ? true : false;
+                    }
+                }
+                catch { /* not an input field */ }
+            }
+
+            if(String.IsNullOrEmpty(validationErrors))
+            {
+                this.DialogResult = true;
+            }
+            else
+            {
+                System.Windows.Forms.MessageBox.Show("Could not update local connection asset. The following errors were found:\r\n\r\n" + validationErrors);
+            }
         }
     }
 }
