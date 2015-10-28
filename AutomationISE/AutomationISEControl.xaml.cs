@@ -1472,18 +1472,62 @@ namespace AutomationISE
 
         private void RunbookFilter_TextChanged(object sender, TextChangedEventArgs e)
         {
-            CollectionViewSource.GetDefaultView(RunbooksListView.ItemsSource).Refresh();
+            try
+            {
+                CollectionViewSource.GetDefaultView(RunbooksListView.ItemsSource).Refresh();
+            }
+            catch { }
         }
 
         private bool FilterRunbook(object item)
         {
-            if (String.IsNullOrEmpty(RunbookFilterTextBox.Text))
+            if (String.IsNullOrEmpty(RunbookFilterTextBox.Text) || RunbookFilterTextBox.Text.Length < 2)
             {
                 return true;
             }
             else
             {
-                return ((item as AutomationRunbook).Name.IndexOf(RunbookFilterTextBox.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+                string[] queries = RunbookFilterTextBox.Text.Split(null);
+                string nameQuery = null;
+                string statusQuery = null;
+                string syncStatusQuery = null;
+                string nameQueryPrefix = "name:";
+                string statusQueryPrefix = "status:";
+                string syncStatusQueryPrefix = "syncStatus:";
+                foreach (string query in queries)
+                {
+                    if (String.IsNullOrEmpty(query)) continue;
+                    int nameQueryPrefixStart = query.IndexOf(nameQueryPrefix, StringComparison.OrdinalIgnoreCase);
+                    int statusQueryPrefixStart = query.IndexOf(statusQueryPrefix, StringComparison.OrdinalIgnoreCase);
+                    int syncStatusQueryPrefixStart = query.IndexOf(syncStatusQueryPrefix, StringComparison.OrdinalIgnoreCase);
+                    if (nameQueryPrefixStart >= 0)
+                    {
+                        nameQuery = query.Substring(nameQueryPrefixStart + nameQueryPrefix.Length);
+                    }
+                    else if (syncStatusQueryPrefixStart >= 0)
+                    {
+                        syncStatusQuery = query.Substring(syncStatusQueryPrefixStart + syncStatusQueryPrefix.Length);
+                    }
+                    else if (statusQueryPrefixStart >= 0)
+                    {
+                        statusQuery = query.Substring(statusQueryPrefixStart + statusQueryPrefix.Length);
+                    }
+                    else if (nameQuery == null)
+                    {
+                        nameQuery = query;
+                    }
+                }
+                bool authoringStateMatch = String.IsNullOrEmpty(statusQuery) ? true : false;
+                bool syncStatusMatch = String.IsNullOrEmpty(syncStatusQuery) ? true : false;
+                bool nameMatch = String.IsNullOrEmpty(nameQuery) ? true : false;
+                if (!String.IsNullOrEmpty(statusQuery) && statusQuery.Length > 1)
+                    authoringStateMatch = ((item as AutomationRunbook).AuthoringState.IndexOf(statusQuery, StringComparison.OrdinalIgnoreCase) >= 0);
+                if (!String.IsNullOrEmpty(syncStatusQuery) && syncStatusQuery.Length > 1)
+                    syncStatusMatch = ((item as AutomationRunbook).SyncStatus.IndexOf(syncStatusQuery, StringComparison.OrdinalIgnoreCase) >= 0);
+                if (!String.IsNullOrEmpty(nameQuery) && nameQuery.Length > 1)
+                    nameMatch = ((item as AutomationRunbook).Name.IndexOf(nameQuery, StringComparison.OrdinalIgnoreCase) >= 0);
+
+                return (authoringStateMatch && syncStatusMatch && nameMatch);
             }
         }
     }
