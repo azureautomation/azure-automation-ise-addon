@@ -46,7 +46,7 @@ namespace AutomationISE.Model
                         var value = jss.DeserializeObject(field.Value.ToLower());
                         this.ValueFields.Add(field.Key, value);
                     }
-                    catch(Exception e)
+                    catch
                     {
                         this.ValueFields.Add(field.Key, field.Value);
                     }

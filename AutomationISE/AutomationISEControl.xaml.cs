@@ -894,9 +894,10 @@ namespace AutomationISE
                         MessageBox.Show("The runbook could not be published.\r\nDetails: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
-                if (count == 1) endBackgroundWork("Published " + name);
-                else endBackgroundWork("Published " + count + " runbooks.");
                 await refreshRunbooks();
+                if (count == 1) endBackgroundWork("Published " + name);
+                else if (count > 1) endBackgroundWork("Published " + count + " runbooks.");
+                else endBackgroundWork();
             }
             catch (Exception ex)
             {
@@ -981,7 +982,8 @@ namespace AutomationISE
                 }
                 await refreshRunbooks();
                 if (count == 1) endBackgroundWork("Uploaded " + name);
-                else endBackgroundWork("Uploaded " + count + " runbooks.");
+                else if (count > 1) endBackgroundWork("Uploaded " + count + " runbooks.");
+                else endBackgroundWork();
             }
             catch (Exception ex)
             {
@@ -1213,7 +1215,6 @@ namespace AutomationISE
             catch (Exception ex)
             {
                 MessageBox.Show("The source control job could not be started. " + ex.Message, "Error");
-                return;
             }
         }
 

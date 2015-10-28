@@ -150,7 +150,7 @@ namespace AutomationISE
                                 ((ComboBox)parameterValueBox).SelectedValue = "False";
                             }
                         }
-                        catch(Exception e)
+                        catch
                         {
                             // value is not a bool, even though connection type schema says it should be
                         }
