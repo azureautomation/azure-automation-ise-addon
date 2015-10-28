@@ -86,6 +86,7 @@ namespace AutomationISE
             if (response.TestJob.Status == "Failed")
             {
                 updateJobOutputTextBlockWithException(response.TestJob.Exception);
+                StartJobButton.IsEnabled = true;
                 refreshTimer.Stop();
             }
             else
@@ -106,10 +107,22 @@ namespace AutomationISE
                 if (response.TestJob.Status == "Suspended")
                 {
                     updateJobOutputTextBlockWithException(response.TestJob.Exception);
+                    StartJobButton.IsEnabled = false;
                     refreshTimer.Stop();
                 }
                 else if (response.TestJob.Status == "Completed")
+                {
+                    StartJobButton.IsEnabled = true;
                     refreshTimer.Stop();
+                }
+                else if (response.TestJob.Status == "Stopped")
+                {
+                    StartJobButton.IsEnabled = true;
+                }
+                else
+                {
+                    StartJobButton.IsEnabled = false;
+                }
             }
         }
 
@@ -294,7 +307,6 @@ namespace AutomationISE
             finally
             {
                 refreshTimer.Start();
-                StartJobButton.IsEnabled = true;
             }
         }
         private async Task<TestJobCreateResponse> createTestJob()
