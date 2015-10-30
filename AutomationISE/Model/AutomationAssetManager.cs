@@ -94,10 +94,12 @@ namespace AutomationISE.Model
 
                     foreach(KeyValuePair<string, object> field in asset.getFields())
                     {
-                        connectionFieldsAsJson.Add(field.Key, jss.Serialize(field.Value));
+                        connectionFieldsAsJson.Add(field.Key, field.Value.ToString());
                     }
 
                     properties.FieldDefinitionValues = connectionFieldsAsJson;
+                    properties.ConnectionType = new ConnectionTypeAssociationProperty();
+                    properties.ConnectionType.Name = asset.ConnectionType;
 
                     await automationApi.Connections.CreateOrUpdateAsync(resourceGroupName, automationAccountName, new ConnectionCreateOrUpdateParameters(asset.Name, properties), cts.Token);
                 }

@@ -48,6 +48,7 @@ namespace AutomationISE
         private ObservableCollection<AutomationRunbook> runbookListViewModel;
         private ObservableCollection<AutomationAsset> assetListViewModel;
         private ISet<ConnectionType> connectionTypes;
+        private ISet<AutomationAsset> assets;
         private ListSortDirection runbookCurrSortDir;
         private string runbookCurrSortProperty;
         private ListSortDirection assetCurrSortDir;
@@ -180,29 +181,13 @@ namespace AutomationISE
             }
         }
 
-        public async Task<SortedSet<AutomationAsset>> getAssetsInfo()
-        {
-            try
-            {
-                return (SortedSet<AutomationAsset>)await AutomationAssetManager.GetAll(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint(), connectionTypes);
-            }
-            catch (Exception exception)
-            {
-                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-
-                return new SortedSet<AutomationAsset>();
-            }
-        }
-
         public async Task<ISet<ConnectionType>> getConnectionTypes()
         {
             return await AutomationAssetManager.GetConnectionTypes(iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
         }
 
-        public async Task<SortedSet<AutomationAsset>> getAssetsOfType(String type)
+        public SortedSet<AutomationAsset> getAssetsOfType(String type)
         {
-            var assets = await getAssetsInfo();
-
             var assetsOfType = new SortedSet<AutomationAsset>();
             foreach (var asset in assets)
             {
@@ -336,28 +321,33 @@ namespace AutomationISE
             });
         }
 
-        public async Task refreshAssets()
+        public async Task refreshAssets(bool useExistingAssetValues = false)
         {
             try
             {
+                if (!useExistingAssetValues)
+                {
+                    assets = await AutomationAssetManager.GetAll(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint(), connectionTypes);
+                }
+
                 var selectedAssets = getSelectedAssets();
                 string selectedAssetType = (string)assetsComboBox.SelectedValue;
                 if (selectedAssetType == null) return;
                 if (selectedAssetType == AutomationISE.Model.Constants.assetVariable)
                 {
-                    mergeAssetListWith(await getAssetsOfType("AutomationVariable"));
+                    mergeAssetListWith(getAssetsOfType("AutomationVariable"));
                 }
                 else if (selectedAssetType == AutomationISE.Model.Constants.assetCredential)
                 {
-                    mergeAssetListWith(await getAssetsOfType("AutomationCredential"));
+                    mergeAssetListWith(getAssetsOfType("AutomationCredential"));
                 }
                 else if (selectedAssetType == AutomationISE.Model.Constants.assetConnection)
                 {
-                    mergeAssetListWith(await getAssetsOfType("AutomationConnection"));
+                    mergeAssetListWith(getAssetsOfType("AutomationConnection"));
                 }
                 else if (selectedAssetType == AutomationISE.Model.Constants.assetCertificate)
                 {
-                    mergeAssetListWith(await getAssetsOfType("AutomationCertificate"));
+                    mergeAssetListWith(getAssetsOfType("AutomationCertificate"));
                 }
                 setSelectedAssets(selectedAssets);
 
@@ -576,7 +566,7 @@ namespace AutomationISE
             try
             {
                 assetListViewModel.Clear();
-                await refreshAssets();
+                await refreshAssets(true);
             }
             catch (Exception ex)
             {

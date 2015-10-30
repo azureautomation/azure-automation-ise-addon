@@ -333,8 +333,8 @@ function Get-AzureAutomationAuthoringToolkitLocalAsset {
             $Asset.ValueFields.psobject.properties | ForEach-Object {
                 
                 if($_.Value -eq $Null) {
-                    Write-Warning "AzureAutomationAuthoringToolkit: Warning - Local Connection asset '$Name' has a null value for field '" + $_.Name + "'.
-                    If this was not intended, update this connection field value in your local assets. "
+                    Write-Warning ("AzureAutomationAuthoringToolkit: Warning - Local Connection asset '$Name' has a null value for field '" + $_.Name + "'.
+                    If this was not intended, update this connection field value in your local assets.")
                 }
                 
                 # even though all connection fields may not be encrypted, try to decrypt them all since we don't know which are encrypted and which are not.

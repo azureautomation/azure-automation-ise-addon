@@ -119,16 +119,23 @@ namespace AutomationISE.Model
                     {
                         var connectionToDelete = (ConnectionJson)assetToDelete;
 
+                        IDictionary<string, FieldDefinition> connectionFieldDefinitions = new Dictionary<string, FieldDefinition>();
+                        foreach (var connectionType in connectionTypes)
+                        {
+                            if (connectionType.Name.Equals(connectionToAffect.ConnectionType))
+                            {
+                                connectionFieldDefinitions = connectionType.Properties.FieldDefinitions;
+                                break;
+                            }
+                        }
+
                         // Connection assets returned from the cloud have null values for their encrypted fields,
                         // so keep the old local asset encrypted field values instead of overwriting the local asset encrypted field values with null
-                        foreach (KeyValuePair<string, object> field in connectionToAffect.getFields())
+                        foreach (var valueField in connectionToDelete.ValueFields)
                         {
-                            if (field.Value == null)
+                            if (connectionToAffect.getFields()[valueField.Key] == null && connectionFieldDefinitions[valueField.Key].IsEncrypted)
                             {
-                                Object fieldValue = null;
-                                connectionToDelete.ValueFields.TryGetValue(field.Key, out fieldValue);
-
-                                connectionToAffect.getFields()[field.Key] = fieldValue;
+                                connectionToAffect.getFields()[valueField.Key] = valueField.Value;
                             }
                         }
 
