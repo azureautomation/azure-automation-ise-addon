@@ -34,10 +34,3 @@ To build from source:
 * Open the PowerShell ISE, and run `Import-Module AzureAutomationAuthoringToolkit`
 * The Azure Automation ISE add-on should appear on the right side of the PowerShell ISE:
 ![alt text](https://github.com/azureautomation/azure-automation-ise-addon/blob/master/Screenshots/Automation-Add-On.png " Azure Automation Add-On")
-
-## Uninstallation
-
-* Open PowerShell console
-* Run `Uninstall-AzureAutomationIseAddOn`
-* If the PowerShell ISE was open, reopen it
-* From now on, opening the PowerShell ISE will no longer cause the Azure Automation ISE add-on to be loaded
