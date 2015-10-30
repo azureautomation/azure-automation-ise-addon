@@ -2,7 +2,9 @@
     Learn more here: http://aka.ms/azureautomationauthoringtoolkit
 #>
 
-$null = $PSIse.CurrentPowerShellTab.VerticalAddOnTools.Add('Azure Automation ISE add-on', [AutomationISE.AutomationISEControl], $True)
+if ($PSIse) {
+    $null = $PSIse.CurrentPowerShellTab.VerticalAddOnTools.Add('Azure Automation ISE add-on', [AutomationISE.AutomationISEControl], $True)
+}
 
 <#
     .SYNOPSIS

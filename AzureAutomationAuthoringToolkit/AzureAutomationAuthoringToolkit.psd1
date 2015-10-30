@@ -12,9 +12,6 @@ ModuleVersion = '0.2.2.9'
 # Minimum version of the Windows PowerShell engine required by this module
 PowerShellVersion = '3.0'
 
-# Name of the Windows PowerShell host required by this module
-PowerShellHostName = 'Windows PowerShell ISE Host'
-
 # ID used to uniquely identify this module
 GUID = '2fcdb2a1-b6b8-4e7a-b48c-adcd98aba614'
 
@@ -40,7 +37,7 @@ RequiredAssemblies = @("$PSScriptRoot\ISEAddon\AutomationISE.dll")
 HelpInfoURI = 'http://aka.ms/azureautomationauthoringtoolkit'
 
 # Functions to export from this module
-FunctionsToExport = @("Get-AutomationVariable", "Get-AutomationCertificate", "Get-AutomationPSCredential", "Get-AutomationConnection", "Set-AutomationVariable", "Get-AzureAutomationAuthoringToolkitLocalAsset", "Get-AzureAutomationAuthoringToolkitConfiguration", "Install-AzureAutomationIseAddOn", "Uninstall-AzureAutomationIseAddOn")
+FunctionsToExport = @("Get-AutomationVariable", "Get-AutomationCertificate", "Get-AutomationPSCredential", "Get-AutomationConnection", "Set-AutomationVariable", "Get-AzureAutomationAuthoringToolkitLocalAsset", "Get-AzureAutomationAuthoringToolkitConfiguration")
 
 # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
 PrivateData = @{
