@@ -7,8 +7,6 @@ $script:ConfigurationPath = "$env:USERPROFILE\$script:ConfigurationFileName"
 $script:LocalAssetsPath = "$PSScriptRoot\LocalAssets.json"
 $script:SecureLocalAssetsPath = "$PSScriptRoot\SecureLocalAssets.json"
 
-$script:IseProfileFileName = "Microsoft.PowerShellISE_profile.ps1"
-
 function _findObjectByName {
     param(
         [object] $ObjectArray,
