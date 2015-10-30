@@ -12,6 +12,9 @@ ModuleVersion = '0.2.2.9'
 # Minimum version of the Windows PowerShell engine required by this module
 PowerShellVersion = '3.0'
 
+# Name of the Windows PowerShell host required by this module
+PowerShellHostName = 'Windows PowerShell ISE Host'
+
 # ID used to uniquely identify this module
 GUID = '2fcdb2a1-b6b8-4e7a-b48c-adcd98aba614'
 
@@ -29,6 +32,9 @@ Description = 'Provides cmdlets to make authoring Azure Automation runbooks and 
 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
 NestedModules = @('.\AzureAutomationAuthoringToolkitInner.psm1')
+
+# Assemblies that must be loaded prior to importing this module
+RequiredAssemblies = @("$PSScriptRoot\ISEAddon\AutomationISE.dll")
 
 # HelpInfo URI of this module
 HelpInfoURI = 'http://aka.ms/azureautomationauthoringtoolkit'
