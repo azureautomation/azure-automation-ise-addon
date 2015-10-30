@@ -182,7 +182,16 @@ namespace AutomationISE
 
         public async Task<SortedSet<AutomationAsset>> getAssetsInfo()
         {
-            return (SortedSet<AutomationAsset>)await AutomationAssetManager.GetAll(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
+            try
+            {
+                return (SortedSet<AutomationAsset>)await AutomationAssetManager.GetAll(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint(), connectionTypes);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                return new SortedSet<AutomationAsset>();
+            }
         }
 
         public async Task<ISet<ConnectionType>> getConnectionTypes()
@@ -208,55 +217,83 @@ namespace AutomationISE
 
         public async Task downloadAllAssets()
         {
-            await AutomationAssetManager.DownloadAllFromCloud(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
+            try
+            {
+                await AutomationAssetManager.DownloadAllFromCloud(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint(), connectionTypes);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         public void downloadAssets(ICollection<AutomationAsset> assetsToDownload)
         {
-            AutomationAssetManager.DownloadFromCloud(assetsToDownload, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
+            try
+            {
+                AutomationAssetManager.DownloadFromCloud(assetsToDownload, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint(), connectionTypes);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            } 
         }
 
         public async Task uploadAssets(ICollection<AutomationAsset> assetsToUpload)
         {
-            await AutomationAssetManager.UploadToCloud(assetsToUpload, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+            try
+            {
+                await AutomationAssetManager.UploadToCloud(assetsToUpload, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
 
-            // Since the cloud assets uploaded will have a last modified time of now, causing them to look newer than their local counterparts,
-            // download the assets after upload to force last modified time between local and cloud to be the same, showing them as in sync (which they are)
-            downloadAssets(assetsToUpload);
+                // Since the cloud assets uploaded will have a last modified time of now, causing them to look newer than their local counterparts,
+                // download the assets after upload to force last modified time between local and cloud to be the same, showing them as in sync (which they are)
+                downloadAssets(assetsToUpload);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         public void deleteAssets(ICollection<AutomationAsset> assetsToDelete)
         {
-            bool deleteLocally = true;
-            bool deleteFromCloud = true;
-
-            // when asset is only local or only in cloud, we know where they want to delete it from. But when asset is both local and cloud,
-            // they may not have meant to delete it from cloud, so ask them 
-            foreach (var assetToDelete in assetsToDelete)
+            try
             {
-                if (assetToDelete.LastModifiedCloud != null && assetToDelete.LastModifiedLocal != null)
+                bool deleteLocally = true;
+                bool deleteFromCloud = true;
+
+                // when asset is only local or only in cloud, we know where they want to delete it from. But when asset is both local and cloud,
+                // they may not have meant to delete it from cloud, so ask them 
+                foreach (var assetToDelete in assetsToDelete)
                 {
-                    var messageBoxResult = System.Windows.MessageBox.Show(
-                        "At least some of the selected assets have both local and cloud versions. Do you want to also delete the cloud versions of these assets?",
-                        "Delete Confirmation",
-                        System.Windows.MessageBoxButton.YesNo
-                    );
-
-                    if (messageBoxResult == MessageBoxResult.No)
+                    if (assetToDelete.LastModifiedCloud != null && assetToDelete.LastModifiedLocal != null)
                     {
-                        deleteFromCloud = false;
-                    }
-                    else if (messageBoxResult == MessageBoxResult.Cancel)
-                    {
-                        deleteFromCloud = false;
-                        deleteLocally = false;
-                    }
+                        var messageBoxResult = System.Windows.MessageBox.Show(
+                            "At least some of the selected assets have both local and cloud versions. Do you want to also delete the cloud versions of these assets?",
+                            "Delete Confirmation",
+                            System.Windows.MessageBoxButton.YesNo
+                        );
 
-                    break;
+                        if (messageBoxResult == MessageBoxResult.No)
+                        {
+                            deleteFromCloud = false;
+                        }
+                        else if (messageBoxResult == MessageBoxResult.Cancel)
+                        {
+                            deleteFromCloud = false;
+                            deleteLocally = false;
+                        }
+
+                        break;
+                    }
                 }
-            }
 
-            AutomationAssetManager.Delete(assetsToDelete, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, deleteLocally, deleteFromCloud, getEncryptionCertificateThumbprint());
+                AutomationAssetManager.Delete(assetsToDelete, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, deleteLocally, deleteFromCloud, getEncryptionCertificateThumbprint(), connectionTypes);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         public void refreshAuthToken(object source, ElapsedEventArgs e)
@@ -301,28 +338,35 @@ namespace AutomationISE
 
         public async Task refreshAssets()
         {
-            var selectedAssets = getSelectedAssets();
-            string selectedAssetType = (string)assetsComboBox.SelectedValue;
-            if (selectedAssetType == null) return;
-            if (selectedAssetType == AutomationISE.Model.Constants.assetVariable)
+            try
             {
-                mergeAssetListWith(await getAssetsOfType("AutomationVariable"));
-            }
-            else if (selectedAssetType == AutomationISE.Model.Constants.assetCredential)
-            {
-                mergeAssetListWith(await getAssetsOfType("AutomationCredential"));
-            }
-            else if (selectedAssetType == AutomationISE.Model.Constants.assetConnection)
-            {
-                mergeAssetListWith(await getAssetsOfType("AutomationConnection"));
-            }
-            else if (selectedAssetType == AutomationISE.Model.Constants.assetCertificate)
-            {
-                mergeAssetListWith(await getAssetsOfType("AutomationCertificate"));
-            }
-            setSelectedAssets(selectedAssets);
+                var selectedAssets = getSelectedAssets();
+                string selectedAssetType = (string)assetsComboBox.SelectedValue;
+                if (selectedAssetType == null) return;
+                if (selectedAssetType == AutomationISE.Model.Constants.assetVariable)
+                {
+                    mergeAssetListWith(await getAssetsOfType("AutomationVariable"));
+                }
+                else if (selectedAssetType == AutomationISE.Model.Constants.assetCredential)
+                {
+                    mergeAssetListWith(await getAssetsOfType("AutomationCredential"));
+                }
+                else if (selectedAssetType == AutomationISE.Model.Constants.assetConnection)
+                {
+                    mergeAssetListWith(await getAssetsOfType("AutomationConnection"));
+                }
+                else if (selectedAssetType == AutomationISE.Model.Constants.assetCertificate)
+                {
+                    mergeAssetListWith(await getAssetsOfType("AutomationCertificate"));
+                }
+                setSelectedAssets(selectedAssets);
 
-            connectionTypes = await getConnectionTypes();
+                connectionTypes = await getConnectionTypes();
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void mergeAssetListWith(ICollection<AutomationAsset> newAssetCollection)
@@ -1055,7 +1099,7 @@ namespace AutomationISE
         {
             if (newAsset)
             {
-                var asset = await AutomationAssetManager.GetAsset(credentialAssetName, Constants.AssetType.Credential, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
+                var asset = await AutomationAssetManager.GetAsset(credentialAssetName, Constants.AssetType.Credential, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint(), connectionTypes);
                 if (asset != null) throw new Exception("Credential with that name already exists");
             }
 
@@ -1068,8 +1112,15 @@ namespace AutomationISE
                 var newCred = new AutomationCredential(credentialAssetName, dialog.username, dialog.password);
                 assetsToSave.Add(newCred);
 
-                AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint());
-                await refreshAssets();
+                try
+                {
+                    AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint(), connectionTypes);
+                    await refreshAssets();
+                }
+                catch (Exception exception)
+                {
+                    MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
@@ -1078,7 +1129,7 @@ namespace AutomationISE
             if (newAsset)
             {
                 // Check if variable already exists before creating one.
-                var asset = await AutomationAssetManager.GetAsset(variableAssetName, Constants.AssetType.Variable, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
+                var asset = await AutomationAssetManager.GetAsset(variableAssetName, Constants.AssetType.Variable, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint(), connectionTypes);
                 if (asset != null) throw new Exception("Variable with that name already exists");
             }
 
@@ -1090,8 +1141,16 @@ namespace AutomationISE
 
                 var newVariable = new AutomationVariable(variableAssetName, dialog.value, dialog.encrypted);
                 assetsToSave.Add(newVariable);
-                AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint());
-                await refreshAssets();
+
+                try
+                {
+                    AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint(), connectionTypes);
+                    await refreshAssets();
+                }
+                catch (Exception exception)
+                {
+                    MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
@@ -1100,7 +1159,7 @@ namespace AutomationISE
             if (newAsset)
             {
                 // Check if connection already exists before creating one.
-                var asset = await AutomationAssetManager.GetAsset(connectionAssetName, Constants.AssetType.Connection, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint());
+                var asset = await AutomationAssetManager.GetAsset(connectionAssetName, Constants.AssetType.Connection, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint(), connectionTypes);
                 if (asset != null) throw new Exception("Connection with that name already exists");
             }
 
@@ -1112,8 +1171,16 @@ namespace AutomationISE
 
                 var newConnection = new AutomationConnection(connectionAssetName, dialog.connectionFields, dialog.connectionType);
                 assetsToSave.Add(newConnection);
-                AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint());
-                await refreshAssets();
+
+                try
+                {
+                    AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint(), connectionTypes);
+                    await refreshAssets();
+                }
+                catch (Exception exception)
+                {
+                    MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 

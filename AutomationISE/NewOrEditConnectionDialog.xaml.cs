@@ -58,12 +58,29 @@ namespace AutomationISE
                 }
             }
             
-            /* Remove old added params */
-            // TODO: doesn't work?
+            /* Remove old added fields */
             if (ParametersGrid.RowDefinitions.Count > 2)
             {
                 ParametersGrid.RowDefinitions.RemoveRange(1, ParametersGrid.RowDefinitions.Count - 2);
-                ParametersGrid.Children.RemoveRange(1, ParametersGrid.RowDefinitions.Count - 2);
+
+
+                var i = 0;
+                var toRemove = new HashSet<UIElement>();
+                foreach (UIElement element in ParametersGrid.Children)
+                {
+                    if(i > 1 && (!element.GetType().Name.Equals("WrapPanel")))
+                    {
+                        // removes everything that is not the connection type selector at the top or the ok / cancel button in the WrapPanel at the bottom
+                        toRemove.Add(element);
+                    }   
+ 
+                    i++;
+                }
+
+                foreach (UIElement removeElement in toRemove)
+                {
+                    ParametersGrid.Children.Remove(removeElement);
+                }
             }
 
             /* Update the UI Grid to fit everything */

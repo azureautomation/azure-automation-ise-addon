@@ -28,15 +28,15 @@ namespace AutomationISE.Model
     {
         private static int TIMEOUT_MS = 10000;
 
-        public static async Task DownloadAllFromCloud(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, String encryptionCertThumbprint)
+        public static async Task DownloadAllFromCloud(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, String encryptionCertThumbprint, ICollection<ConnectionType> connectionTypes)
         {
-            var assets = await AutomationAssetManager.GetAll(null, automationApi, resourceGroupName, automationAccountName, encryptionCertThumbprint);
-            AutomationAssetManager.SaveLocally(localWorkspacePath, assets, encryptionCertThumbprint);
+            var assets = await AutomationAssetManager.GetAll(null, automationApi, resourceGroupName, automationAccountName, encryptionCertThumbprint, connectionTypes);
+            AutomationAssetManager.SaveLocally(localWorkspacePath, assets, encryptionCertThumbprint, connectionTypes);
         }
 
-        public static async void DownloadFromCloud(ICollection<AutomationAsset> assetsToDownload, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, String encryptionCertThumbprint)
+        public static async void DownloadFromCloud(ICollection<AutomationAsset> assetsToDownload, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, String encryptionCertThumbprint, ICollection<ConnectionType> connectionTypes)
         {
-            var cloudAssets = await AutomationAssetManager.GetAll(null, automationApi, resourceGroupName, automationAccountName, encryptionCertThumbprint);
+            var cloudAssets = await AutomationAssetManager.GetAll(null, automationApi, resourceGroupName, automationAccountName, encryptionCertThumbprint, connectionTypes);
             var assetsToSaveLocally = new SortedSet<AutomationAsset>();
 
             foreach (var cloudAsset in cloudAssets)
@@ -51,7 +51,7 @@ namespace AutomationISE.Model
                 }
             }
 
-            AutomationAssetManager.SaveLocally(localWorkspacePath, assetsToSaveLocally, encryptionCertThumbprint);
+            AutomationAssetManager.SaveLocally(localWorkspacePath, assetsToSaveLocally, encryptionCertThumbprint, connectionTypes);
         }
 
         public static async Task UploadToCloud(ICollection<AutomationAsset> assetsToUpload, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
@@ -105,16 +105,16 @@ namespace AutomationISE.Model
             }
         }
 
-        public static void SaveLocally(String localWorkspacePath, ICollection<AutomationAsset> assets, String encryptionCertThumbprint)
+        public static void SaveLocally(String localWorkspacePath, ICollection<AutomationAsset> assets, String encryptionCertThumbprint, ICollection<ConnectionType> connectionTypes)
         {
-            LocalAssetsStore.Add(localWorkspacePath, assets, encryptionCertThumbprint);
+            LocalAssetsStore.Add(localWorkspacePath, assets, encryptionCertThumbprint, connectionTypes);
         }
 
-        public static void Delete(ICollection<AutomationAsset> assetsToDelete, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, bool deleteLocally, bool deleteFromCloud, String encryptionCertThumbprint)
+        public static void Delete(ICollection<AutomationAsset> assetsToDelete, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, bool deleteLocally, bool deleteFromCloud, String encryptionCertThumbprint, ICollection<ConnectionType> connectionTypes)
         {
             if (deleteLocally)
             {
-                LocalAssetsStore.Delete(localWorkspacePath, assetsToDelete, encryptionCertThumbprint);
+                LocalAssetsStore.Delete(localWorkspacePath, assetsToDelete, encryptionCertThumbprint, connectionTypes);
             }
 
             if (deleteFromCloud)
@@ -138,7 +138,7 @@ namespace AutomationISE.Model
             }
         }
 
-        public static async Task<ISet<AutomationAsset>> GetAll(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, string encryptionCertThumbprint)
+        public static async Task<ISet<AutomationAsset>> GetAll(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, string encryptionCertThumbprint, ICollection<ConnectionType> connectionTypes)
         {
             CancellationTokenSource cts = new CancellationTokenSource();
             cts.CancelAfter(TIMEOUT_MS);
@@ -160,7 +160,7 @@ namespace AutomationISE.Model
                 connectionAssetsWithValues.Add(connectionResponse.Connection);
             }
 
-            LocalAssets localAssets = LocalAssetsStore.Get(localWorkspacePath, encryptionCertThumbprint);
+            LocalAssets localAssets = LocalAssetsStore.Get(localWorkspacePath, encryptionCertThumbprint, connectionTypes);
 
             var automationAssets = new SortedSet<AutomationAsset>();
 
@@ -236,12 +236,12 @@ namespace AutomationISE.Model
         /// <param name="automationAccountName"></param>
         /// <param name="encryptionCertThumbprint"></param>
         /// <returns>null if the asset does not exist or else returns the asset</returns>
-        public static async Task<AutomationAsset> GetAsset(String assetName, String assetType,  String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, string encryptionCertThumbprint)
+        public static async Task<AutomationAsset> GetAsset(String assetName, String assetType, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, string encryptionCertThumbprint, ICollection<ConnectionType> connectionTypes)
         {
             AutomationAsset automationAsset = null;
 
             // Get local assets
-            LocalAssets localAssets = LocalAssetsStore.Get(localWorkspacePath, encryptionCertThumbprint);
+            LocalAssets localAssets = LocalAssetsStore.Get(localWorkspacePath, encryptionCertThumbprint, connectionTypes);
 
             // Search for variables
             CancellationTokenSource cts = new CancellationTokenSource();

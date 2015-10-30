@@ -45,7 +45,8 @@ function _findObjectByName {
 
 function _DecryptValue {
     param(
-        [object] $Value
+        [object] $Value,
+        [switch] $SupressCouldNotDecryptWarning
     )
 
     $Configuration = Get-AzureAutomationAuthoringToolkitConfiguration
@@ -68,9 +69,9 @@ function _DecryptValue {
 
         if (Test-Path -Path Cert:\CurrentUser\My\$Thumbprint) {
             $Cert = Get-Item -Path Cert:\CurrentUser\My\$Thumbprint
-            $Encrypted = [Convert]::FromBase64String($Value)
             
             try {
+                $Encrypted = [Convert]::FromBase64String($Value)
                 $Bytes = $Cert.PrivateKey.Decrypt($Encrypted, $True)
                 $EncryptedValue = [Text.Encoding]::UTF8.GetString($Bytes)
 
@@ -80,8 +81,11 @@ function _DecryptValue {
                 return $EncryptedValue
             }
             catch {
-                Write-Warning "AzureAutomationAuthoringToolkit: Warning - Could not decrypt value '$Value' using encryption certificate with thumbprint '$Thumbprint'.
-                Returning raw value instead. Are you sure the value was encrypted with this certificate?"
+                
+                if(!$SupressCouldNotDecryptWarning.IsPresent) {
+                    Write-Warning "AzureAutomationAuthoringToolkit: Warning - Could not decrypt value '$Value' using encryption certificate with thumbprint '$Thumbprint'.
+                    Returning raw value instead. Are you sure the value was encrypted with this certificate?"
+                }
 
                 return $Value 
             }
@@ -323,13 +327,20 @@ function Get-AzureAutomationAuthoringToolkitLocalAsset {
 
         }
         elseif($Type -eq "Connection") {
-             # Convert PSCustomObject to Hashtable
+            # Convert PSCustomObject to Hashtable
             $Temp = @{}
 
             $Asset.ValueFields.psobject.properties | ForEach-Object {
-                if($_.Name -ne "Name" -and $_.Name -ne "LastModified") {
-                    $Temp."$($_.Name)" = $_.Value
+                
+                if($_.Value -eq $Null) {
+                    Write-Warning "AzureAutomationAuthoringToolkit: Warning - Local Connection asset '$Name' has a null value for field '" + $_.Name + "'.
+                    If this was not intended, update this connection field value in your local assets. "
                 }
+                
+                # even though all connection fields may not be encrypted, try to decrypt them all since we don't know which are encrypted and which are not.
+                # if decryption fails (because field was not encrypted), supress the warning that decryption failed, since could be perfectly fine in this case.
+                # when decryption fails, _DecryptValue returns the raw value, which is what we want
+                $Temp."$($_.Name)" = (_DecryptValue -Value $_.Value -SupressCouldNotDecryptWarning)
             }
 
             $AssetValue = $Temp

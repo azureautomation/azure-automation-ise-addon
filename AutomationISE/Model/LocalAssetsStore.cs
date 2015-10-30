@@ -21,6 +21,7 @@ using System.Web.Script.Serialization;
 using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
 using System.Security.Cryptography;
+using Microsoft.Azure.Management.Automation.Models;
 
 namespace AutomationISE.Model
 {
@@ -55,9 +56,9 @@ namespace AutomationISE.Model
         }
 
         // updates the local assets, either removing (if replace = false) or adding/replacing (if replace = true) the specified assets
-        private static void Set(String workspacePath, ICollection<AutomationAsset> assetsToAffect, bool replace, String encryptionCertThumbprint)
+        private static void Set(String workspacePath, ICollection<AutomationAsset> assetsToAffect, bool replace, String encryptionCertThumbprint, ICollection<ConnectionType> connectionTypes)
         {
-            LocalAssets localAssets = LocalAssetsStore.Get(workspacePath, encryptionCertThumbprint);
+            LocalAssets localAssets = LocalAssetsStore.Get(workspacePath, encryptionCertThumbprint, connectionTypes);
 
             foreach (var assetToAffect in assetsToAffect)
             {
@@ -143,25 +144,25 @@ namespace AutomationISE.Model
 
             DirectoryInfo dir = Directory.CreateDirectory(workspacePath);
             UnsecureLocalAssetsContainerJson.Set(workspacePath, localAssets);
-            SecureLocalAssetsContainerJson.Set(workspacePath, localAssets, encryptionCertThumbprint); 
+            SecureLocalAssetsContainerJson.Set(workspacePath, localAssets, encryptionCertThumbprint, connectionTypes); 
         }
 
-        public static void Add(String workspacePath, ICollection<AutomationAsset> newAssets, String encryptionCertThumbprint)
+        public static void Add(String workspacePath, ICollection<AutomationAsset> newAssets, String encryptionCertThumbprint, ICollection<ConnectionType> connectionTypes)
         {
-            LocalAssetsStore.Set(workspacePath, newAssets, true, encryptionCertThumbprint);
+            LocalAssetsStore.Set(workspacePath, newAssets, true, encryptionCertThumbprint, connectionTypes);
         }
 
-        public static void Delete(String workspacePath, ICollection<AutomationAsset> assetsToDelete, String encryptionCertThumbprint)
+        public static void Delete(String workspacePath, ICollection<AutomationAsset> assetsToDelete, String encryptionCertThumbprint, ICollection<ConnectionType> connectionTypes)
         {
-            LocalAssetsStore.Set(workspacePath, assetsToDelete, false, encryptionCertThumbprint);
+            LocalAssetsStore.Set(workspacePath, assetsToDelete, false, encryptionCertThumbprint, connectionTypes);
         }
 
-        public static LocalAssets Get(String workspacePath, String encryptionCertThumbprint)
+        public static LocalAssets Get(String workspacePath, String encryptionCertThumbprint, ICollection<ConnectionType> connectionTypes)
         {
             LocalAssets localAssetsContainer = new LocalAssets(); 
             
             UnsecureLocalAssetsContainerJson localAssetsJson = UnsecureLocalAssetsContainerJson.Get(workspacePath);
-            SecureLocalAssetsContainerJson secureLocalAssetsJson = SecureLocalAssetsContainerJson.Get(workspacePath, encryptionCertThumbprint);
+            SecureLocalAssetsContainerJson secureLocalAssetsJson = SecureLocalAssetsContainerJson.Get(workspacePath, encryptionCertThumbprint, connectionTypes);
             
             // add JSON variables to the container
             localAssetsJson.Variable.ForEach(variable => variable.Encrypted = false);
@@ -264,8 +265,8 @@ namespace AutomationISE.Model
                     return JsonConvert.DeserializeObject(valueJson);
                 }
             }
-            
-            public static SecureLocalAssetsContainerJson Get(string workspacePath, String encryptionCertThumbprint)
+
+            public static SecureLocalAssetsContainerJson Get(string workspacePath, String encryptionCertThumbprint, ICollection<ConnectionType> connectionTypes)
             {
                 try
                 {
@@ -295,10 +296,22 @@ namespace AutomationISE.Model
 
                         foreach (var localConnectionAsset in localAssetsSecure.Connection)
                         {
-                            foreach (KeyValuePair<string, object> field in localConnectionAsset.ValueFields)
+                            IDictionary<string, FieldDefinition> connectionFieldDefinitions = new Dictionary<string, FieldDefinition>();
+                            foreach (var connectionType in connectionTypes)
                             {
-                                //localConnectionAsset.ValueFields[field.Key] = Decrypt(field.Value, encryptionCertThumbprint);
-                                // TODO: re-add this line when encrypt line stops causing crash
+                                if (connectionType.Name.Equals(localConnectionAsset.ConnectionType))
+                                {
+                                    connectionFieldDefinitions = connectionType.Properties.FieldDefinitions;
+                                    break;
+                                }
+                            }
+
+                            foreach (var fieldDefinition in connectionFieldDefinitions)
+                            {
+                                if (localConnectionAsset.ValueFields[fieldDefinition.Key] != null && fieldDefinition.Value.IsEncrypted)
+                                {
+                                    localConnectionAsset.ValueFields[fieldDefinition.Key] = Decrypt(localConnectionAsset.ValueFields[fieldDefinition.Key], encryptionCertThumbprint);
+                                }
                             }
                         }
                     }
@@ -311,7 +324,7 @@ namespace AutomationISE.Model
                 }
             }
 
-            public static void Set(string workspacePath, LocalAssets localAssets, String encryptionCertThumbprint)
+            public static void Set(string workspacePath, LocalAssets localAssets, String encryptionCertThumbprint, ICollection<ConnectionType> connectionTypes)
             {
                 var localAssetsSecure = new SecureLocalAssetsContainerJson();
                 foreach (var localVariableAsset in localAssets.Variables)
@@ -339,10 +352,22 @@ namespace AutomationISE.Model
 
                     foreach (var localConnectionAsset in localAssetsSecure.Connection)
                     {
-                        foreach (KeyValuePair<string, object> field in localConnectionAsset.ValueFields)
+                        IDictionary<string, FieldDefinition> connectionFieldDefinitions = new Dictionary<string, FieldDefinition>();
+                        foreach (var connectionType in connectionTypes)
                         {
-                            //localConnectionAsset.ValueFields[field.Key] = Encrypt(field.Value, encryptionCertThumbprint);
-                            //TODO: why is this causing crash?
+                            if (connectionType.Name.Equals(localConnectionAsset.ConnectionType))
+                            {
+                                connectionFieldDefinitions = connectionType.Properties.FieldDefinitions;
+                                break;
+                            }
+                        }
+                        
+                        foreach (var fieldDefinition in connectionFieldDefinitions)
+                        {
+                            if (localConnectionAsset.ValueFields[fieldDefinition.Key] != null && fieldDefinition.Value.IsEncrypted)
+                            {
+                                localConnectionAsset.ValueFields[fieldDefinition.Key] = Encrypt(localConnectionAsset.ValueFields[fieldDefinition.Key], encryptionCertThumbprint);
+                            }
                         }
                     }
                 }
