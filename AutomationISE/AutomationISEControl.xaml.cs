@@ -355,7 +355,16 @@ namespace AutomationISE
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                int tokenExpiredResult = -2146233088;
+                if (exception.HResult == tokenExpiredResult)
+                {
+                    refreshAccountDataTimer.Stop();
+                    MessageBox.Show("Your session has expired. Please sign in again.", "Session Expired", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                else
+                {
+                    MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
