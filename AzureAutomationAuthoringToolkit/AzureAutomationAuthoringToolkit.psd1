@@ -37,7 +37,9 @@ RequiredAssemblies = @("$PSScriptRoot\ISEAddon\AutomationISE.dll")
 HelpInfoURI = 'http://aka.ms/azureautomationauthoringtoolkit'
 
 # Functions to export from this module
-FunctionsToExport = @("Get-AutomationVariable", "Get-AutomationCertificate", "Get-AutomationPSCredential", "Get-AutomationConnection", "Set-AutomationVariable", "Get-AzureAutomationAuthoringToolkitLocalAsset", "Get-AzureAutomationAuthoringToolkitConfiguration")
+FunctionsToExport = @("Get-AutomationVariable", "Get-AutomationCertificate", "Get-AutomationPSCredential", "Get-AutomationConnection",
+                       "Set-AutomationVariable", "Get-AzureAutomationAuthoringToolkitLocalAsset", "Get-AzureAutomationAuthoringToolkitConfiguration",
+                       "Install-AzureAutomationIseAddOn", "Uninstall-AzureAutomationIseAddOn")
 
 # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
 PrivateData = @{
