@@ -1,5 +1,5 @@
 ﻿<#
-    Learn more here: http://aka.ms/azureautomationauthoringtoolkit
+        Learn more here: http://aka.ms/azureautomationauthoringtoolkit
 #>
 
 $script:ConfigurationFileName = "AzureAutomationAuthoringToolkitConfig.json"
@@ -121,6 +121,24 @@ function _EncryptValue {
 
 <#
     .SYNOPSIS
+    Copies configuration file for AzureAutomationAuthoringToolkit to user's profile directory
+#>
+function Copy-ConfigFile
+{
+    Write-Verbose "AzureAutomationAuthoringToolkit: Copying '$script:ConfigurationFileName' configuration file to '$script:ConfigurationPath'"
+
+    $ConfigurationFile = Get-Item -Path $script:ConfigurationPath -ErrorAction SilentlyContinue
+
+    if(!$ConfigurationFile) {
+        Copy-Item -Path (Join-Path $PSScriptRoot $script:ConfigurationFileName) -Destination $script:ConfigurationPath
+    }
+    else {
+        Write-Verbose "AzureAutomationAuthoringToolkit: '$script:ConfigurationPath' already present. Not copying file."
+    }
+}
+
+<#
+        .SYNOPSIS
         Sets up the Azure Automation ISE add-on for use in the PowerShell ISE.
 #>
 function Install-AzureAutomationIseAddOn {
@@ -159,22 +177,10 @@ function Install-AzureAutomationIseAddOn {
     else {
          Write-Verbose "AzureAutomationAuthoringToolkit: Content already present. Not adding any content."
     }
-
-    # copy configuration file for AzureAutomationAuthoringToolkit to user's profile directory
-    Write-Verbose "AzureAutomationAuthoringToolkit: Copying '$script:ConfigurationFileName' configuration file to '$script:ConfigurationPath'"
-
-    $ConfigurationFile = Get-Item -Path $script:ConfigurationPath -ErrorAction SilentlyContinue
-
-    if(!$ConfigurationFile) {
-        Copy-Item -Path (Join-Path $PSScriptRoot $script:ConfigurationFileName) -Destination $script:ConfigurationPath
-    }
-    else {
-        Write-Verbose "AzureAutomationAuthoringToolkit: '$script:ConfigurationPath' already present. Not copying file."
-    }
 }
 
 <#
-    .SYNOPSIS
+        .SYNOPSIS
         Removes the Azure Automation ISE add-on from the PowerShell ISE.
 #>
 function Uninstall-AzureAutomationIseAddOn {
@@ -197,7 +203,7 @@ function Uninstall-AzureAutomationIseAddOn {
 }
 
 <#
-    .SYNOPSIS
+        .SYNOPSIS
         Get a local certificate based on its thumbprint, as part of the Azure Automation Authoring Toolkit.
         Not meant to be called directly.
 #>
@@ -225,7 +231,7 @@ function Get-AzureAutomationAuthoringToolkitLocalCertificate {
 }
 
 <#
-    .SYNOPSIS
+        .SYNOPSIS
         Get local assets defined for the Azure Automation Authoring Toolkit. Not meant to be called directly.
 #>
 function Get-AzureAutomationAuthoringToolkitLocalAsset {
@@ -357,12 +363,12 @@ function Get-AzureAutomationAuthoringToolkitLocalAsset {
 }
 
 <#
-    .SYNOPSIS
+        .SYNOPSIS
         Get the configuration for the Azure Automation Authoring Toolkit. Not meant to be called directly.
 #>
 function Get-AzureAutomationAuthoringToolkitConfiguration {       
     $ConfigurationError = "AzureAutomationAuthoringToolkit: AzureAutomationAuthoringToolkit configuration defined in 
-    '$script:ConfigurationPath' is incorrect. Make sure the file exists, contains valid JSON, and contains 'LocalAssetsPath', 
+        '$script:ConfigurationPath' is incorrect. Make sure the file exists, contains valid JSON, and contains 'LocalAssetsPath', 
     'SecureLocalAssetsPath', and 'EncryptionCertificateThumbprint' settings."
 
     Write-Verbose "AzureAutomationAuthoringToolkit: Grabbing AzureAutomationAuthoringToolkit configuration from '$script:ConfigurationPath'"
@@ -391,7 +397,7 @@ function Get-AzureAutomationAuthoringToolkitConfiguration {
 }
 
 <#
-    .SYNOPSIS
+        .SYNOPSIS
         Get a variable asset from Azure Automation.
         Part of the Azure Automation Authoring Toolkit to help author runbooks locally.
 #>
@@ -412,7 +418,7 @@ function Get-AutomationVariable {
 }
 
 <#
-    .SYNOPSIS
+        .SYNOPSIS
         Get a connection asset from Azure Automation.
         Part of the Azure Automation Authoring Toolkit to help author runbooks locally.
 #>
@@ -433,7 +439,7 @@ function Get-AutomationConnection {
 }
 
 <#
-    .SYNOPSIS
+        .SYNOPSIS
         Set the value of a variable asset in Azure Automation.
         Part of the Azure Automation Authoring Toolkit to help author runbooks locally.
 #>
@@ -481,7 +487,7 @@ function Set-AutomationVariable {
 }
 
 <#
-    .SYNOPSIS
+        .SYNOPSIS
         Get a certificate asset from Azure Automation.
         Part of the Azure Automation Authoring Toolkit to help author runbooks locally.
 #>
