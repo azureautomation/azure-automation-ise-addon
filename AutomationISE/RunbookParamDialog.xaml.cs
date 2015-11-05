@@ -22,17 +22,66 @@ namespace AutomationISE
     public partial class RunbookParamDialog : Window
     {
         private IDictionary<string, RunbookParameter> parameterDict;
+        private IList<HybridRunbookWorkerGroup> hybridGroups;
         private IDictionary<string, string> existingParamsDict;
         private IDictionary<string, string> _paramValues;
         public IDictionary<string, string> paramValues { get { return _paramValues; } }
+        private string _runOnSelection;
+        public string runOnSelection { get { return _runOnSelection; } }
 
-        public RunbookParamDialog(IDictionary<string, RunbookParameter> parameterDict, IDictionary<string, string> existingParamsDict)
+        public RunbookParamDialog(IDictionary<string, RunbookParameter> parameterDict, IDictionary<string, string> existingParamsDict, IList<HybridRunbookWorkerGroup> hybridGroups)
         {
             InitializeComponent();
+            this.hybridGroups = hybridGroups;
             this.parameterDict = parameterDict;
             this.existingParamsDict = existingParamsDict;
-            AddParamForms();
+            if (parameterDict.Count > 0)
+                AddParamForms();
+            if (hybridGroups.Count > 0)
+                AddRunOnForms();
         }
+
+        private void AddRunOnForms()
+        {
+            /* Update the UI Grid to fit everything */
+            for (int i = 0; i < 2; i++)
+            {
+                RowDefinition rowDef = new RowDefinition();
+                rowDef.Height = System.Windows.GridLength.Auto;
+                ParametersGrid.RowDefinitions.Add(rowDef);
+            }
+            Grid.SetRow(ButtonsPanel, ParametersGrid.RowDefinitions.Count - 1);
+
+            Label runOnLabel = new Label();
+            runOnLabel.Content = "Choose where to run the test job:";
+            Grid.SetRow(runOnLabel, ParametersGrid.RowDefinitions.Count - 3);
+            Grid.SetColumn(runOnLabel, 0);
+            Grid.SetColumnSpan(runOnLabel, 2);
+
+            IList<string> runOnOptions = new List<string>();
+            runOnOptions.Add("Azure");
+            foreach (HybridRunbookWorkerGroup group in this.hybridGroups)
+            {
+                runOnOptions.Add(group.Name);
+            }
+            ComboBox runOnComboBox = new ComboBox();
+            runOnComboBox.ItemsSource = runOnOptions;
+            runOnComboBox.SelectedIndex = 0;
+            runOnComboBox.SelectionChanged += changeRunOnSelection;
+            Grid.SetRow(runOnComboBox, ParametersGrid.RowDefinitions.Count - 2);
+            Grid.SetColumn(runOnComboBox, 0);
+            Grid.SetColumnSpan(runOnComboBox, 2);
+
+            /* Add to Grid */
+            ParametersGrid.Children.Add(runOnLabel);
+            ParametersGrid.Children.Add(runOnComboBox);
+        }
+
+        private void changeRunOnSelection(object sender, RoutedEventArgs e)
+        {
+            _runOnSelection = ((sender as ComboBox).SelectedItem as string);
+        }
+
         private void AddParamForms()
         {
             /* Update the UI Grid to fit everything */
@@ -113,9 +162,12 @@ namespace AutomationISE
                 catch { /* not an input field */ }
             }
             if (String.IsNullOrEmpty(validationErrors))
+            {
                 this.DialogResult = true;
-            else
+            }
+            else {
                 System.Windows.Forms.MessageBox.Show("Could not submit test job. The following errors were found:\r\n\r\n" + validationErrors);
+            }
         }
     }
 }

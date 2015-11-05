@@ -268,7 +268,7 @@ namespace AutomationISE
             }
         }
 
-        private async Task<IDictionary<string, string>> GetTestJobParams()
+        private async Task<IDictionary<string, string>> GetLastTestJobParams()
         {
             try {
                 CancellationTokenSource cts = new CancellationTokenSource();
@@ -299,6 +299,10 @@ namespace AutomationISE
                     JobDetails.Content = runbookName + " test job created at " + response.TestJob.CreationTime.LocalDateTime;
                     JobStatus.Content = response.TestJob.Status;
                 }
+                else
+                {
+                    StartJobButton.IsEnabled = true;
+                }
             }
             catch (Exception exception)
             {
@@ -315,17 +319,29 @@ namespace AutomationISE
                             iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
             if (draft.InEdit == false)
                 throw new Exception("This runbook has no draft to test because it is in a 'Published' state.");
+
+            HybridRunbookWorkerGroupsListResponse hybridGroupResponse = await iseClient.automationManagementClient.HybridRunbookWorkerGroups.ListAsync(
+                iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name,
+                new CancellationToken());
+
             TestJobCreateParameters jobCreationParams = new TestJobCreateParameters();
             jobCreationParams.RunbookName = runbookName;
-            if (draft.Parameters.Count > 0)
+            if (draft.Parameters.Count > 0 || hybridGroupResponse.HybridRunbookWorkerGroups.Count > 0)
             {
-                /* User needs to specify values for them */
-                var existingParams = await GetTestJobParams();
-                RunbookParamDialog paramDialog = new RunbookParamDialog(draft.Parameters,existingParams);
+                /* User needs to specify some things */
+                var existingParams = await GetLastTestJobParams();
+                RunbookParamDialog paramDialog = new RunbookParamDialog(draft.Parameters, existingParams, hybridGroupResponse.HybridRunbookWorkerGroups);
                 if (paramDialog.ShowDialog() == true)
-                    jobCreationParams.Parameters = paramDialog.paramValues;
+                {
+                    if (draft.Parameters.Count > 0)
+                        jobCreationParams.Parameters = paramDialog.paramValues;
+                    if (!String.IsNullOrEmpty(paramDialog.runOnSelection) && !paramDialog.runOnSelection.Equals("Azure"))
+                        jobCreationParams.RunOn = paramDialog.runOnSelection;
+                }
                 else
+                {
                     return null;
+                }
             }
             /* start the test job */
             CancellationTokenSource cts = new CancellationTokenSource();
