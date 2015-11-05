@@ -30,11 +30,16 @@ Description = 'Provides cmdlets to make authoring Azure Automation runbooks and 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
 NestedModules = @('.\AzureAutomationAuthoringToolkitInner.psm1')
 
+# Assemblies that must be loaded prior to importing this module
+RequiredAssemblies = @("$PSScriptRoot\ISEAddon\AutomationISE.dll")
+
 # HelpInfo URI of this module
 HelpInfoURI = 'http://aka.ms/azureautomationauthoringtoolkit'
 
 # Functions to export from this module
-FunctionsToExport = @("Get-AutomationVariable", "Get-AutomationCertificate", "Get-AutomationPSCredential", "Get-AutomationConnection", "Set-AutomationVariable", "Get-AzureAutomationAuthoringToolkitLocalAsset", "Get-AzureAutomationAuthoringToolkitConfiguration", "Install-AzureAutomationIseAddOn", "Uninstall-AzureAutomationIseAddOn")
+FunctionsToExport = @("Get-AutomationVariable", "Get-AutomationCertificate", "Get-AutomationPSCredential", "Get-AutomationConnection",
+                       "Set-AutomationVariable", "Get-AzureAutomationAuthoringToolkitLocalAsset", "Get-AzureAutomationAuthoringToolkitConfiguration",
+                       "Install-AzureAutomationIseAddOn", "Uninstall-AzureAutomationIseAddOn")
 
 # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
 PrivateData = @{
