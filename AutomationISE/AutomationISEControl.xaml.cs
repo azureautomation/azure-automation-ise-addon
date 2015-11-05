@@ -63,6 +63,7 @@ namespace AutomationISE
         private string certificateThumbprint;
         public ObjectModelRoot HostObject { get; set; }
 
+
         public AutomationISEControl()
         {
             try
@@ -1541,6 +1542,7 @@ namespace AutomationISE
         {
             try
             {
+
                 CollectionViewSource.GetDefaultView(RunbooksListView.ItemsSource).Refresh();
             }
             catch { }
@@ -1601,12 +1603,34 @@ namespace AutomationISE
 
         private bool FilterRunbook(object item)
         {
-            if (String.IsNullOrEmpty(RunbookFilterTextBox.Text) || RunbookFilterTextBox.Text.Length < 2)
+            if (String.IsNullOrEmpty(RunbookFilterTextBox.Text) || RunbookFilterTextBox.Text.Length < 2 || RunbookFilterTextBox.Text == "Search")
                 return true;
             if (RunbookFilterTextBox.Text.IndexOf(':') >= 0)
                 return doAdvancedFiltering(item);
             else
                 return doBasicFiltering(item);
+        }
+
+        private void RunbookFilterFocus(object sender, RoutedEventArgs e)
+        {
+            if (RunbookFilterTextBox.Text == "Search")
+            {
+                RunbookFilterTextBox.FontWeight = FontWeights.Normal;
+                RunbookFilterTextBox.FontStyle = FontStyles.Normal;
+                RunbookFilterTextBox.Text = "";
+            }
+
+        }
+
+        private void RunbookFilterLostFocus(object sender, RoutedEventArgs e)
+        {
+            if (RunbookFilterTextBox.Text == "")
+            {
+                RunbookFilterTextBox.FontWeight = FontWeights.Light;
+                RunbookFilterTextBox.FontStyle = FontStyles.Italic;
+                RunbookFilterTextBox.Text = "Search";
+            }
+
         }
     }
 }

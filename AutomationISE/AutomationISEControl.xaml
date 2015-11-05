@@ -71,7 +71,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <TextBox Name="RunbookFilterTextBox" Margin="10,5,10,3" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" TextChanged="RunbookFilter_TextChanged" />
+                    <TextBox Name="RunbookFilterTextBox" Margin="10,10,10,10" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" TextChanged="RunbookFilter_TextChanged" GotFocus="RunbookFilterFocus" LostFocus="RunbookFilterLostFocus" />
                     <ListView x:Name="RunbooksListView" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4"  SelectionMode="Extended" Margin="10,0,10,0" VerticalAlignment="Stretch" SelectionChanged="RunbooksListView_SelectionChanged" MouseDoubleClick="RunbooksListView_MouseDoubleClick">
                         <ListView.View>
                             <GridView>
