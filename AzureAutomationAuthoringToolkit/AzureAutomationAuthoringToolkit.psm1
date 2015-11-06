@@ -2,6 +2,12 @@
     Learn more here: http://aka.ms/azureautomationauthoringtoolkit
 #>
 
+Copy-ConfigFile
+
+if ($PSIse) {
+    $null = $PSIse.CurrentPowerShellTab.VerticalAddOnTools.Add('Azure Automation ISE add-on', [AutomationISE.AutomationISEControl], $True)
+}
+
 <#
     .SYNOPSIS
         Get a credential asset from Azure Automation.

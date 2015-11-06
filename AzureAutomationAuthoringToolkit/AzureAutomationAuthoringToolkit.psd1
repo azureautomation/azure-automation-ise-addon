@@ -30,6 +30,9 @@ Description = 'Provides cmdlets to make authoring Azure Automation runbooks and 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
 NestedModules = @('.\AzureAutomationAuthoringToolkitInner.psm1')
 
+# Assemblies that must be loaded prior to importing this module
+RequiredAssemblies = @("$PSScriptRoot\ISEAddon\AutomationISE.dll")
+
 # HelpInfo URI of this module
 HelpInfoURI = 'http://aka.ms/azureautomationauthoringtoolkit'
 
