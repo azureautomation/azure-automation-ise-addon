@@ -15,7 +15,7 @@ $script:IseAddonPath = "\ISEaddon\AutomationISE.dll"
 $script:PowerShellToLoadAzureAutomationIseAddOnGeneric = @"
 `n
 # Start AzureAutomationISEAddOn snippet
-`$PSIse.CurrentPowerShellTab.VerticalAddOnTools.Add('Azure Automation ISE add-on', [AutomationISE.AutomationISEControl], `$True) | Out-Null
+Import-Module AzureAutomationAuthoringToolkit
 # End AzureAutomationISEAddOn snippet
 "@
 
