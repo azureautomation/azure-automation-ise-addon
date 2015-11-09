@@ -27,16 +27,16 @@ namespace AutomationISE.Model
         /* Azure Credential Data */
         public AuthenticationResult azureADAuthResult { get; set; }
         private AuthenticationResult azureARMAuthResult;
-        private Microsoft.WindowsAzure.TokenCloudCredentials subscriptionCredentials;
+        private Microsoft.Azure.TokenCloudCredentials subscriptionCredentials;
         private SubscriptionCloudCredentials subscriptionCreds;
 
         /* Azure Clients */
         public AutomationManagementClient automationManagementClient { get; set; }
         private ResourceManagementClient resourceManagementClient;
-        private Microsoft.WindowsAzure.Subscriptions.SubscriptionClient subscriptionClient;
+        private Microsoft.Azure.Subscriptions.SubscriptionClient subscriptionClient;
 
         /* User Session Data */
-        public Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription currSubscription { get; set; }
+        public AutomationISEClient.SubscriptionObject currSubscription { get; set; }
         public String baseWorkspace { get; set; }
         public String currWorkspace { get; set; }
         private AutomationAccount _currAccount;
@@ -59,16 +59,68 @@ namespace AutomationISE.Model
             /* Placeholder. All fields null, will only be instantiated when called upon */
         }
 
-        public async Task<IList<Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription>> GetSubscriptions()
+        public async Task<IList<SubscriptionObject>> GetSubscriptions()
         {
             if (azureADAuthResult == null)
                 throw new Exception(Properties.Resources.AzureADAuthResult);
-            subscriptionCredentials = new Microsoft.WindowsAzure.TokenCloudCredentials(azureADAuthResult.AccessToken);
-            subscriptionClient = new Microsoft.WindowsAzure.Subscriptions.SubscriptionClient(subscriptionCredentials);
-           
+
+            // Common subscription object to host subscriptions from RDFE & ARM
+            IList<SubscriptionObject> subscriptionList = new List<SubscriptionObject>();
+
+            subscriptionCredentials = new Microsoft.Azure.TokenCloudCredentials(azureADAuthResult.AccessToken);
+            subscriptionClient = new Microsoft.Azure.Subscriptions.SubscriptionClient(subscriptionCredentials);
+
             var cancelToken = new CancellationToken();
-            Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse subscriptionsResult = await subscriptionClient.Subscriptions.ListAsync(cancelToken);
-            return subscriptionsResult.Subscriptions;
+            Microsoft.Azure.Subscriptions.Models.SubscriptionListResult subscriptionResults = await subscriptionClient.Subscriptions.ListAsync(cancelToken);
+
+            // Add any ARM subscriptions to the common subscription object
+            foreach (var subscription in subscriptionResults.Subscriptions)
+            {
+                var subList = new SubscriptionObject();
+                subList.Name = subscription.DisplayName;
+                subList.SubscriptionId = subscription.SubscriptionId;
+                subList.Authority = "common";
+                subscriptionList.Add(subList);
+            }
+
+            // Add any RDFE subscriptions to the common subscription object
+            IList<Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription> RDFEsubscriptions = await GetRDFESubscriptions();
+            foreach (var subscription in RDFEsubscriptions)
+            {
+                // Only add subscriptions that are not already in the subscription list
+                if (subscriptionList.Where(x => x.SubscriptionId == subscription.SubscriptionId).Count() == 0)
+                {
+                    var subList = new SubscriptionObject();
+                    subList.Name = subscription.SubscriptionName;
+                    subList.SubscriptionId = subscription.SubscriptionId;
+                    subList.Authority = subscription.ActiveDirectoryTenantId;
+                    subscriptionList.Add(subList);
+                }
+            }
+
+            return subscriptionList;
+        }
+
+        /// <summary>
+        /// Contains information about the subscription
+        /// </summary>
+        public struct SubscriptionObject
+        {
+            public string Name { get; set; }
+            public string SubscriptionId { get; set; }
+            public string Authority { get; set; }
+        }
+
+        public async Task<IList<Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription>> GetRDFESubscriptions()
+        {
+            if (azureADAuthResult == null)
+                throw new Exception(Properties.Resources.AzureADAuthResult);
+            var subscriptionCredentials = new Microsoft.WindowsAzure.TokenCloudCredentials(azureADAuthResult.AccessToken);
+            var subscriptionClient = new Microsoft.WindowsAzure.Subscriptions.SubscriptionClient(subscriptionCredentials);
+
+            var cancelToken = new CancellationToken();
+            Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse subscriptionResults = await subscriptionClient.Subscriptions.ListAsync(cancelToken);
+            return subscriptionResults.Subscriptions;
         }
 
         /// <summary>
@@ -80,10 +132,10 @@ namespace AutomationISE.Model
         {
             // Get the token for the tenant on this subscription and check if it is about to expire.
             // If it is, refresh it if possible.
-            if (currSubscription == null) return;
+            if (currSubscription.Name == null) return;
             if (azureARMAuthResult.ExpiresOn.ToLocalTime() < DateTime.Now.AddMinutes(Constants.tokenRefreshInterval + 2))
             {
-                azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
+                azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.Authority);
                 subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, azureARMAuthResult.AccessToken);
 
                 automationManagementClient = new AutomationManagementClient(subscriptionCreds);
@@ -96,11 +148,11 @@ namespace AutomationISE.Model
 
         public async Task<IList<AutomationAccount>> GetAutomationAccounts()
         {
-            if(currSubscription == null)
+            if(currSubscription.Name == null)
                 throw new Exception(Properties.Resources.SubscriptionNotSet);
 
             // Get the token for the tenant on this subscription.
-            azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
+            azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.Authority);
             subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, azureARMAuthResult.AccessToken);
 
             automationManagementClient = new AutomationManagementClient(subscriptionCreds);
@@ -132,11 +184,11 @@ namespace AutomationISE.Model
 
         public async Task<IList<ResourceGroupExtended>> GetResourceGroups()
         {
-            if (currSubscription == null)
+            if (currSubscription.Name == null)
                 throw new Exception(Properties.Resources.SubscriptionNotSet);
 
             // Get the token for the tenant on this subscription.
-            var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.ActiveDirectoryTenantId);
+            var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(azureARMAuthResult.TenantId);
             subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, cloudtoken.AccessToken);
 
             resourceManagementClient = new ResourceManagementClient(subscriptionCreds);
@@ -153,7 +205,7 @@ namespace AutomationISE.Model
         private string getCurrentAccountWorkspace()
         {
             //Account must be unique within the ResourceGroup: no need to include region
-            string[] pathFolders = new string[] { this.baseWorkspace, currSubscription.SubscriptionName + " - " + currSubscription.SubscriptionId, 
+            string[] pathFolders = new string[] { this.baseWorkspace, currSubscription.Name  + " - " + currSubscription.SubscriptionId, 
                 accountResourceGroups[currAccount].Name, currAccount.Name };
             return System.IO.Path.Combine(pathFolders);
         }

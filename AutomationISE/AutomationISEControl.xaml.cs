@@ -391,14 +391,16 @@ namespace AutomationISE
                 UpdateStatusBox(configurationStatusTextBox, "Logged in user: " + userNameTextBox.Text);
                 Properties.Settings.Default["ADUserName"] = userNameTextBox.Text;
                 Properties.Settings.Default.Save();
+                subscriptionComboBox.ItemsSource = null;
 
-                IList<Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription> subscriptions = await iseClient.GetSubscriptions();
+                IList<AutomationISEClient.SubscriptionObject> subscriptions = await iseClient.GetSubscriptions();
+
                 if (subscriptions.Count > 0)
                 {
                     endBackgroundWork(Properties.Resources.FoundSubscriptions);
                     subscriptionComboBox.ItemsSource = subscriptions;
-                    subscriptionComboBox.DisplayMemberPath = "SubscriptionName";
-                    foreach (Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription selectedSubscription in subscriptionComboBox.Items)
+                    subscriptionComboBox.DisplayMemberPath = "Name";
+                    foreach (AutomationISEClient.SubscriptionObject selectedSubscription in subscriptionComboBox.Items)
                     {
                         if (selectedSubscription.SubscriptionId == Properties.Settings.Default.lastSubscription.ToString())
                         {
@@ -451,30 +453,34 @@ namespace AutomationISE
                 refreshAccountDataTimer.Stop();
 
                 // Save the last selected subscription so we default to this one next time the ISE is openend
-                var selectedSubscription = (Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription)subscriptionComboBox.SelectedValue;
-                if (selectedSubscription != null)
+                if (subscriptionComboBox.SelectedItem != null)
                 {
+
+                    var selectedSubscription = (AutomationISEClient.SubscriptionObject)subscriptionComboBox.SelectedValue;
+                    if (selectedSubscription.Name != null)
+                    {
                     Properties.Settings.Default.lastSubscription = selectedSubscription.SubscriptionId;
                     Properties.Settings.Default.Save();
-                }
-
-                iseClient.currSubscription = (Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription)subscriptionComboBox.SelectedValue;
-                if (iseClient.currSubscription != null)
-                {
-                    beginBackgroundWork(Properties.Resources.RetrieveAutomationAccounts);
-                    IList<AutomationAccount> automationAccounts = await iseClient.GetAutomationAccounts();
-                    var accountList = automationAccounts.OrderBy(x => x.Name);
-                    accountsComboBox.ItemsSource = accountList;
-                    accountsComboBox.DisplayMemberPath = "Name";
-                    if (accountsComboBox.HasItems)
-                    {
-                        endBackgroundWork(Properties.Resources.FoundAutomationAccounts);
-                        accountsComboBox.SelectedItem = accountsComboBox.Items[0];
-                        accountsComboBox.IsEnabled = true;
                     }
-                    else
+
+                    iseClient.currSubscription = (AutomationISEClient.SubscriptionObject)subscriptionComboBox.SelectedValue;
+                    if (iseClient.currSubscription.Name != null)
                     {
-                        endBackgroundWork(Properties.Resources.NoAutomationAccounts);
+                        beginBackgroundWork(Properties.Resources.RetrieveAutomationAccounts);
+                        IList<AutomationAccount> automationAccounts = await iseClient.GetAutomationAccounts();
+                        var accountList = automationAccounts.OrderBy(x => x.Name);
+                        accountsComboBox.ItemsSource = accountList;
+                        accountsComboBox.DisplayMemberPath = "Name";
+                        if (accountsComboBox.HasItems)
+                        {
+                            endBackgroundWork(Properties.Resources.FoundAutomationAccounts);
+                            accountsComboBox.SelectedItem = accountsComboBox.Items[0];
+                            accountsComboBox.IsEnabled = true;
+                        }
+                        else
+                        {
+                            endBackgroundWork(Properties.Resources.NoAutomationAccounts);
+                        }
                     }
                 }
             }
