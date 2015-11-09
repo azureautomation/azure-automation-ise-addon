@@ -23,8 +23,12 @@ To install the latest build of the add-on, follow the instructions for our [Earl
 To install from PowerShell Gallery:
 * Open the PowerShell console as an administrator
 * Run `Install-Module AzureAutomationAuthoringToolkit`
+
+If you want the PowerShell ISE to always automatically load the Azure Automation ISE addon:
 * Run `Install-AzureAutomationIseAddOn`
-* From now on, opening the PowerShell ISE should automatically load the Azure Automation ISE add-on.
+
+If not:
+* Any time you want to use the Azure Automation ISE addon in the PowerShell ISE, run `Import-Module AzureAutomationAuthoringToolkit` in the PowerShell ISE
 
 ### From Source
 To build from source:
@@ -33,15 +37,19 @@ To build from source:
 * Build the solution. NuGet will pull the required packages.
 * Put the resulting binaries in the AzureAutomationAuthoringToolkit/ISEaddon directory
 * Place the AzureAutomationAuthoringToolkit folder somewhere in your PSModulePath, ex: `C:\Users\<USERNAME>\Documents\WindowsPowerShell\Modules`
+
+If you want the PowerShell ISE to always automatically load the Azure Automation ISE addon:
 * Open the PowerShell ISE, and run `Install-AzureAutomationIseAddOn`
 * The Azure Automation ISE add-on should appear on the right side of the PowerShell ISE:
 ![alt text](https://github.com/azureautomation/azure-automation-ise-addon/blob/master/Screenshots/Automation-Add-On.png " Azure Automation Add-On")
-* From now on, opening the PowerShell ISE should automatically load the Azure Automation ISE add-on
+If not:
+* Any time you want to use the Azure Automation ISE addon in the PowerShell ISE, run `Import-Module AzureAutomationAuthoringToolkit` in the PowerShell ISE
 
 
 ## Uninstallation
 
-* Open PowerShell console
+* Open the PowerShell console as an administrator
 * Run `Uninstall-AzureAutomationIseAddOn`
+* Run `Uninstall-Module AzureAutomationAuthoringToolkit`
 * If the PowerShell ISE was open, reopen it
 * From now on, opening the PowerShell ISE will no longer cause the Azure Automation ISE add-on to be loaded
