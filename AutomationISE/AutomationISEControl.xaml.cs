@@ -479,6 +479,7 @@ namespace AutomationISE
                         }
                         else
                         {
+                            subscriptionComboBox.IsEnabled = true;
                             endBackgroundWork(Properties.Resources.NoAutomationAccounts);
                         }
                     }
