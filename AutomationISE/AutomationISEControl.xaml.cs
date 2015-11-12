@@ -887,7 +887,7 @@ namespace AutomationISE
                     AutomationRunbook selectedRunbook = (AutomationRunbook)obj;
                     if (selectedRunbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.CloudOnly)
                     {
-                        MessageBox.Show("There is no local copy of " + selectedRunbook.localFileInfo.Name + " to open.",
+                        MessageBox.Show("There is no local copy of the selected runbook to open. Please download the runbook.",
                                 "No Local Runbook", MessageBoxButton.OK, MessageBoxImage.Warning);
                         continue;
                     }
