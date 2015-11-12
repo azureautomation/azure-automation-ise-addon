@@ -289,6 +289,7 @@ namespace AutomationISE
                 refreshAuthTokenTimer.Stop();
                 iseClient.RefreshAutomationClientwithNewToken();
                 refreshAuthTokenTimer.Start();
+                if (refreshAccountDataTimer.Enabled == false) refreshAccountDataTimer.Start();
             }
             catch (Exception exception)
             {
@@ -312,7 +313,7 @@ namespace AutomationISE
                     int tokenExpiredResult = -2146233088;
                     if (exception.HResult == tokenExpiredResult)
                     {
-                        MessageBox.Show("Your session has expired. Please sign in again.", "Session Expired", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        iseClient.RefreshAutomationClientwithNewToken();
                     }
                     else
                     {
