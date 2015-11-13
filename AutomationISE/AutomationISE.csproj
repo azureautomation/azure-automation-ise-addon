@@ -139,6 +139,7 @@
     <Compile Include="DeleteRunbookDialog.xaml.cs">
       <DependentUpon>DeleteRunbookDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Model\PowerShellGallery.cs" />
     <Compile Include="Model\AutomationSelfSignedCertificate.cs" />
     <Compile Include="Model\AutomationSourceControl.cs" />
     <Compile Include="Model\Certificate.cs" />

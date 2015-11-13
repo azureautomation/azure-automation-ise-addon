@@ -34,6 +34,7 @@ using System.ComponentModel;
 using System.Windows.Data;
 using System.Windows.Media.Animation;
 using System.Text;
+using System.Drawing;
 
 namespace AutomationISE
 {
@@ -123,6 +124,18 @@ namespace AutomationISE
                 // Load feedback and help page preemptively
                 surveyBrowserControl.Navigate(new Uri(Constants.feedbackURI));
                 helpBrowserControl.Navigate(new Uri(Constants.helpURI));
+
+                // Check if this is the latest version from PowerShell Gallery
+                if (PowerShellGallery.CheckGalleryVersion())
+                {
+                    versionLabel.Foreground = System.Windows.Media.Brushes.Red;
+                    versionLabel.Content = "New AzureAutomationAuthoringToolkik available";
+                }
+                else
+                {
+                    versionLabel.Visibility = Visibility.Collapsed;
+                    versionButton.Visibility = Visibility.Collapsed;
+                }
             }
             catch (Exception exception)
             {
@@ -1255,7 +1268,7 @@ namespace AutomationISE
         private void certificateButton_Click(object sender, RoutedEventArgs e)
         {
             try
-            {
+            {                
                 var certDialog = new ChangeCertificateDialog(certificateThumbprint);
                 certDialog.ShowDialog();
                 if (certificateTextBox.Text != certDialog.updatedThumbprint)
@@ -1639,6 +1652,15 @@ namespace AutomationISE
                 RunbookFilterTextBox.Text = "Search";
             }
 
+        }
+
+        private void updateButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show("Do you want to install the latest PowerShell module from the PowerShell Gallery?  (You will need to restart the ISE after install)",
+              "Install AzureAutomationAuthoringToolkit Module", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            {
+                HostObject.CurrentPowerShellTab.Invoke("install-module AzureAutomationAuthoringToolkit -Scope CurrentUser -verbose -force");
+            }
         }
     }
 }
