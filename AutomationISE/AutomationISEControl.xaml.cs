@@ -129,7 +129,7 @@ namespace AutomationISE
                 if (PowerShellGallery.CheckGalleryVersion())
                 {
                     versionLabel.Foreground = System.Windows.Media.Brushes.Red;
-                    versionLabel.Content = "New AzureAutomationAuthoringToolkik available";
+                    versionLabel.Content = "New AzureAutomationAuthoringToolkit available";
                 }
                 else
                 {
