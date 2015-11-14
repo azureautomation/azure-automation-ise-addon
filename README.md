@@ -21,8 +21,8 @@ To install the latest build of the add-on, follow the instructions for our [Earl
 
 ### From PowerShell Gallery
 To install from PowerShell Gallery:
-* Open the PowerShell console as an administrator
-* Run `Install-Module AzureAutomationAuthoringToolkit`
+* Open the PowerShell console
+* Run `Install-Module AzureAutomationAuthoringToolkit -Scope CurrentUser`
 
 If you want the PowerShell ISE to always automatically load the Azure Automation ISE addon:
 * Run `Install-AzureAutomationIseAddOn`
@@ -48,7 +48,7 @@ If not:
 
 ## Uninstallation
 
-* Open the PowerShell console as an administrator
+* Open the PowerShell console
 * Run `Uninstall-AzureAutomationIseAddOn`
 * Run `Uninstall-Module AzureAutomationAuthoringToolkit`
 * If the PowerShell ISE was open, reopen it
