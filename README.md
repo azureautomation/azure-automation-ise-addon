@@ -54,6 +54,6 @@ If not:
 * From now on, opening the PowerShell ISE will no longer cause the Azure Automation ISE add-on to be loaded
 
 ## Notes
-* The `AzureAutomationAuthoringToolkit` cmdlets are currently incompatible with SMA's EmulatedAutomationActivities module due to name conflicts
+* The `AzureAutomationAuthoringToolkit` cmdlets are currently incompatible with SMA's `EmulatedAutomationActivities` module due to name conflicts
 * The `AzureAutomationAuthoringToolkit` cmdlets may not run correctly on a SMA runbook worker or Automation Hybrid runbook worker due to name conflicts
 
