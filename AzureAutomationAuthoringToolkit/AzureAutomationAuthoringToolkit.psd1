@@ -7,7 +7,7 @@
 RootModule = 'AzureAutomationAuthoringToolkit.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.2.2.9'
+ModuleVersion = '0.2.3.0'
 
 # Minimum version of the Windows PowerShell engine required by this module
 PowerShellVersion = '3.0'
@@ -31,7 +31,7 @@ Description = 'Provides cmdlets to make authoring Azure Automation runbooks and 
 NestedModules = @('.\AzureAutomationAuthoringToolkitInner.psm1')
 
 # Assemblies that must be loaded prior to importing this module
-RequiredAssemblies = @("$PSScriptRoot\ISEAddon\AutomationISE.dll")
+RequiredAssemblies = @(".\ISEAddon\AutomationISE.dll")
 
 # HelpInfo URI of this module
 HelpInfoURI = 'http://aka.ms/azureautomationauthoringtoolkit'
