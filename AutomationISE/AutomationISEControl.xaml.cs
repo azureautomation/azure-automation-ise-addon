@@ -374,7 +374,7 @@ namespace AutomationISE
                 if (exception.HResult == tokenExpiredResult)
                 {
                     refreshAccountDataTimer.Stop();
-                    MessageBox.Show("Your session has expired. Please sign in again.", "Session Expired", MessageBoxButton.OK, MessageBoxImage.Warning);
+                  //  MessageBox.Show("Your session has expired. Please sign in again.", "Session Expired", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
                 else
                 {
