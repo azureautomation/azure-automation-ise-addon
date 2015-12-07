@@ -100,7 +100,13 @@ namespace AutomationISE.Model
 
             // Load up the XML response
             XmlDocument doc = new XmlDocument();
-            doc.LoadXml(requestContent);
+            doc.XmlResolver = null;
+            XmlReaderSettings settings = new XmlReaderSettings();
+            settings.XmlResolver = null;
+            using (XmlReader reader = XmlReader.Create(new StringReader(requestContent), settings))
+            {
+                doc.Load(reader);
+            }
 
             // Add the namespaces for the gallery xml content
             XmlNamespaceManager nsmgr = new XmlNamespaceManager(doc.NameTable);
