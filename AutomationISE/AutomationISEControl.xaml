@@ -18,11 +18,8 @@
             <TabItem x:Name="configurationTab" Header="Configuration">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="204*"/>
-                        <ColumnDefinition Width="53*"/>
-                        <ColumnDefinition Width="31*"/>
-                        <ColumnDefinition Width="11*"/>
-                        <ColumnDefinition Width="20*"/>
+                        <ColumnDefinition Width="4*"/>
+                        <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Name="Workspace" Height="50"/>
@@ -35,30 +32,30 @@
                         <RowDefinition Name="Version" Height="Auto"/>
                         <RowDefinition Name="Status" Height="*"/>
                     </Grid.RowDefinitions>
-                    <Label x:Name="workspaceLabel" Content="Base path for runbooks and assets" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="0" />
-                    <TextBox x:Name="workspaceTextBox" Margin="5,0,5,5" VerticalAlignment="Bottom" TextChanged="workspaceTextBox_TextChanged" Grid.Column="0" Grid.Row="0"/>
-                    <Button x:Name="workspaceButton" Content=" Browse " Margin="5,0,5.334,5" VerticalAlignment="Bottom" Click="workspaceButton_Click" Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="4"/>
-                    <TextBox x:Name="userNameTextBox" Margin="5,0,5,5" VerticalAlignment="Bottom" Grid.Column="0" Grid.Row="1" IsReadOnly="True" IsReadOnlyCaretVisible="True" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"/>
-                    <Button x:Name="loginButton" Content="Sign In" Margin="5,0,5.334,5" VerticalAlignment="Bottom" Click="loginButton_Click" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="4"/>
-                    <ComboBox x:Name="subscriptionComboBox" Margin="5,0,5,5" Grid.Row="2" Grid.Column="0"  VerticalAlignment="Bottom" SelectionChanged="SubscriptionComboBox_SelectionChanged" Grid.ColumnSpan="1" />
-                    <ComboBox x:Name="accountsComboBox" Margin="5,0,5,5" VerticalAlignment="Bottom" SelectionChanged="accountsComboBox_SelectionChanged" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="1"/>
+                    <Label x:Name="workspaceLabel" Content="Base path for runbooks and assets" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.ColumnSpan="2" Grid.Row="0" />
+                    <TextBox x:Name="workspaceTextBox" Margin="5" VerticalAlignment="Bottom" TextChanged="workspaceTextBox_TextChanged" Grid.Column="0" Grid.Row="0"/>
+                    <Button x:Name="workspaceButton" Content=" Browse " Margin="5" VerticalAlignment="Bottom" Click="workspaceButton_Click" Grid.Column="1" Grid.Row="0"/>
+                    <TextBox x:Name="userNameTextBox" Margin="5" VerticalAlignment="Bottom" Grid.Column="0" Grid.Row="1" IsReadOnly="True" IsReadOnlyCaretVisible="True" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"/>
+                    <Button x:Name="loginButton" Content="Sign In" Margin="5" VerticalAlignment="Bottom" Click="loginButton_Click" Grid.Column="1" Grid.Row="1"/>
+                    <ComboBox x:Name="subscriptionComboBox" Margin="5" Grid.Row="2" Grid.Column="0"  VerticalAlignment="Bottom" SelectionChanged="SubscriptionComboBox_SelectionChanged" Grid.ColumnSpan="1" />
+                    <ComboBox x:Name="accountsComboBox" Margin="5" VerticalAlignment="Bottom" SelectionChanged="accountsComboBox_SelectionChanged" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="1"/>
                     <Label x:Name="signinLabel" Content="Sign in to Azure Automation" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="1" Grid.Column="0"/>
                     <Label x:Name="subscriptionLabel" Content="Subscription" Grid.Row="2" Grid.Column="0"  HorizontalAlignment="Left" VerticalAlignment="Top"/>
                     <Label x:Name="automationAccountLabel" Content="Automation Account"  HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="3" Grid.Column="0"/>
-                    <Label x:Name="accountPathLabel" Content="Account content location" Padding="5,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="4" />
+                    <Label x:Name="accountPathLabel" Content="Account content location" Padding="5,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.ColumnSpan="2" Grid.Row="4" />
                     <TextBox x:Name="accountPathTextBox" Margin="5" IsReadOnly="True" VerticalAlignment="Stretch" TextWrapping="Wrap" Grid.Column="0" Grid.Row="5"/>
-                    <StackPanel Grid.Column="1" Grid.Row="5" Grid.ColumnSpan="4" Margin="0,0,0.334,0">
+                    <StackPanel Grid.Column="1" Grid.Row="5">
                         <Button x:Name="accountPathButton" Content="Open" Margin="5" VerticalAlignment="Top" Click="accountPathButton_Click" Grid.Column="1" Grid.Row="5"/>
                         <Button x:Name="togglePromptButton" Content="Toggle Prompt" Margin="5" VerticalAlignment="Bottom" Click="togglePromptButton_Click" Grid.Column="1" Grid.Row="5"/>
                     </StackPanel>
                     <Label x:Name="certificateStatusLabel" Content="Certificate thumbprint to encrypt local assets" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2"/>
-                    <TextBox x:Name="certificateTextBox" Margin="5,0,5,5" VerticalAlignment="Bottom" Grid.Column="0" Grid.Row="6"/>
-                    <Button x:Name="certificateButton" Content="Change" Margin="5,0,5.334,5" VerticalAlignment="Bottom" Click="certificateButton_Click" Grid.Column="1" Grid.Row="6" Grid.ColumnSpan="4"/>
-                    <Label x:Name="configurationStatusLabel" Content="Status" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="8" Grid.Column="0"/>
-                    <TextBox x:Name="configurationStatusTextBox" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="5" Margin="5,25,5.334,5" IsReadOnly="True" TextWrapping="Wrap" BorderThickness="2" ScrollViewer.CanContentScroll="True" VerticalScrollBarVisibility="Auto"/>
+                    <TextBox x:Name="certificateTextBox" Margin="5" VerticalAlignment="Bottom" Grid.Column="0" Grid.Row="6"/>
+                    <Button x:Name="certificateButton" Content="Change" Margin="5" VerticalAlignment="Bottom" Click="certificateButton_Click" Grid.Column="1" Grid.Row="6"/>
+                    <Label x:Name="configurationStatusLabel" Content="Status" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2"/>
+                    <TextBox x:Name="configurationStatusTextBox" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Margin="5,25,5,5" IsReadOnly="True" TextWrapping="Wrap" BorderThickness="2" ScrollViewer.CanContentScroll="True" VerticalScrollBarVisibility="Auto"/>
                     <Label x:Name="versionLabel" Content="Version" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="7" Grid.Column="0"/>
-                    <Button x:Name="versionButton" Content="Update" Margin="5,0,5.334,5" VerticalAlignment="Bottom" Click="updateButton_Click" Grid.Column="1" Grid.Row="7" Grid.ColumnSpan="4"/>
-                    <Button x:Name="PortalButton" Content="Portal" Grid.Column="1" Margin="5,0,5.334,5" Grid.Row="3" VerticalAlignment="Bottom"  Click="PortalButton_Click" Grid.ColumnSpan="4"/>
+                    <Button x:Name="versionButton" Content="Update" Margin="5" VerticalAlignment="Bottom" Click="updateButton_Click" Grid.Column="1" Grid.Row="7"/>
+                    <Button x:Name="PortalButton" Content="Portal" Grid.Column="2" Margin="5" Grid.Row="3" VerticalAlignment="Bottom"  Click="PortalButton_Click"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="runbookTab" Header="Runbooks">
@@ -210,9 +207,8 @@
         <StackPanel Grid.Row="1" Grid.Column="0">
             <TextBlock Name="WorkStartingTextBlock" FontSize="13" Grid.Row="1" Grid.Column="0" Margin="5,5,0,0" TextWrapping="Wrap">Hello there, thanks for trying out our beta.</TextBlock>
             <TextBlock Name="WorkFinishingTextBlock" FontSize="13" Grid.Row="1" Grid.Column="0" Margin="5,0,0,0" TextWrapping="Wrap">Happy automating!</TextBlock>
-            <TextBlock x:Name="LineBreakTextBlock" FontSize="13" Margin="5,0,0,0" TextWrapping="Wrap"><Run Text=""/></TextBlock>
-            <TextBlock x:Name="ScriptAnalyzerTextBlock_Start" FontSize="13" Margin="5,0,0,0" TextWrapping="Wrap"><Run Text=""/>Consider using <Hyperlink RequestNavigate="Hyperlink_ScriptAnalyzer" NavigateUri="https://github.com/PowerShell/PSScriptAnalyzer">PowerShell ScriptAnalyzer</Hyperlink> to validate your Runbook Code</TextBlock>
-            <TextBlock x:Name="ScriptAnalyzerTextBlock_ISEAddon" FontSize="13" Margin="5,0,0,0" TextWrapping="Wrap"><Run Text=""/>Get <Hyperlink RequestNavigate="Hyperlink_ScriptAnalyzer" NavigateUri="https://www.powershellgallery.com/packages/ISEScriptAnalyzerAddOn">ScriptAnalyzer ISE Add-On</Hyperlink> from PowerShell Gallery</TextBlock>            
+            <TextBlock x:Name="ScriptAnalyzerTextBlock_Start" FontSize="13" Margin="5,0,0,0" TextWrapping="Wrap"><Run Text=""/>Consider using <Hyperlink RequestNavigate="Hyperlink_ScriptAnalyzer" NavigateUri="https://github.com/PowerShell/PSScriptAnalyzer">PowerShell ScriptAnalyzer</Hyperlink> to validate Runbook Code</TextBlock>
+            <TextBlock x:Name="ScriptAnalyzerTextBlock_ISEAddon" FontSize="13" Margin="5,0,0,0" TextWrapping="Wrap"><Run Text=""/>Get <Hyperlink RequestNavigate="Hyperlink_ScriptAnalyzer" NavigateUri="https://www.powershellgallery.com/packages/ISEScriptAnalyzerAddOn">ScriptAnalyzer ISE Add-On</Hyperlink> from PowerShell Gallery</TextBlock>
         </StackPanel>
         <Image Source="Images/automation-big-gear-no-background.png" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right" RenderTransformOrigin=".5,.5" Height="40" Margin="5,5,5,5">
             <Image.RenderTransform>
