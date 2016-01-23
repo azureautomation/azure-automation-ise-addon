@@ -285,7 +285,9 @@ namespace AutomationISE.Model
             }
             else if (runbookType.Equals(Constants.RunbookType.PowerShellScript))
             {
-                File.Create(runbookFilePath);
+                using (FileStream fs = File.Create(runbookFilePath))
+                {
+                }
             }
             else
             {

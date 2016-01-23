@@ -82,5 +82,17 @@ namespace AutomationISE.Properties {
                 this["lastSubscription"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5000")]
+        public int jobRefreshTimeInMilliseconds {
+            get {
+                return ((int)(this["jobRefreshTimeInMilliseconds"]));
+            }
+            set {
+                this["jobRefreshTimeInMilliseconds"] = value;
+            }
+        }
     }
 }

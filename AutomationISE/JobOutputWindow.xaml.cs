@@ -27,6 +27,7 @@ namespace AutomationISE
         private String runbookName;
         private System.Timers.Timer refreshTimer;
         private static int TIMEOUT_MS = 10000;
+        private JobStreamListParameters jobParams = new JobStreamListParameters();
         /* These values are the defaults for the settings visible using PS>(Get-Host).PrivateData */
         public static String ErrorForegroundColorCode = "#FFFF0000";
         public static String ErrorBackgroundColorCode = "#00FFFFFF";
@@ -35,33 +36,38 @@ namespace AutomationISE
         public static String VerboseForegroundColorCode = "#FF00FFFF";
         public static String VerboseBackgroundColorCode = "#00FFFFFF";
 
-        public JobOutputWindow(String name, AutomationISEClient client)
+        public JobOutputWindow(String name, AutomationISEClient client, int refreshTimerValue)
         {
             InitializeComponent();
+            StartJobButton.IsEnabled = true;
+            StopJobButton.IsEnabled = false;
             this.Title = name + " Test Job";
             AdditionalInformation.Text = "Tip: not seeing Verbose output? Add the line \"$VerbosePreference='Continue'\" to your runbook.";
             runbookName = name;
             iseClient = client;
+            jobParams.Time = DateTime.UtcNow.AddDays(-30).ToString("o");
             Task t = checkTestJob(true);
+       
             refreshTimer = new System.Timers.Timer();
-            refreshTimer.Interval = 30000;
+            refreshTimer.Interval = refreshTimerValue;
             refreshTimer.Elapsed += new ElapsedEventHandler(refresh);
         }
 
         //TODO: refactor this to a different class with some inheritance structure
-        public JobOutputWindow(String name, JobCreateResponse response, AutomationISEClient client)
+        public JobOutputWindow(String name, JobCreateResponse response, AutomationISEClient client, int refreshTimerValue)
         {
             InitializeComponent();
-            StartJobButton.IsEnabled = false;
+            StartJobButton.IsEnabled = true;
             StopJobButton.IsEnabled = false;
             this.Title = "Job: " + name;
             AdditionalInformation.Text = "This is a Global Runbook responsible for syncing your GitHub repo with your Automation Account. Neato!";
             runbookName = name;
             jobCreateResponse = response;
             iseClient = client;
+            jobParams.Time = DateTime.UtcNow.AddDays(-30).ToString("o");
             Task t = checkJob();
             refreshTimer = new System.Timers.Timer();
-            refreshTimer.Interval = 30000;
+            refreshTimer.Interval = refreshTimerValue;
             refreshTimer.Elapsed += new ElapsedEventHandler(refresh);
         }
 
@@ -87,14 +93,22 @@ namespace AutomationISE
             {
                 updateJobOutputTextBlockWithException(response.TestJob.Exception);
                 StartJobButton.IsEnabled = true;
-                refreshTimer.Stop();
+                StopJobButton.IsEnabled = false;
             }
             else
-            {
+            { 
                 cts = new CancellationTokenSource();
                 cts.CancelAfter(TIMEOUT_MS);
                 JobStreamListResponse jslResponse = await iseClient.automationManagementClient.JobStreams.ListTestJobStreamsAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
-                    iseClient.currAccount.Name, runbookName, null, cts.Token);
+                    iseClient.currAccount.Name, runbookName, jobParams, cts.Token);
+
+                JobStream lastJob = null;
+                if (jslResponse.JobStreams.Count > 0)
+                {
+                   lastJob = jslResponse.JobStreams.Last();
+                   jobParams.Time = lastJob.Properties.Time.UtcDateTime.ToString("o");
+                }
+
                 /* Write out each stream's output */
                 foreach (JobStream stream in jslResponse.JobStreams)
                 {
@@ -102,26 +116,31 @@ namespace AutomationISE
                     cts.CancelAfter(TIMEOUT_MS);
                     var jslStream = await iseClient.automationManagementClient.JobStreams.GetTestJobStreamAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
                             iseClient.currAccount.Name, runbookName, stream.Properties.JobStreamId, cts.Token);
-                    updateJobOutputTextBlock(jslStream);
+                    // If this is the last stream, don't show it as it was displayed already.
+                    if ((stream.Properties.JobStreamId != lastJob.Properties.JobStreamId) || (response.TestJob.Status != "Running"))
+                        updateJobOutputTextBlock(jslStream);
                 }
                 if (response.TestJob.Status == "Suspended")
                 {
                     updateJobOutputTextBlockWithException(response.TestJob.Exception);
                     StartJobButton.IsEnabled = false;
-                    refreshTimer.Stop();
+                    StopJobButton.IsEnabled = true;
                 }
                 else if (response.TestJob.Status == "Completed")
                 {
                     StartJobButton.IsEnabled = true;
-                    refreshTimer.Stop();
+                    StopJobButton.IsEnabled = false;
                 }
                 else if (response.TestJob.Status == "Stopped")
                 {
                     StartJobButton.IsEnabled = true;
+                    StopJobButton.IsEnabled = false;
                 }
                 else
                 {
                     StartJobButton.IsEnabled = false;
+                    StopJobButton.IsEnabled = true;
+                    refreshTimer.Enabled = true;
                 }
             }
         }
@@ -140,7 +159,7 @@ namespace AutomationISE
             cts = new CancellationTokenSource();
             cts.CancelAfter(TIMEOUT_MS);
             JobStreamListResponse jslResponse = await iseClient.automationManagementClient.JobStreams.ListAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
-                iseClient.currAccount.Name, jobCreateResponse.Job.Properties.JobId, null, cts.Token);
+                iseClient.currAccount.Name, jobCreateResponse.Job.Properties.JobId, jobParams, cts.Token);
 
             foreach (JobStream stream in jslResponse.JobStreams)
             {
@@ -148,8 +167,14 @@ namespace AutomationISE
                 cts.CancelAfter(TIMEOUT_MS);
                 var jslStream = await iseClient.automationManagementClient.JobStreams.GetAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
                         iseClient.currAccount.Name, jobCreateResponse.Job.Properties.JobId, stream.Properties.JobStreamId, cts.Token);
-                updateJobOutputTextBlock(jslStream);
+                if (jslStream.JobStream.Properties.Time.DateTime > Convert.ToDateTime(jobParams.Time))
+                {
+                    jobParams.Time = stream.Properties.Time.ToString("o");
+                    updateJobOutputTextBlock(jslStream);
+                }
             }
+            refreshTimer.Enabled = true;
+
         }
 
         private void updateJobOutputTextBlock(JobStreamGetResponse stream)
@@ -192,6 +217,7 @@ namespace AutomationISE
                 Debug.WriteLine("Unknown stream type couldn't be colored properly: " + stream.JobStream.Properties.StreamType);
                 OutputTextBlockParagraph.Inlines.Add(stream.JobStream.Properties.StreamType.ToUpper() + ":  " + streamText);
             }
+            OutputTextBlock.ScrollToEnd();
         }
 
         private void updateJobOutputTextBlockWithException(string exceptionMessage)
@@ -207,39 +233,25 @@ namespace AutomationISE
 
         private void refresh(object source, ElapsedEventArgs e)
         {
-            this.Dispatcher.Invoke(() =>
-            {
-                OutputTextBlockParagraph.Inlines.Clear();
-                Task t;
-                if (jobCreateResponse != null)
-                    t = checkJob();
-                else 
-                    t = checkTestJob();
-            });
-        }
-
-        private async void RefreshJobButton_Click(object sender, RoutedEventArgs e)
-        {
             try
             {
-                RefreshJobButton.IsEnabled = false;
-                RefreshJobButton.Content = "Refreshing...";
-                refreshTimer.Stop();
-                OutputTextBlockParagraph.Inlines.Clear();
-                if (jobCreateResponse != null) await checkJob();
-                else await checkTestJob();
+                refreshTimer.Enabled = false;
+                this.Dispatcher.Invoke(() =>
+                {
+                    Task t;
+                    if (jobCreateResponse != null)
+                        t = checkJob();
+                    else
+                        t = checkTestJob();
+                });
             }
             catch (Exception exception)
             {
                 MessageBox.Show(exception.Message, "Refresh Failure", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                refreshTimer.Start();
-                RefreshJobButton.IsEnabled = true;
-                RefreshJobButton.Content = "Refresh";
+                refreshTimer.Enabled = true;
             }
         }
+
 
         private async void StopJobButton_Click(object sender, RoutedEventArgs e)
         {
@@ -262,7 +274,6 @@ namespace AutomationISE
             }
             finally
             {
-                refreshTimer.Start();
                 StopJobButton.IsEnabled = true;
                 StopJobButton.Content = "Stop Job";
             }
@@ -291,6 +302,7 @@ namespace AutomationISE
             {
                 StartJobButton.IsEnabled = false;
                 refreshTimer.Stop();
+                jobParams.Time = DateTime.UtcNow.AddDays(-30).ToString("o");
                 TestJobCreateResponse response = await createTestJob();
                 if (response != null)
                 {
@@ -298,6 +310,7 @@ namespace AutomationISE
                     JobDetails.FontWeight = FontWeights.Regular;
                     JobDetails.Content = runbookName + " test job created at " + response.TestJob.CreationTime.LocalDateTime;
                     JobStatus.Content = response.TestJob.Status;
+                    StopJobButton.IsEnabled = true;
                 }
                 else
                 {
