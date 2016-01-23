@@ -396,6 +396,7 @@ namespace AutomationISE
         {
             try
             {
+                ScriptAnalyzerTextBlock_ISEAddon.Visibility = Visibility.Collapsed;
                 UpdateStatusBox(configurationStatusTextBox, "Launching login window...");
                 iseClient.azureADAuthResult = AutomationISE.Model.AuthenticateHelper.GetInteractiveLogin(userNameTextBox.Text);
                 refreshAccountDataTimer.Stop();

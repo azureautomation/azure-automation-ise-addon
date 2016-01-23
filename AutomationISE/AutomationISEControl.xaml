@@ -205,11 +205,9 @@
             </TabItem>
         </TabControl>
         <StackPanel Grid.Row="1" Grid.Column="0">
-            <TextBlock Name="WorkStartingTextBlock" FontSize="13" Grid.Row="1" Grid.Column="0" Margin="5,5,0,0" TextWrapping="Wrap">Hello there, thanks for trying out our beta.</TextBlock>
+            <TextBlock Name="WorkStartingTextBlock" FontSize="13" Grid.Row="1" Grid.Column="0" Margin="5,5,0,0" TextWrapping="Wrap">Hello there, thanks for trying out the tool.</TextBlock>
+            <TextBlock x:Name="ScriptAnalyzerTextBlock_ISEAddon" FontSize="13" Margin="5,0,0,0" TextWrapping="Wrap"><Run Text=""/>Validate Runbooks with <Hyperlink RequestNavigate="Hyperlink_ScriptAnalyzer" NavigateUri="https://www.powershellgallery.com/packages/ISEScriptAnalyzerAddOn">ScriptAnalyzer ISE Add-On</Hyperlink></TextBlock>
             <TextBlock Name="WorkFinishingTextBlock" FontSize="13" Grid.Row="1" Grid.Column="0" Margin="5,0,0,0" TextWrapping="Wrap">Happy automating!</TextBlock>
-            <TextBlock x:Name="LineBreakTextBlock" FontSize="13" Margin="5,0,0,0" TextWrapping="Wrap"><Run Text=""/></TextBlock>
-            <TextBlock x:Name="ScriptAnalyzerTextBlock_Start" FontSize="13" Margin="5,0,0,0" TextWrapping="Wrap"><Run Text=""/>Consider using <Hyperlink RequestNavigate="Hyperlink_ScriptAnalyzer" NavigateUri="https://github.com/PowerShell/PSScriptAnalyzer">PowerShell ScriptAnalyzer</Hyperlink> to validate Runbook Code</TextBlock>
-            <TextBlock x:Name="ScriptAnalyzerTextBlock_ISEAddon" FontSize="13" Margin="5,0,0,0" TextWrapping="Wrap"><Run Text=""/>Get <Hyperlink RequestNavigate="Hyperlink_ScriptAnalyzer" NavigateUri="https://www.powershellgallery.com/packages/ISEScriptAnalyzerAddOn">ScriptAnalyzer ISE Add-On</Hyperlink> from PowerShell Gallery</TextBlock>
         </StackPanel>
         <Image Source="Images/automation-big-gear-no-background.png" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right" RenderTransformOrigin=".5,.5" Height="40" Margin="5,5,5,5">
             <Image.RenderTransform>
