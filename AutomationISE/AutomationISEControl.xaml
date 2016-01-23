@@ -177,7 +177,7 @@
                             </GridView>
                         </ListView.View>
                     </ListView>
-                    
+
                     <Button x:Name="ButtonNewAsset" Grid.Column="0" Grid.Row="3" Margin="5,10,5,0" Content="New" Click="ButtonNewAsset_Click" />
                     <Button x:Name="ButtonEditAsset" Grid.Column="1" Grid.Row="3" Margin="5,10,5,0" Content="Edit Locally" Height="25" VerticalAlignment="Top" Click="ButtonEditAsset_Click" />
                     <Button x:Name="ButtonDeleteAssets" Grid.Column="2" Grid.Row="3" Margin="5,10,5,0" Content="Delete" Click="ButtonDeleteAsset_Click" />
@@ -207,6 +207,9 @@
         <StackPanel Grid.Row="1" Grid.Column="0">
             <TextBlock Name="WorkStartingTextBlock" FontSize="13" Grid.Row="1" Grid.Column="0" Margin="5,5,0,0" TextWrapping="Wrap">Hello there, thanks for trying out our beta.</TextBlock>
             <TextBlock Name="WorkFinishingTextBlock" FontSize="13" Grid.Row="1" Grid.Column="0" Margin="5,0,0,0" TextWrapping="Wrap">Happy automating!</TextBlock>
+            <TextBlock x:Name="LineBreakTextBlock" FontSize="13" Margin="5,0,0,0" TextWrapping="Wrap"><Run Text=""/></TextBlock>
+            <TextBlock x:Name="ScriptAnalyzerTextBlock_Start" FontSize="13" Margin="5,0,0,0" TextWrapping="Wrap"><Run Text=""/>Consider using <Hyperlink RequestNavigate="Hyperlink_ScriptAnalyzer" NavigateUri="https://github.com/PowerShell/PSScriptAnalyzer">PowerShell ScriptAnalyzer</Hyperlink> to validate Runbook Code</TextBlock>
+            <TextBlock x:Name="ScriptAnalyzerTextBlock_ISEAddon" FontSize="13" Margin="5,0,0,0" TextWrapping="Wrap"><Run Text=""/>Get <Hyperlink RequestNavigate="Hyperlink_ScriptAnalyzer" NavigateUri="https://www.powershellgallery.com/packages/ISEScriptAnalyzerAddOn">ScriptAnalyzer ISE Add-On</Hyperlink> from PowerShell Gallery</TextBlock>
         </StackPanel>
         <Image Source="Images/automation-big-gear-no-background.png" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right" RenderTransformOrigin=".5,.5" Height="40" Margin="5,5,5,5">
             <Image.RenderTransform>

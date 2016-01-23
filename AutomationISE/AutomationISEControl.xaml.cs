@@ -1662,5 +1662,10 @@ namespace AutomationISE
                 HostObject.CurrentPowerShellTab.Invoke("install-module AzureAutomationAuthoringToolkit -Scope CurrentUser -verbose -force");
             }
         }
+
+        private void Hyperlink_ScriptAnalyzer(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        {
+            System.Diagnostics.Process.Start(e.Uri.AbsoluteUri);            
+        }        
     }
 }
