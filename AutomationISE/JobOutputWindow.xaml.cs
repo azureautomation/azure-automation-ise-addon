@@ -81,6 +81,7 @@ namespace AutomationISE
             {
                 JobDetails.FontWeight = FontWeights.Bold;
                 JobDetails.Content = "This is a past test job for " + runbookName + " created at " + response.TestJob.CreationTime.LocalDateTime;
+                StartJobButton.IsEnabled = false;
             }
             else
             {
