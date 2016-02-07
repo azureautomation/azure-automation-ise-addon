@@ -24,7 +24,7 @@ namespace AutomationISE
             assetTypeComboBox.Items.Add(AutomationISE.Model.Constants.assetConnection);
             assetTypeComboBox.Items.Add(AutomationISE.Model.Constants.assetCredential);
             assetTypeComboBox.Items.Add(AutomationISE.Model.Constants.assetVariable);
-            //assetTypeComboBox.Items.Add(AutomationISE.Model.Constants.assetCertificate);
+            assetTypeComboBox.Items.Add(AutomationISE.Model.Constants.assetCertificate);
         }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)

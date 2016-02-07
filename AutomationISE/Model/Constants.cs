@@ -78,6 +78,7 @@ namespace AutomationISE.Model
             public const String Variable = "Variable";
             public const String Connection = "Connection";
             public const String Credential = "Credential";
+            public const String Certificate = "Certificate";
         }
 
         public class AutomationAccountState

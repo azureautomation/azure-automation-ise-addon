@@ -43,7 +43,10 @@ namespace AutomationISE.Model
             {
                 assetJsonList.AddRange(localAssets.Connections);
             }
-
+            else if (asset is AutomationCertificate)
+            {
+                assetJsonList.AddRange(localAssets.Certificate);
+            }
             foreach (var currentLocalAsset in assetJsonList)
             {
                 if (asset.Name == currentLocalAsset.Name)
@@ -147,6 +150,30 @@ namespace AutomationISE.Model
                         localAssets.Connections.Add(new ConnectionJson(connectionToAffect));
                     }
                 }
+                else if (assetToAffect is AutomationCertificate)
+                {
+                    var certToAffect = (AutomationCertificate)assetToAffect;
+
+                    if (assetToDelete != null)
+                    {
+                        var certToDelete = (CertificateJson)assetToDelete;
+
+                        // Certificate assets returned from the cloud have their passwords removed,
+                        // so keep the old local asset password instead of overwriting the local asset password with null
+                        if (certToAffect.getCertPath() == null)
+                        {
+                            certToAffect.setPassword(certToDelete.Password);
+                            certToAffect.setCertPath(certToDelete.CertPath);
+                        }
+
+                        localAssets.Certificate.Remove(certToDelete);
+                    }
+
+                    if (replace)
+                    {
+                        localAssets.Certificate.Add(new CertificateJson(certToAffect));
+                    }
+                }
             }
 
             DirectoryInfo dir = Directory.CreateDirectory(workspacePath);
@@ -181,6 +208,13 @@ namespace AutomationISE.Model
             // add JSON credentials to the container
             localAssetsContainer.PSCredentials.AddRange(secureLocalAssetsJson.PSCredential);
 
+            // add JSON certificates to the container
+            localAssetsJson.Certificate.ForEach(Certificate => Certificate.Encrypted = false);
+            localAssetsContainer.Certificate.AddRange(localAssetsJson.Certificate);
+
+            secureLocalAssetsJson.Certificate.ForEach(Certificate => Certificate.Encrypted = true);
+            localAssetsContainer.Certificate.AddRange(secureLocalAssetsJson.Certificate);
+
             // add JSON connections to the container
             localAssetsContainer.Connections.AddRange(secureLocalAssetsJson.Connection);
 
@@ -190,6 +224,7 @@ namespace AutomationISE.Model
         private abstract class AbstractLocalAssetsContainerJson
         {
             public List<VariableJson> Variable = new List<VariableJson>();
+            public List<CertificateJson> Certificate = new List<CertificateJson>();
             public static JavaScriptSerializer jss = new JavaScriptSerializer();
 
             public static void WriteJson(string jsonFilePath, Object assets)
@@ -225,11 +260,17 @@ namespace AutomationISE.Model
                         localAssetsUnsecure.Variable.Add(localVariableAsset);
                     }
                 }
+                foreach (var localCertificateAsset in localAssets.Certificate)
+                {
+                   if (!localCertificateAsset.Encrypted)
+                    {
+                        localAssetsUnsecure.Certificate.Add(localCertificateAsset);
+                    }
+                }
 
                 WriteJson(System.IO.Path.Combine(workspacePath, AutomationISE.Model.Constants.localAssetsFileName), localAssetsUnsecure);
             }
            
-            //public List<CertificateJson> Certificate = new List<CertificateJson>();
         }
 
         private class SecureLocalAssetsContainerJson
@@ -244,8 +285,9 @@ namespace AutomationISE.Model
                 else
                 {
                     X509Certificate2 EncryptCert = AutomationSelfSignedCertificate.GetCertificateWithThumbprint(Thumbprint);
-                    RSACryptoServiceProvider rsaEncryptor = (RSACryptoServiceProvider)EncryptCert.PublicKey.Key;
                     var valueJson = JsonConvert.SerializeObject(Value);
+                    RSACryptoServiceProvider rsaEncryptor = (RSACryptoServiceProvider)EncryptCert.PublicKey.Key;
+
                     var EncryptedBytes = System.Text.Encoding.Default.GetBytes(valueJson);
                     byte[] EncryptedData = rsaEncryptor.Encrypt(EncryptedBytes, true);
                     return Convert.ToBase64String(EncryptedData);
@@ -285,6 +327,11 @@ namespace AutomationISE.Model
                         foreach (var localVariableAsset in localAssetsSecure.Variable)
                         {
                             localVariableAsset.Value = Decrypt(localVariableAsset.Value, encryptionCertThumbprint);
+                        }
+
+                        foreach (var localCertificateAsset in localAssetsSecure.Certificate)
+                        {
+                           localCertificateAsset.Password = (string) Decrypt(localCertificateAsset.Password, encryptionCertThumbprint);
                         }
 
                         foreach (var localCredAsset in localAssetsSecure.PSCredential)
@@ -342,6 +389,14 @@ namespace AutomationISE.Model
                     }
                 }
 
+                foreach (var localCertificateAsset in localAssets.Certificate)
+                {
+                    if (localCertificateAsset.Encrypted)
+                    {
+                        localAssetsSecure.Certificate.Add(localCertificateAsset);
+                    }
+                }
+
                 localAssetsSecure.PSCredential.AddRange(localAssets.PSCredentials);
                 localAssetsSecure.Connection.AddRange(localAssets.Connections);
 
@@ -355,6 +410,11 @@ namespace AutomationISE.Model
                     foreach (var localCredAsset in localAssetsSecure.PSCredential)
                     {
                         localCredAsset.Password = Encrypt(localCredAsset.Password, encryptionCertThumbprint);
+                    }
+
+                    foreach (var localCertAsset in localAssetsSecure.Certificate)
+                    {
+                        localCertAsset.Password = Encrypt(localCertAsset.Password, encryptionCertThumbprint);
                     }
 
                     foreach (var localConnectionAsset in localAssetsSecure.Connection)

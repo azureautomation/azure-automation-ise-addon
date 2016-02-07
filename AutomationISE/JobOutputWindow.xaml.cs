@@ -26,7 +26,7 @@ namespace AutomationISE
         private AutomationISEClient iseClient;
         private String runbookName;
         private System.Timers.Timer refreshTimer;
-        private static int TIMEOUT_MS = 10000;
+        private static int TIMEOUT_MS = 30000;
         private JobStreamListParameters jobParams = new JobStreamListParameters();
         /* These values are the defaults for the settings visible using PS>(Get-Host).PrivateData */
         public static String ErrorForegroundColorCode = "#FFFF0000";

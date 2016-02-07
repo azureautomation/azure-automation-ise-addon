@@ -171,12 +171,16 @@
     <Compile Include="DeleteRunbookDialog.xaml.cs">
       <DependentUpon>DeleteRunbookDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Model\AutomationCertificate.cs" />
     <Compile Include="Model\PowerShellGallery.cs" />
     <Compile Include="Model\AutomationSelfSignedCertificate.cs" />
     <Compile Include="Model\AutomationSourceControl.cs" />
     <Compile Include="Model\Certificate.cs" />
     <Compile Include="NewOrEditConnectionDialog.xaml.cs">
       <DependentUpon>NewOrEditConnectionDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="NewOrEditCertificateDialog.xaml.cs">
+      <DependentUpon>NewOrEditCertificateDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="NewOrEditVariableDialog.xaml.cs">
       <DependentUpon>NewOrEditVariableDialog.xaml</DependentUpon>
@@ -215,6 +219,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="NewOrEditConnectionDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="NewOrEditCertificateDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

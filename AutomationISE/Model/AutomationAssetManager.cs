@@ -21,12 +21,15 @@ using Microsoft.Azure.Management.Automation;
 using Microsoft.Azure.Management.Automation.Models;
 using System.Web.Script.Serialization;
 using System.Text;
+using System.Security.Cryptography.X509Certificates;
+using System.IO;
+using System.Windows;
 
 namespace AutomationISE.Model
 {
     public class AutomationAssetManager
     {
-        private static int TIMEOUT_MS = 10000;
+        private static int TIMEOUT_MS = 30000;
 
         public static async Task DownloadAllFromCloud(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, String encryptionCertThumbprint, ICollection<ConnectionType> connectionTypes)
         {
@@ -36,22 +39,29 @@ namespace AutomationISE.Model
 
         public static async void DownloadFromCloud(ICollection<AutomationAsset> assetsToDownload, String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, String encryptionCertThumbprint, ICollection<ConnectionType> connectionTypes)
         {
-            var cloudAssets = await AutomationAssetManager.GetAll(null, automationApi, resourceGroupName, automationAccountName, encryptionCertThumbprint, connectionTypes);
-            var assetsToSaveLocally = new SortedSet<AutomationAsset>();
-
-            foreach (var cloudAsset in cloudAssets)
+            try
             {
-                foreach (var assetToDownload in assetsToDownload)
+                var cloudAssets = await AutomationAssetManager.GetAll(null, automationApi, resourceGroupName, automationAccountName, encryptionCertThumbprint, connectionTypes);
+                var assetsToSaveLocally = new SortedSet<AutomationAsset>();
+
+                foreach (var cloudAsset in cloudAssets)
                 {
-                    if (cloudAsset.Equals(assetToDownload))
+                    foreach (var assetToDownload in assetsToDownload)
                     {
-                        assetsToSaveLocally.Add(cloudAsset);
-                        break;
+                        if (cloudAsset.Equals(assetToDownload))
+                        {
+                            assetsToSaveLocally.Add(cloudAsset);
+                            break;
+                        }
                     }
                 }
-            }
 
-            AutomationAssetManager.SaveLocally(localWorkspacePath, assetsToSaveLocally, encryptionCertThumbprint, connectionTypes);
+                AutomationAssetManager.SaveLocally(localWorkspacePath, assetsToSaveLocally, encryptionCertThumbprint, connectionTypes);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         public static async Task UploadToCloud(ICollection<AutomationAsset> assetsToUpload, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName)
@@ -103,7 +113,27 @@ namespace AutomationISE.Model
 
                     await automationApi.Connections.CreateOrUpdateAsync(resourceGroupName, automationAccountName, new ConnectionCreateOrUpdateParameters(asset.Name, properties), cts.Token);
                 }
-                // TODO: implement certificates
+                else if (assetToUpload is AutomationCertificate)
+                {
+                    var asset = (AutomationCertificate)assetToUpload;
+
+                    var cert = (asset.getPassword() == null)
+                                ? new X509Certificate2(asset.getCertPath(), String.Empty,
+                                    X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet |
+                                    X509KeyStorageFlags.MachineKeySet)
+                                : new X509Certificate2(asset.getCertPath(), asset.getPassword(),
+                                    X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet |
+                                    X509KeyStorageFlags.MachineKeySet);
+
+                    var properties = new CertificateCreateOrUpdateProperties()
+                    {
+                        Base64Value = Convert.ToBase64String(cert.Export(X509ContentType.Pkcs12)),
+                        Thumbprint = cert.Thumbprint,
+                        IsExportable = asset.getExportable()
+                    };
+
+                    await automationApi.Certificates.CreateOrUpdateAsync(resourceGroupName, automationAccountName, new CertificateCreateOrUpdateParameters(asset.Name, properties), cts.Token);
+                }
             }
         }
 
@@ -136,6 +166,10 @@ namespace AutomationISE.Model
                     {
                         automationApi.PsCredentials.Delete(resourceGroupName, automationAccountName, assetToDelete.Name);
                     }
+                    else if (assetToDelete is AutomationCertificate)
+                    {
+                        automationApi.Certificates.Delete(resourceGroupName, automationAccountName, assetToDelete.Name);
+                    }
                 }
             }
         }
@@ -151,6 +185,8 @@ namespace AutomationISE.Model
             cts = new CancellationTokenSource();
             cts.CancelAfter(TIMEOUT_MS);
             ConnectionListResponse cloudConnections = await automationApi.Connections.ListAsync(resourceGroupName, automationAccountName, cts.Token);
+
+            CertificateListResponse cloudCertificates = await automationApi.Certificates.ListAsync(resourceGroupName, automationAccountName, cts.Token);
 
             // need to get connections one at a time to get each connection's values. Values currently come back as empty in list call
             var connectionAssetsWithValues = new HashSet<Connection>();
@@ -221,6 +257,25 @@ namespace AutomationISE.Model
             foreach (var localAsset in localAssets.Connections)
             {
                 var automationAsset = new AutomationConnection(localAsset);
+                automationAssets.Add(automationAsset);
+            }
+
+            // Compare cloud certificates to local
+            foreach (var cloudAsset in cloudCertificates.Certificates)
+            {
+                var localAsset = localAssets.Certificate.Find(asset => asset.Name == cloudAsset.Name);
+
+                var automationAsset = (localAsset != null) ?
+                        new AutomationCertificate(localAsset, cloudAsset) :
+                        new AutomationCertificate(cloudAsset);
+
+                automationAssets.Add(automationAsset);
+            }
+
+            // Add remaining locally created certificates
+            foreach (var localAsset in localAssets.Certificate)
+            {
+                var automationAsset = new AutomationCertificate(localAsset);
                 automationAssets.Add(automationAsset);
             }
 
@@ -315,6 +370,30 @@ namespace AutomationISE.Model
                         ConnectionTypeGetResponse connectionType =  await automationApi.ConnectionTypes.GetAsync(resourceGroupName, automationAccountName, 
                             cloudConnection.Connection.Properties.ConnectionType.Name, cts.Token);
                         automationAsset = new AutomationConnection(cloudConnection.Connection, connectionType.ConnectionType);
+                    }
+                    catch (Exception e)
+                    {
+                        // If the exception is not found, don't throw new exception as this is expected
+                        if (e.HResult != -2146233088) throw e;
+                    }
+                }
+            }
+            // Search for certificates
+            else if (assetType == Constants.AssetType.Certificate)
+            {
+                // Check local asset store first
+                var localCertificate = localAssets.Certificate.Find(asset => asset.Name == assetName);
+                if (localCertificate != null)
+                {
+                    automationAsset = new AutomationCertificate(localCertificate);
+                }
+                else
+                {
+                    try
+                    {
+                        // Check cloud. Catch execption if it doesn't exist
+                        CertificateGetResponse cloudCertificate = await automationApi.Certificates.GetAsync(resourceGroupName, automationAccountName, assetName, cts.Token);
+                        automationAsset = new AutomationCertificate(cloudCertificate.Certificate);
                     }
                     catch (Exception e)
                     {

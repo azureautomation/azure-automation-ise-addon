@@ -108,7 +108,7 @@ namespace AutomationISE
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetConnection);
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCredential);
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetVariable);
-                //assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCertificate);
+                assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCertificate);
 
                 setCreationButtonStatesTo(false);
                 setAllAssetButtonStatesTo(false);
@@ -1206,6 +1206,35 @@ namespace AutomationISE
             }
         }
 
+
+        private async Task createOrUpdateCertificateAsset(string certificateAssetName, AutomationCertificate certToEdit, bool newAsset = false)
+        {
+            if (newAsset)
+            {
+                var asset = await AutomationAssetManager.GetAsset(certificateAssetName, Constants.AssetType.Certificate, iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint(), connectionTypes);
+                if (asset != null) throw new Exception("Certificate with that name already exists");
+            }
+
+            var dialog = new NewOrEditCertificateDialog(certToEdit);
+
+            if (dialog.ShowDialog() == true)
+            {
+                var assetsToSave = new List<AutomationAsset>();
+
+                var newCert = new AutomationCertificate(certificateAssetName, dialog.thumbprint, dialog.certPath, dialog.password, dialog.exportable, dialog.encrypted);
+                assetsToSave.Add(newCert);
+
+                try
+                {
+                    AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint(), connectionTypes);
+                    await refreshAssets();
+                }
+                catch (Exception exception)
+                {
+                    MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
         private async void ButtonNewAsset_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -1217,7 +1246,7 @@ namespace AutomationISE
                     if (dialog.newAssetType == AutomationISE.Model.Constants.assetVariable)
                     {
                         await createOrUpdateVariableAsset(dialog.newAssetName, null);
-                        assetsComboBox.SelectedItem = assetsComboBox.Items[0];
+                        assetsComboBox.SelectedItem = assetsComboBox.Items[2];
                     }
                     else if (dialog.newAssetType == AutomationISE.Model.Constants.assetCredential)
                     {
@@ -1227,11 +1256,12 @@ namespace AutomationISE
                     else if (dialog.newAssetType == AutomationISE.Model.Constants.assetConnection)
                     {
                         await createOrUpdateConnectionAsset(dialog.newAssetName, null,true);
-                        assetsComboBox.SelectedItem = assetsComboBox.Items[2];
+                        assetsComboBox.SelectedItem = assetsComboBox.Items[0];
                     }
                     else if (dialog.newAssetType == AutomationISE.Model.Constants.assetCertificate)
                     {
-
+                        await createOrUpdateCertificateAsset(dialog.newAssetName, null, true);
+                        assetsComboBox.SelectedItem = assetsComboBox.Items[3];
                     }
                 }
             }
@@ -1258,6 +1288,10 @@ namespace AutomationISE
                 else if (asset is AutomationConnection)
                 {
                     await createOrUpdateConnectionAsset(asset.Name, (AutomationConnection)asset);
+                }
+                else if (asset is AutomationCertificate)
+                {
+                    await createOrUpdateCertificateAsset(asset.Name, (AutomationCertificate)asset);
                 }
             }
             catch (Exception ex)

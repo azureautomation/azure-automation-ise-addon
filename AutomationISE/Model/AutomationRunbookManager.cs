@@ -16,7 +16,7 @@ namespace AutomationISE.Model
      */
     public static class AutomationRunbookManager
     {
-        private static int TIMEOUT_MS = 10000;
+        private static int TIMEOUT_MS = 30000;
 
         public static async Task UploadRunbookAsDraft(AutomationRunbook runbook, AutomationManagementClient automationManagementClient, string resourceGroupName, AutomationAccount account)
         {
