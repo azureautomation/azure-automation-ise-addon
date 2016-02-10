@@ -62,7 +62,9 @@ namespace AutomationISE
         private Storyboard miniProgressSpinnerStoryboardReverse;
         private bool promptShortened;
         private string certificateThumbprint;
+        private FileSystemWatcher fileWatcher;
         public ObjectModelRoot HostObject { get; set; }
+        DateTime lastUpdated = DateTime.Now;
 
 
         public AutomationISEControl()
@@ -98,6 +100,9 @@ namespace AutomationISE
                 refreshAuthTokenTimer = new System.Timers.Timer();
                 refreshAuthTokenTimer.Interval = Constants.tokenRefreshInterval * 60000;
                 refreshAuthTokenTimer.Elapsed += new ElapsedEventHandler(refreshAuthToken);
+
+                /* Set up file system watcher */
+                fileWatcher = new System.IO.FileSystemWatcher();
 
                 /* Update UI */
                 workspaceTextBox.Text = iseClient.baseWorkspace;
@@ -522,6 +527,17 @@ namespace AutomationISE
                     UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
                     if (iseClient.AccountWorkspaceExists())
                         accountPathTextBox.Text = iseClient.currWorkspace;
+
+                    /* Set up file watch on the current workspace */
+                    fileWatcher.Path = iseClient.currWorkspace + "\\";
+                    fileWatcher.Filter = "*.ps1";
+                    fileWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
+
+                    fileWatcher.Changed += new FileSystemEventHandler(FileSystemChanged);
+                    fileWatcher.Created += new FileSystemEventHandler(FileSystemChanged);
+                    fileWatcher.Deleted += new FileSystemEventHandler(FileSystemChanged);
+                    fileWatcher.EnableRaisingEvents = true;
+
                     /* Update Runbooks */
                     beginBackgroundWork("Getting account data");
                     beginBackgroundWork("Getting runbook data for " + account.Name);
@@ -585,6 +601,32 @@ namespace AutomationISE
             {
                 endBackgroundWork("Error getting account data");
                 var detailsDialog = MessageBox.Show(exception.Message);
+            }
+        }
+
+        private void FileSystemChanged(object sender, FileSystemEventArgs e)
+        {
+            try
+            {
+                DateTime lastWriteTime = File.GetLastWriteTime(e.FullPath);
+                // Prevent multiple change events from getting acted upon
+                if (lastWriteTime != lastUpdated)
+                {
+                    foreach (AutomationRunbook runbook in runbookListViewModel)
+                    {
+                        if (runbook.Name.Equals(Path.GetFileNameWithoutExtension(e.Name)))
+                        {
+                            runbook.LastModifiedLocal = DateTime.Now;
+                            runbook.UpdateSyncStatus();
+                            break;
+                        }
+                    }
+                    lastUpdated = lastWriteTime;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Runbook could not be refreshed.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -1069,12 +1111,20 @@ namespace AutomationISE
                 if (RunbooksListView.SelectedItems.Count > 1)
                 {
                     string message = "Batch creation of test jobs is suppressed for performance reasons.";
-                    message += "\r\nPlease create test jobs one at a time, eager beaver!";
+                    message += "\r\nPlease create test jobs one at a time.";
                     MessageBox.Show(message, "Test Job Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
                 ButtonTestRunbook.IsEnabled = false;
                 AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
+
+                if (selectedRunbook.LastModifiedLocal > selectedRunbook.LastModifiedCloud)
+                {
+                    var dialog = MessageBox.Show("Local copy is newer than cloud version. Continue testing cloud version?",
+                            "Local Runbook is newer", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+                    if (dialog == MessageBoxResult.Cancel) return;
+                }
+
                 if (selectedRunbook.AuthoringState == AutomationRunbook.AuthoringStates.Published)
                 {
                     beginBackgroundWork();
@@ -1481,14 +1531,15 @@ namespace AutomationISE
                 if (result.HasValue && result.Value)
                 {
                     AutomationRunbookManager.CreateLocalRunbook(createOptionsWindow.runbookName, iseClient.currWorkspace, createOptionsWindow.runbookType);
+                    HostObject.CurrentPowerShellTab.Files.Add(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.runbookName + ".ps1"));
+
                     await refreshRunbooks();
-                    /* Now, select and open the newly-created runbook */
+                    /* Select new runbook from list*/
                     foreach (AutomationRunbook runbook in runbookListViewModel)
                     {
                         if (runbook.Name.Equals(createOptionsWindow.runbookName))
                         {
                             RunbooksListView.SelectedItem = runbook;
-                            ButtonOpenRunbook_Click(null, null);
                             break;
                         }
                     }
