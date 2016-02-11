@@ -117,7 +117,7 @@ namespace AutomationISE
             }
             else
             {
-                if (_exportable) cert.Import(_certPath, _password, X509KeyStorageFlags.Exportable);
+                if (_exportable) cert.Import(_certPath, _password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet);
                 else cert.Import(_certPath, _password, X509KeyStorageFlags.DefaultKeySet);
             }
             var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
