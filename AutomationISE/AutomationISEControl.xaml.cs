@@ -528,16 +528,6 @@ namespace AutomationISE
                     if (iseClient.AccountWorkspaceExists())
                         accountPathTextBox.Text = iseClient.currWorkspace;
 
-                    /* Set up file watch on the current workspace */
-                    fileWatcher.Path = iseClient.currWorkspace + "\\";
-                    fileWatcher.Filter = "*.ps1";
-                    fileWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
-
-                    fileWatcher.Changed += new FileSystemEventHandler(FileSystemChanged);
-                    fileWatcher.Created += new FileSystemEventHandler(FileSystemChanged);
-                    fileWatcher.Deleted += new FileSystemEventHandler(FileSystemChanged);
-                    fileWatcher.EnableRaisingEvents = true;
-
                     /* Update Runbooks */
                     beginBackgroundWork("Getting account data");
                     beginBackgroundWork("Getting runbook data for " + account.Name);
@@ -595,6 +585,16 @@ namespace AutomationISE
                     promptShortened = true;
                     endBackgroundWork("Finished getting data for " + account.Name);
                     refreshAccountDataTimer.Start();
+
+                    /* Set up file watch on the current workspace */
+                    fileWatcher.Path = iseClient.currWorkspace + "\\";
+                    fileWatcher.Filter = "*.ps1";
+                    fileWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
+
+                    fileWatcher.Changed += new FileSystemEventHandler(FileSystemChanged);
+                    fileWatcher.Created += new FileSystemEventHandler(FileSystemChanged);
+                    fileWatcher.Deleted += new FileSystemEventHandler(FileSystemChanged);
+                    fileWatcher.EnableRaisingEvents = true;
                 }
             }
             catch (Exception exception)
