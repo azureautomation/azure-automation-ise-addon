@@ -65,6 +65,7 @@ namespace AutomationISE
         private FileSystemWatcher fileWatcher;
         public ObjectModelRoot HostObject { get; set; }
         DateTime lastUpdated = DateTime.Now;
+        private string addOnVersion = null;
 
 
         public AutomationISEControl()
@@ -127,8 +128,9 @@ namespace AutomationISE
                 UpdateStatusBox(configurationStatusTextBox, "Thumbprint of certificate used to encrypt local assets: " + certificateThumbprint);
 
                 // Load feedback and help page preemptively
+                addOnVersion = PowerShellGallery.GetLocalVersion();
                 surveyBrowserControl.Navigate(new Uri(Constants.feedbackURI));
-                helpBrowserControl.Navigate(new Uri(Constants.helpURI));
+                helpBrowserControl.Navigate(new Uri(Constants.helpURI + "?version=" + addOnVersion));
 
                 // Check if this is the latest version from PowerShell Gallery
                 if (PowerShellGallery.CheckGalleryVersion())
@@ -700,7 +702,7 @@ namespace AutomationISE
                     surveyBrowserControl.Navigate(new Uri(Constants.feedbackURI));
                     break;
                 case "helpTab":
-                    helpBrowserControl.Navigate(new Uri(Constants.helpURI));
+                    helpBrowserControl.Navigate(new Uri(Constants.helpURI + "?version=" + addOnVersion));
                     break;
                 default:
                     Debug.WriteLine("Couldn't find tab handler with name: " + selectedTab.Name);
