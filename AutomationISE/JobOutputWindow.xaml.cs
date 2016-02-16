@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Diagnostics;
+using System.Net;
 using System.Timers;
 using Microsoft.Azure.Management.Automation.Models;
 using AutomationISE.Model;
@@ -133,6 +130,11 @@ namespace AutomationISE
                     StopJobButton.IsEnabled = false;
                 }
                 else if (response.TestJob.Status == "Stopped")
+                {
+                    StartJobButton.IsEnabled = true;
+                    StopJobButton.IsEnabled = false;
+                }
+                else if (!IsRetryStatusCode(response.StatusCode))
                 {
                     StartJobButton.IsEnabled = true;
                     StopJobButton.IsEnabled = false;
@@ -366,6 +368,24 @@ namespace AutomationISE
             if (jobResponse == null || jobResponse.StatusCode != System.Net.HttpStatusCode.Created)
                 throw new Exception("The test job could not be created: received HTTP status code " + jobResponse.StatusCode);
             return jobResponse;
+        }
+
+        private static bool IsRetryStatusCode(HttpStatusCode statusCode)
+        {
+            switch (statusCode)
+            {
+                case HttpStatusCode.OK:
+                case HttpStatusCode.Accepted:
+                case HttpStatusCode.NoContent:
+                    return true;
+                case HttpStatusCode.BadRequest:
+                case HttpStatusCode.Unauthorized:
+                case HttpStatusCode.Forbidden:
+                case HttpStatusCode.NotFound:
+                    return false;
+                default:
+                    return true;
+            }
         }
     }
 }
