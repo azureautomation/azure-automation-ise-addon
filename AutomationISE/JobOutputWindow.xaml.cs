@@ -382,6 +382,7 @@ namespace AutomationISE
                 case HttpStatusCode.Unauthorized:
                 case HttpStatusCode.Forbidden:
                 case HttpStatusCode.NotFound:
+                case HttpStatusCode.InternalServerError:
                     return false;
                 default:
                     return true;
