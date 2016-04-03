@@ -121,7 +121,7 @@ namespace AutomationISE
                 assetsComboBox.IsEnabled = false;
                 setAllRunbookButtonStatesTo(false);
 
-                // Generate self-signed certificate for encrypting local assets in the current user store Cert:\CurrentUser\My\
+                 // Generate self-signed certificate for encrypting local assets in the current user store Cert:\CurrentUser\My\
                 var certObj = new AutomationSelfSignedCertificate();
                 certificateThumbprint = certObj.CreateSelfSignedCertificate();
                 certificateTextBox.Text = certificateThumbprint;
@@ -143,10 +143,32 @@ namespace AutomationISE
                     versionLabel.Visibility = Visibility.Collapsed;
                     versionButton.Visibility = Visibility.Collapsed;
                 }
+
             }
             catch (Exception exception)
             {
                 var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
+            }
+        }
+
+        /// <summary>
+        /// Checks when a property changes on selected tab
+        /// If the property change is getting focus, then update the runbook list to match this
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CurrentPowerShellTab_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "LastEditorWithFocus")
+            {
+                foreach (AutomationRunbook runbook in runbookListViewModel)
+                {
+                    if (runbook.Name.Equals(Path.GetFileNameWithoutExtension(HostObject.CurrentPowerShellTab.Files.SelectedFile.DisplayName)))
+                    {
+                        RunbooksListView.SelectedItem = runbook;
+                        break;
+                    }
+                }
             }
         }
 
@@ -441,6 +463,8 @@ namespace AutomationISE
                 {
                     endBackgroundWork(Properties.Resources.NoSubscriptions);
                 }
+
+                HostObject.CurrentPowerShellTab.PropertyChanged += new PropertyChangedEventHandler(CurrentPowerShellTab_PropertyChanged);
             }
             catch (Microsoft.IdentityModel.Clients.ActiveDirectory.AdalServiceException Ex)
             {
