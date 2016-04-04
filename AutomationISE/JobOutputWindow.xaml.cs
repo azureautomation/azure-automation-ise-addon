@@ -25,6 +25,8 @@ namespace AutomationISE
         private System.Timers.Timer refreshTimer;
         private static int TIMEOUT_MS = 30000;
         private JobStreamListParameters jobParams = new JobStreamListParameters();
+        private bool cancelOutput = false;
+
         /* These values are the defaults for the settings visible using PS>(Get-Host).PrivateData */
         public static String ErrorForegroundColorCode = "#FFFF0000";
         public static String ErrorBackgroundColorCode = "#00FFFFFF";
@@ -44,7 +46,7 @@ namespace AutomationISE
             iseClient = client;
             jobParams.Time = DateTime.UtcNow.AddDays(-30).ToString("o");
             Task t = checkTestJob(true);
-       
+
             refreshTimer = new System.Timers.Timer();
             refreshTimer.Interval = refreshTimerValue;
             refreshTimer.Elapsed += new ElapsedEventHandler(refresh);
@@ -78,7 +80,7 @@ namespace AutomationISE
             {
                 JobDetails.FontWeight = FontWeights.Bold;
                 JobDetails.Content = "This is a past test job for " + runbookName + " created at " + response.TestJob.CreationTime.LocalDateTime;
-                StartJobButton.IsEnabled = false;
+         //       StartJobButton.IsEnabled = false;
             }
             else
             {
@@ -110,6 +112,7 @@ namespace AutomationISE
                 /* Write out each stream's output */
                 foreach (JobStream stream in jslResponse.JobStreams)
                 {
+                    if (cancelOutput) break;
                     cts = new CancellationTokenSource();
                     cts.CancelAfter(TIMEOUT_MS);
                     var jslStream = await iseClient.automationManagementClient.JobStreams.GetTestJobStreamAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
