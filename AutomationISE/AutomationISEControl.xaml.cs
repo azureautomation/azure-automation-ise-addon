@@ -525,11 +525,11 @@ namespace AutomationISE
                         }
                         else
                         {
-                            subscriptionComboBox.IsEnabled = true;
                             endBackgroundWork(Properties.Resources.NoAutomationAccounts);
                         }
                     }
                 }
+                subscriptionComboBox.IsEnabled = true;
             }
             catch (Exception exception)
             {
