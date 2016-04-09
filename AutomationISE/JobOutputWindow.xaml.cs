@@ -26,6 +26,7 @@ namespace AutomationISE
         private static int TIMEOUT_MS = 30000;
         private JobStreamListParameters jobParams = new JobStreamListParameters();
         private bool cancelOutput = false;
+        private List<String> processedStreamIDs = new List<String>();
 
         /* These values are the defaults for the settings visible using PS>(Get-Host).PrivateData */
         public static String ErrorForegroundColorCode = "#FFFF0000";
@@ -76,11 +77,12 @@ namespace AutomationISE
             cts.CancelAfter(TIMEOUT_MS);
             TestJobGetResponse response = await iseClient.automationManagementClient.TestJobs.GetAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
                                                 iseClient.currAccount.Name, runbookName, cts.Token);
+            // Set cancel output to false so we show the output of this job
+            cancelOutput = false;
             if (showWarning)
             {
                 JobDetails.FontWeight = FontWeights.Bold;
                 JobDetails.Content = "This is a past test job for " + runbookName + " created at " + response.TestJob.CreationTime.LocalDateTime;
-         //       StartJobButton.IsEnabled = false;
             }
             else
             {
@@ -102,24 +104,26 @@ namespace AutomationISE
                 JobStreamListResponse jslResponse = await iseClient.automationManagementClient.JobStreams.ListTestJobStreamsAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
                     iseClient.currAccount.Name, runbookName, jobParams, cts.Token);
 
-                JobStream lastJob = null;
                 if (jslResponse.JobStreams.Count > 0)
                 {
-                   lastJob = jslResponse.JobStreams.Last();
-                   jobParams.Time = lastJob.Properties.Time.UtcDateTime.ToString("o");
+                   jobParams.Time = jslResponse.JobStreams.Last().Properties.Time.UtcDateTime.ToString("o");
                 }
 
                 /* Write out each stream's output */
                 foreach (JobStream stream in jslResponse.JobStreams)
                 {
+                    // If cancelOutput is set to true, then we should break out and stop writing output
                     if (cancelOutput) break;
                     cts = new CancellationTokenSource();
                     cts.CancelAfter(TIMEOUT_MS);
                     var jslStream = await iseClient.automationManagementClient.JobStreams.GetTestJobStreamAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
                             iseClient.currAccount.Name, runbookName, stream.Properties.JobStreamId, cts.Token);
-                    // If this is the last stream, don't show it as it was displayed already.
-                    if ((stream.Properties.JobStreamId != lastJob.Properties.JobStreamId) || (response.TestJob.Status != "Running"))
+                    // Current issue sending back previous streams so ensuring we have not already processed the job before outputing
+                    if ((processedStreamIDs.IndexOf(stream.Properties.JobStreamId) == -1))
+                    {
+                        processedStreamIDs.Add(stream.Properties.JobStreamId);
                         updateJobOutputTextBlock(jslStream);
+                    }
                 }
                 if (response.TestJob.Status == "Suspended")
                 {
@@ -307,6 +311,8 @@ namespace AutomationISE
             try
             {
                 StartJobButton.IsEnabled = false;
+                processedStreamIDs.Clear();
+                cancelOutput = true;
                 refreshTimer.Stop();
                 jobParams.Time = DateTime.UtcNow.AddDays(-30).ToString("o");
                 TestJobCreateResponse response = await createTestJob();
