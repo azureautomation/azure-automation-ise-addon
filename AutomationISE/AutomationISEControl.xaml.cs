@@ -166,6 +166,7 @@ namespace AutomationISE
                     if (runbook.Name.Equals(Path.GetFileNameWithoutExtension(HostObject.CurrentPowerShellTab.Files.SelectedFile.DisplayName)))
                     {
                         RunbooksListView.SelectedItem = runbook;
+                        RunbooksListView.ScrollIntoView(RunbooksListView.SelectedItem);
                         break;
                     }
                 }
