@@ -97,6 +97,15 @@ namespace AutomationISE.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Local configuration file not found.
+        /// </summary>
+        internal static string LocalConfigurationFileNotFound {
+            get {
+                return ResourceManager.GetString("LocalConfigurationFileNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No automation accounts found in this subscription. Please create one in the Azure portal..
         /// </summary>
         internal static string NoAutomationAccounts {

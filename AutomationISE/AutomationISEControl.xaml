@@ -119,6 +119,65 @@
                     <Button x:Name="ButtonSourceControlRunbook" Grid.Column="3" Grid.Row="3" Margin="5,10,5,0" Content="Sync Source Control" Click="ButtonSourceControlRunbook_Click" IsEnabled="False" Visibility="Collapsed"/>
                 </Grid>
             </TabItem>
+            <TabItem x:Name="DSCTab" Header="DSC">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="35"/>
+                        <RowDefinition Height="35"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBox Name="ConfigurationFilterTextBox" Margin="10,10,10,10" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" TextChanged="ConfigurationFilter_TextChanged" GotFocus="ConfigurationFilterFocus" LostFocus="ConfigurationFilterLostFocus" />
+                    <ListView x:Name="DSCListView" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4"  SelectionMode="Extended" Margin="10,0,10,0" VerticalAlignment="Stretch" SelectionChanged="DSCListView_SelectionChanged" MouseDoubleClick="DSCListView_MouseDoubleClick">
+                        <ListView.View>
+                            <GridView>
+                                <GridView.ColumnHeaderContextMenu>
+                                    <ContextMenu/>
+                                </GridView.ColumnHeaderContextMenu>
+                                <GridViewColumn DisplayMemberBinding="{Binding Name}">
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="Name" Click="DSCListColumnHeader_Click">Name</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
+                                </GridViewColumn>
+                                <GridViewColumn DisplayMemberBinding="{Binding AuthoringState}">
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="AuthoringState" Click="DSCListColumnHeader_Click">Status</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
+                                </GridViewColumn>
+                                <GridViewColumn DisplayMemberBinding="{Binding SyncStatus}" >
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="SyncStatus" Click="DSCListColumnHeader_Click">Sync Status</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
+                                </GridViewColumn>
+                                <GridViewColumn DisplayMemberBinding="{Binding LastModifiedLocal, StringFormat='{}{0:MM/dd/yy hh:mm tt}'}">
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="LastModifiedLocal" Click="DSCListColumnHeader_Click">Last Modified (Local)</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
+                                </GridViewColumn>
+                                <GridViewColumn DisplayMemberBinding="{Binding LastModifiedCloud, StringFormat='{}{0:MM/dd/yy hh:mm tt}'}">
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="LastModifiedCloud" Click="DSCListColumnHeader_Click">Last Modified (Cloud)</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
+                                </GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                    <Button x:Name="ButtonDownloadConfiguration" Grid.Column="0" Grid.Row="2" Margin="5,10,5,0" Content="Download" Click="ButtonDownloadConfiguration_Click" IsEnabled="False"/>
+                    <Button x:Name="ButtonOpenConfiguration" Grid.Column="1" Grid.Row="2" Margin="5,10,5,0" Content="Open" Click="ButtonOpenConfiguration_Click" IsEnabled="False"/>
+                    <Button x:Name="ButtonCreateConfiguration" Grid.Column="2" Grid.Row="2" Margin="5,10,5,0" Content="Create New" Click="ButtonCreateConfiguration_Click"/>
+                    <Button x:Name="ButtonDeleteConfiguration" Grid.Column="3" Grid.Row="2" Margin="5,10,5,0" Content="Delete" Click="ButtonDeleteConfiguration_Click"/>
+                    <Button x:Name="ButtonUploadConfiguration" Grid.Column="0" Grid.Row="3" Margin="5,10,5,0" Content="Upload" Click="ButtonUploadConfiguration_Click" />
+                    <Button x:Name="ButtonCompileConfiguration" Grid.Column="1" Grid.Row="3" Margin="5,10,5,0" Content="Compile in Azure" Click="ButtonCompileConfiguration_Click"/>
+                </Grid>
+            </TabItem>
             <TabItem x:Name="settingsTab" Header="Assets">
                 <Grid>
                     <Grid.ColumnDefinitions>

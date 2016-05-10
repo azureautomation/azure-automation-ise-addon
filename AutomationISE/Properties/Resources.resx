@@ -129,6 +129,9 @@
   <data name="FoundSubscriptions" xml:space="preserve">
     <value>Found subscriptions</value>
   </data>
+  <data name="LocalConfigurationFileNotFound" xml:space="preserve">
+    <value>Local configuration file not found</value>
+  </data>
   <data name="NoAutomationAccounts" xml:space="preserve">
     <value>No automation accounts found in this subscription. Please create one in the Azure portal.</value>
   </data>

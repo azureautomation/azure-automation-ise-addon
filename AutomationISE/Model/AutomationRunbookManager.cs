@@ -188,26 +188,23 @@ namespace AutomationISE.Model
             }
         }
 
-        public static async Task<ISet<AutomationRunbook>> GetAllRunbookMetadata(AutomationManagementClient automationManagementClient, string workspace, string resourceGroupName, string accountName)
+        public static async Task<ISet<AutomationRunbook>> GetAllRunbookMetadata(AutomationManagementClient automationManagementClient, string workspace, string resourceGroupName, string accountName, Dictionary<string, string> localScriptsParsed)
         {
             ISet<AutomationRunbook> result = new SortedSet<AutomationRunbook>();            
             IList<Runbook> cloudRunbooks = await DownloadRunbookMetadata(automationManagementClient, resourceGroupName, accountName);
-            
+
             /* Create a Dictionary of (filename, filepath) tuples found on disk. This will come in handy */
             Dictionary<string, string> filePathForRunbook = new Dictionary<string, string>();
-            if (Directory.Exists(workspace))
+            foreach (string path in localScriptsParsed.Keys)
             {
-                string[] localRunbookFilePaths = Directory.GetFiles(workspace, "*.ps1");
-                foreach (string path in localRunbookFilePaths)
-                {
+                if (localScriptsParsed[path] == ("script"))
                     filePathForRunbook.Add(System.IO.Path.GetFileNameWithoutExtension(path), path);
-                }
             }
             /* Start by checking the downloaded runbooks */
             foreach (Runbook cloudRunbook in cloudRunbooks)
             {
                 /* Don't bother with graphical runbooks, since the ISE can't do anything with them */
-                if (cloudRunbook.Properties.RunbookType != Constants.RunbookType.Graphical)
+                if (cloudRunbook.Properties.RunbookType != Constants.RunbookType.Graphical && cloudRunbook.Properties.RunbookType != Constants.RunbookType.GraphPowerShell)
                 {
                     RunbookDraftGetResponse draftResponse;
                     try

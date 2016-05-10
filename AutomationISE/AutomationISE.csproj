@@ -165,13 +165,24 @@
     <Compile Include="ChooseNewAssetTypeDialog.xaml.cs">
       <DependentUpon>ChooseNewAssetTypeDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="CreateConfigurationDialog.xaml.cs">
+      <DependentUpon>CreateConfigurationDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="CreateRunbookDialog.xaml.cs">
       <DependentUpon>CreateRunbookDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="DeleteConfigurationDialog.xaml.cs">
+      <DependentUpon>DeleteConfigurationDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="DeleteRunbookDialog.xaml.cs">
       <DependentUpon>DeleteRunbookDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="DSCCompilationJobOutputWindow.xaml.cs">
+      <DependentUpon>DSCCompilationJobOutputWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Model\AutomationCertificate.cs" />
+    <Compile Include="Model\AutomationDSC.cs" />
+    <Compile Include="Model\AutomationDSCManager.cs" />
     <Compile Include="Model\PowerShellGallery.cs" />
     <Compile Include="Model\AutomationSelfSignedCertificate.cs" />
     <Compile Include="Model\AutomationSourceControl.cs" />
@@ -187,6 +198,9 @@
     </Compile>
     <Compile Include="NewOrEditCredentialDialog.xaml.cs">
       <DependentUpon>NewOrEditCredentialDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="DSCConfigurationParamDialog.xaml.cs">
+      <DependentUpon>DSCConfigurationParamDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="RunbookParamDialog.xaml.cs">
       <DependentUpon>RunbookParamDialog.xaml</DependentUpon>
@@ -210,13 +224,25 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="CreateConfigurationDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="CreateRunbookDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="DeleteConfigurationDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="DeleteRunbookDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DSCCompilationJobOutputWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="NewOrEditConnectionDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -231,6 +257,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="NewOrEditCredentialDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="DSCConfigurationParamDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

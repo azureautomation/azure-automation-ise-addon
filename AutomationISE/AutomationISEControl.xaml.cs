@@ -47,15 +47,19 @@ namespace AutomationISE
         private System.Timers.Timer refreshAuthTokenTimer;
         private AutomationISEClient iseClient;
         private ObservableCollection<AutomationRunbook> runbookListViewModel;
+        private ObservableCollection<AutomationDSC> DSCListViewModel;
         private ObservableCollection<AutomationAsset> assetListViewModel;
         private ISet<ConnectionType> connectionTypes;
         private ISet<AutomationAsset> assets;
         private ListSortDirection runbookCurrSortDir;
         private string runbookCurrSortProperty;
+        private ListSortDirection configurationCurrSortDir;
+        private string configurationCurrSortProperty;
         private ListSortDirection assetCurrSortDir;
         private string assetCurrSortProperty;
         private int numBackgroundTasks = 0;
         private Object backgroundWorkLock;
+        private Object refreshScriptsLock;
         private Storyboard progressSpinnerStoryboard;
         private Storyboard progressSpinnerStoryboardReverse;
         private Storyboard miniProgressSpinnerStoryboard;
@@ -64,8 +68,9 @@ namespace AutomationISE
         private string certificateThumbprint;
         private FileSystemWatcher fileWatcher;
         public ObjectModelRoot HostObject { get; set; }
-        DateTime lastUpdated = DateTime.Now;
+        string lastUpdated = "";
         private string addOnVersion = null;
+        Dictionary<string, string> localScriptsParsed = new Dictionary<string, string>();
 
 
         public AutomationISEControl()
@@ -76,6 +81,7 @@ namespace AutomationISE
                 iseClient = new AutomationISEClient();
                 /* Spinner animation stuff */
                 backgroundWorkLock = new Object();
+                refreshScriptsLock = new Object();
                 progressSpinnerStoryboard = (Storyboard)FindResource("bigGearRotationStoryboard");
                 progressSpinnerStoryboardReverse = (Storyboard)FindResource("bigGearRotationStoryboardReverse");
                 miniProgressSpinnerStoryboard = (Storyboard)FindResource("smallGearRotationStoryboard");
@@ -120,8 +126,9 @@ namespace AutomationISE
                 setAllAssetButtonStatesTo(false);
                 assetsComboBox.IsEnabled = false;
                 setAllRunbookButtonStatesTo(false);
+                setAllConfigurationButtonStatesTo(false);
 
-                 // Generate self-signed certificate for encrypting local assets in the current user store Cert:\CurrentUser\My\
+                // Generate self-signed certificate for encrypting local assets in the current user store Cert:\CurrentUser\My\
                 var certObj = new AutomationSelfSignedCertificate();
                 certificateThumbprint = certObj.CreateSelfSignedCertificate();
                 certificateTextBox.Text = certificateThumbprint;
@@ -161,13 +168,28 @@ namespace AutomationISE
         {
             if (e.PropertyName == "LastEditorWithFocus")
             {
-                foreach (AutomationRunbook runbook in runbookListViewModel)
+                if (runbookListViewModel != null && DSCListViewModel != null)
                 {
-                    if (runbook.Name.Equals(Path.GetFileNameWithoutExtension(HostObject.CurrentPowerShellTab.Files.SelectedFile.DisplayName)))
+                    foreach (AutomationRunbook runbook in runbookListViewModel)
                     {
-                        RunbooksListView.SelectedItem = runbook;
-                        RunbooksListView.ScrollIntoView(RunbooksListView.SelectedItem);
-                        break;
+                        if (runbook.Name.Equals(Path.GetFileNameWithoutExtension(HostObject.CurrentPowerShellTab.Files.SelectedFile.DisplayName)))
+                        {
+                            RunbooksListView.SelectedItem = runbook;
+                            RunbooksListView.ScrollIntoView(RunbooksListView.SelectedItem);
+                            break;
+                        }
+                    }
+                    foreach (AutomationDSC configuration in DSCListViewModel)
+                    {
+                        if (configuration.localFileInfo != null)
+                        {
+                            if (Path.GetFileNameWithoutExtension(configuration.localFileInfo.ToString()).Equals(Path.GetFileNameWithoutExtension(HostObject.CurrentPowerShellTab.Files.SelectedFile.DisplayName)))
+                            {
+                                DSCListView.SelectedItem = configuration;
+                                DSCListView.ScrollIntoView(DSCListView.SelectedItem);
+                                break;
+                            }
+                        }
                     }
                 }
             }
@@ -182,6 +204,7 @@ namespace AutomationISE
         {
             ButtonNewAsset.IsEnabled = enabled;
             ButtonCreateRunbook.IsEnabled = enabled;
+            ButtonCreateConfiguration.IsEnabled = enabled;
         }
 
         public void setAllRunbookButtonStatesTo(bool enabled)
@@ -192,6 +215,15 @@ namespace AutomationISE
             ButtonUploadRunbook.IsEnabled = enabled;
             ButtonTestRunbook.IsEnabled = enabled;
             ButtonPublishRunbook.IsEnabled = enabled;
+        }
+
+        public void setAllConfigurationButtonStatesTo(bool enabled)
+        {
+            ButtonDeleteConfiguration.IsEnabled = enabled;
+            ButtonDownloadConfiguration.IsEnabled = enabled;
+            ButtonOpenConfiguration.IsEnabled = enabled;
+            ButtonUploadConfiguration.IsEnabled = enabled;
+            ButtonCompileConfiguration.IsEnabled = enabled;
         }
 
         public void setAllAssetButtonStatesTo(bool enabled)
@@ -347,8 +379,9 @@ namespace AutomationISE
             {
                 try
                 {
-                    Task t = refreshAssets();
-                    t = refreshRunbooks();
+                    Task t = refreshRunbooks();
+                    t = refreshAssets();
+                    t = refreshConfigurations();
                 }
                 catch (Exception exception)
                 {
@@ -560,9 +593,20 @@ namespace AutomationISE
                     beginBackgroundWork("Getting runbook data for " + account.Name);
                     if (runbookListViewModel != null) runbookListViewModel.Clear();
                     if (assetListViewModel != null) assetListViewModel.Clear();
+                    await refreshLocalScripts();
+                    var localScripts = await getLocalScripts();
                     runbookListViewModel = new ObservableCollection<AutomationRunbook>(await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient, 
-                          iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name));
+                          iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name,localScripts));
                     endBackgroundWork("Done getting runbook data");
+
+                    /* Update Configurations */
+                    beginBackgroundWork("Getting configuration data for " + account.Name);
+                    if (DSCListViewModel != null) DSCListViewModel.Clear();
+                    if (assetListViewModel != null) assetListViewModel.Clear();
+                    DSCListViewModel = new ObservableCollection<AutomationDSC>(await AutomationDSCManager.GetAllConfigurationMetadata(iseClient.automationManagementClient,
+                          iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, localScripts));
+                    endBackgroundWork("Done getting configuration data");
+
                     /* Update Assets */
                     beginBackgroundWork("Downloading assets for " + account.Name);
                     //TODO: this is not quite checking what we need it to check
@@ -589,10 +633,16 @@ namespace AutomationISE
                     RunbooksListView.ItemsSource = runbookListViewModel;
                     CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(RunbooksListView.ItemsSource);
                     view.Filter = FilterRunbook;
+
+                    DSCListView.ItemsSource = DSCListViewModel;
+                    CollectionView DSCview = (CollectionView)CollectionViewSource.GetDefaultView(DSCListView.ItemsSource);
+                    DSCview.Filter = FilterConfiguration;
+
                     assetsListView.ItemsSource = assetListViewModel;
                     // Set credentials assets to be selected
                     assetsComboBox.SelectedItem = assetsComboBox.Items[1];
                     setAllRunbookButtonStatesTo(false);
+                    setAllConfigurationButtonStatesTo(false);
                     setCreationButtonStatesTo(true);
                     assetsComboBox.IsEnabled = true;
                     subscriptionComboBox.IsEnabled = true;
@@ -605,6 +655,7 @@ namespace AutomationISE
                         ButtonSourceControlRunbook.IsEnabled = true;
                     }
                     else ButtonSourceControlRunbook.Visibility = Visibility.Collapsed;
+
                     /* Change current directory to new workspace location */
                     accountPathTextBox.Text = iseClient.currWorkspace;
                     string pathHint = Path.GetPathRoot(iseClient.currWorkspace) + "..." + Path.DirectorySeparatorChar + Path.GetFileName(iseClient.currWorkspace);
@@ -635,10 +686,14 @@ namespace AutomationISE
         {
             try
             {
-                DateTime lastWriteTime = File.GetLastWriteTime(e.FullPath);
-                // Prevent multiple change events from getting acted upon
+                DateTime lastWriteTimeonFile = File.GetLastWriteTime(e.FullPath);
+                // Shorten to seconds to prevent multiple updates
+                String lastWriteTime = lastWriteTimeonFile.ToString("G");
                 if (lastWriteTime != lastUpdated)
                 {
+                    lastUpdated = lastWriteTime;
+                    Task t = new Task(delegate { refreshLocalScripts(); });
+                    t.Start();
                     foreach (AutomationRunbook runbook in runbookListViewModel)
                     {
                         if (runbook.Name.Equals(Path.GetFileNameWithoutExtension(e.Name)))
@@ -648,7 +703,16 @@ namespace AutomationISE
                             break;
                         }
                     }
-                    lastUpdated = lastWriteTime;
+
+                    foreach (AutomationDSC configuration in DSCListViewModel)
+                    {
+                        if (configuration.Name.Equals(Path.GetFileNameWithoutExtension(e.Name)))
+                        {
+                            configuration.LastModifiedLocal = DateTime.Now;
+                            configuration.UpdateSyncStatus();
+                            break;
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -720,6 +784,8 @@ namespace AutomationISE
                 case "configurationTab":
                     break;
                 case "runbookTab":
+                    break;
+                case "DSCTab":
                     break;
                 case "settingsTab":
                     break;
@@ -808,6 +874,18 @@ namespace AutomationISE
             return false;
         }
 
+        private bool ConfirmConfigurationDownload(string name)
+        {
+            String message = "Are you sure you want to import the cloud's copy of " + name + "?";
+            message += "\r\nAny changes you have made to it locally will be overwritten.";
+            String header = "Download Warning";
+            System.Windows.Forms.DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(message, header,
+                System.Windows.Forms.MessageBoxButtons.YesNo, System.Windows.Forms.MessageBoxIcon.Warning);
+            if (dialogResult == System.Windows.Forms.DialogResult.Yes)
+                return true;
+            return false;
+        }
+
         private async void ButtonDownloadRunbook_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -863,6 +941,63 @@ namespace AutomationISE
                 SetButtonStatesForSelectedRunbook();
             }
         }
+
+        private async void ButtonDownloadConfiguration_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                ButtonDownloadConfiguration.IsEnabled = false;
+                /* 
+                 * These outer, empty calls to [begin|end]BackgroundWork() prevent the spinner from stopping
+                 * every time a configuration download finishes, which can make the UI look jittery.
+                 */
+                beginBackgroundWork();
+                int count = 0;
+                string name = "";
+                foreach (Object obj in DSCListView.SelectedItems)
+                {
+                    AutomationDSC configuration = (AutomationDSC)obj;
+                    if (configuration.SyncStatus == AutomationDSC.Constants.SyncStatus.LocalOnly ||
+                        configuration.SyncStatus == AutomationDSC.Constants.SyncStatus.InSync)
+                        continue;
+                    if (configuration.localFileInfo != null && File.Exists(configuration.localFileInfo.FullName) && !ConfirmConfigurationDownload(configuration.Name))
+                        continue;
+                    try
+                    {
+                        beginBackgroundWork("Downloading configuration " + configuration.Name + "...");
+                        await AutomationDSCManager.DownloadConfiguration(configuration, iseClient.automationManagementClient,
+                                    iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
+                        endBackgroundWork("Downloaded " + configuration.Name + ".");
+                        count++;
+                        name = configuration.Name;
+                        configuration.UpdateSyncStatus();
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        endBackgroundWork("Downloading " + configuration.Name + " timed out.");
+                    }
+                    catch (Exception ex)
+                    {
+                        endBackgroundWork("Error downloading configuration " + configuration.Name);
+                        MessageBox.Show("The configuration " + configuration.Name + " could not be downloaded.\r\nError details: " + ex.Message);
+                    }
+                }
+                await refreshConfigurations();
+                if (count == 1) endBackgroundWork("Downloaded " + name + ".");
+                else if (count > 1) endBackgroundWork("Downloaded " + count + " configurations.");
+                else endBackgroundWork();
+            }
+            catch (Exception ex)
+            {
+                endBackgroundWork("Error downloading configurations.");
+                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                SetButtonStatesForSelectedConfiguration();
+            }
+        }
+
 
         private void beginOrResumeClockwiseSpin()
         {
@@ -956,9 +1091,74 @@ namespace AutomationISE
             }
         }
 
+        private void SetButtonStatesForSelectedConfiguration()
+        {
+            AutomationDSC selectedConfiguration = (AutomationDSC)DSCListView.SelectedItem;
+            if (selectedConfiguration == null)
+            {
+                setAllConfigurationButtonStatesTo(false);
+                ButtonCreateConfiguration.IsEnabled = true;
+                return;
+            }
+            ButtonDeleteConfiguration.IsEnabled = true;
+            ButtonCreateConfiguration.IsEnabled = true;
+            /* Set Download button status */
+            if (selectedConfiguration.SyncStatus == AutomationDSC.Constants.SyncStatus.LocalOnly)
+                ButtonDownloadConfiguration.IsEnabled = false;
+            else
+                ButtonDownloadConfiguration.IsEnabled = true;
+            /* Set Open and Upload button status */
+            if (selectedConfiguration.localFileInfo != null && File.Exists(selectedConfiguration.localFileInfo.FullName))
+            {
+                ButtonOpenConfiguration.IsEnabled = true;
+                ButtonUploadConfiguration.IsEnabled = true;
+            }
+            else
+            {
+                ButtonOpenConfiguration.IsEnabled = false;
+                ButtonUploadConfiguration.IsEnabled = false;
+            }
+            /* Set Compile button status */
+            if (selectedConfiguration.SyncStatus == AutomationDSC.Constants.SyncStatus.LocalOnly)
+            {
+                ButtonCompileConfiguration.IsEnabled = false;
+            }
+            else
+            {
+                ButtonCompileConfiguration.IsEnabled = true;
+            }
+        }
+
         private void RunbooksListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             SetButtonStatesForSelectedRunbook();
+            AutomationRunbook runbook = (AutomationRunbook)RunbooksListView.SelectedItem;
+
+            if (RunbooksListView.SelectedItem != null && runbook.localFileInfo != null)
+            {
+                var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == runbook.localFileInfo.FullName);
+                if (currentFile.Count() > 0)
+                {
+                    HostObject.CurrentPowerShellTab.Files.SetSelectedFile(currentFile.FirstOrDefault());
+                }
+
+            }
+        }
+
+        private void DSCListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            AutomationDSC dsc = (AutomationDSC)DSCListView.SelectedItem;
+
+            if (RunbooksListView.SelectedItem != null)
+            {
+                var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == dsc.localFileInfo.FullName);
+                if (currentFile.Count() > 0)
+                {
+                    HostObject.CurrentPowerShellTab.Files.SetSelectedFile(currentFile.FirstOrDefault());
+                }
+
+            }
+            SetButtonStatesForSelectedConfiguration();
         }
 
         private void ButtonOpenRunbook_Click(object sender, RoutedEventArgs e)
@@ -979,21 +1179,57 @@ namespace AutomationISE
                     {
                         try
                         {
-                            // If the file is opened but not saved, an exception will be thrown here
-                            HostObject.CurrentPowerShellTab.Files.Remove(currentFile.First());
+                            HostObject.CurrentPowerShellTab.Files.SetSelectedFile(currentFile.FirstOrDefault());
                         }
                         catch
                         {
-                            MessageBox.Show("There are unsaved changes to " + selectedRunbook.localFileInfo.Name + ", so it cannot be re-opened.",
-                                "Unsaved Runbook Changes", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            MessageBox.Show("Could not select " + selectedRunbook.localFileInfo.Name + " in the ISE.",
+                                "Open Runbook", MessageBoxButton.OK, MessageBoxImage.Warning);
                         }
                     }
-                    HostObject.CurrentPowerShellTab.Files.Add(selectedRunbook.localFileInfo.FullName);
+                    else
+                      HostObject.CurrentPowerShellTab.Files.Add(selectedRunbook.localFileInfo.FullName);
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show("The runbook could not be opened.\r\nError details: " + ex.Message, "Error");
+            }
+        }
+
+        private void ButtonOpenConfiguration_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                foreach (Object obj in DSCListView.SelectedItems)
+                {
+                    AutomationDSC selectedConfiguration = (AutomationDSC)obj;
+                    if (selectedConfiguration.SyncStatus == AutomationDSC.Constants.SyncStatus.CloudOnly)
+                    {
+                        MessageBox.Show("There is no local copy of the selected configuration to open. Please download the configuration.",
+                                "No Local configuration", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        continue;
+                    }
+                    var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == selectedConfiguration.localFileInfo.FullName);
+                    if (currentFile.Count() > 0)
+                    {
+                        try
+                        {
+                            // If the file is opened but not saved, an exception will be thrown here
+                            HostObject.CurrentPowerShellTab.Files.Remove(currentFile.First());
+                        }
+                        catch
+                        {
+                            MessageBox.Show("There are unsaved changes to " + selectedConfiguration.localFileInfo.Name + ", so it cannot be re-opened.",
+                                "Unsaved configuration Changes", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        }
+                    }
+                    HostObject.CurrentPowerShellTab.Files.Add(selectedConfiguration.localFileInfo.FullName);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("The configuration could not be opened.\r\nError details: " + ex.Message, "Error");
             }
         }
 
@@ -1049,8 +1285,9 @@ namespace AutomationISE
 
         private async Task refreshRunbooks()
         {
+            var localScripts = await getLocalScripts();
             ISet<AutomationRunbook> runbooks = await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient,
-                                    iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                                    iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name,localScripts);
             IDictionary<String, AutomationRunbook> runbookWithName = new Dictionary<String, AutomationRunbook>(runbooks.Count);
             foreach (AutomationRunbook runbook in runbooks)
             {
@@ -1079,6 +1316,80 @@ namespace AutomationISE
             foreach (String name in runbookWithName.Keys)
             {
                 runbookListViewModel.Add(runbookWithName[name]);
+            }
+        }
+
+        private async Task refreshLocalScripts()
+        {
+            System.Management.Automation.Language.Token[] AST;
+            System.Management.Automation.Language.ParseError[] ASTError = null;
+            Dictionary<string, string> copyScripts = new Dictionary<string, string>();
+
+            if (Directory.Exists(iseClient.currWorkspace))
+                {
+                string[] localScripts = Directory.GetFiles(iseClient.currWorkspace, "*.ps1");
+                foreach (string path in localScripts)
+                {
+                    String PSScriptText = File.ReadAllText(path);
+                    var ASTScript = System.Management.Automation.Language.Parser.ParseInput(PSScriptText, out AST, out ASTError);
+                    if ((ASTScript.EndBlock.Extent.Text.ToLower().StartsWith("configuration")))
+                    {
+                        copyScripts.Add(path, "configuration");
+                    }
+                    else copyScripts.Add(path, "script");
+                }
+                // Lock access to localScriptsParsed dictionary so it is not overwritten when accessed by other threads.
+                lock (refreshScriptsLock)
+                {
+                    localScriptsParsed = new Dictionary<string, string>(copyScripts);
+                }
+            }
+        }
+
+        private async Task<Dictionary<string, string>> getLocalScripts()
+        {
+            Dictionary<string, string> copyOfScripts = null;
+            // Lock access to localScriptsParsed dictionary so it is not overwritten when accessed by other threads.
+            lock (refreshScriptsLock)
+            {
+                copyOfScripts = new Dictionary<string, string>(localScriptsParsed);
+            }
+            return copyOfScripts;
+
+        }
+        private async Task refreshConfigurations()
+        {
+            var localScripts = await getLocalScripts();
+            ISet<AutomationDSC> configurations = await AutomationDSCManager.GetAllConfigurationMetadata(iseClient.automationManagementClient,
+                                    iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, localScripts);
+            IDictionary<String, AutomationDSC> configurationWithName = new Dictionary<String, AutomationDSC>(configurations.Count);
+            foreach (AutomationDSC configuration in configurations)
+            {
+                configurationWithName.Add(configuration.Name, configuration);
+            }
+            ISet<AutomationDSC> configurationsToDelete = new SortedSet<AutomationDSC>();
+            foreach (AutomationDSC curr in DSCListViewModel)
+            {
+                if (!configurationWithName.ContainsKey(curr.Name))
+                {
+                    configurationsToDelete.Add(curr);
+                    continue;
+                }
+                curr.AuthoringState = configurationWithName[curr.Name].AuthoringState;
+                curr.Parameters = configurationWithName[curr.Name].Parameters;
+                curr.Description = configurationWithName[curr.Name].Description;
+                curr.LastModifiedCloud = configurationWithName[curr.Name].LastModifiedCloud;
+                curr.LastModifiedLocal = configurationWithName[curr.Name].LastModifiedLocal;
+                curr.UpdateSyncStatus();
+                configurationWithName.Remove(curr.Name);
+            }
+            foreach (AutomationDSC configuration in configurationsToDelete)
+            {
+                DSCListViewModel.Remove(configuration);
+            }
+            foreach (String name in configurationWithName.Keys)
+            {
+                DSCListViewModel.Add(configurationWithName[name]);
             }
         }
 
@@ -1131,6 +1442,55 @@ namespace AutomationISE
             }
         }
 
+        private async void ButtonUploadConfiguration_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                ButtonUploadConfiguration.IsEnabled = false;
+                beginBackgroundWork();
+                int count = 0;
+                string name = "";
+                foreach (Object obj in DSCListView.SelectedItems)
+                {
+                    AutomationDSC selectedConfiguration = (AutomationDSC)obj;
+                    if (selectedConfiguration.SyncStatus == AutomationDSC.Constants.SyncStatus.CloudOnly)
+                        continue;
+                    try
+                    {
+                        // If the file is unsaved in the ISE, show warning to user before uploading
+                        if (checkIfDSCFileIsSaved(selectedConfiguration))
+                        {
+                            beginBackgroundWork("Uploading configuration " + selectedConfiguration.Name + "...");
+                            await AutomationDSCManager.UploadConfigurationAsDraft(selectedConfiguration, iseClient.automationManagementClient,
+                                        iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
+                            count++;
+                            name = selectedConfiguration.Name;
+                            selectedConfiguration.UpdateSyncStatus();
+                            endBackgroundWork("Uploaded " + selectedConfiguration.Name);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        endBackgroundWork("Error uploading configuration " + selectedConfiguration.Name);
+                        MessageBox.Show("The configuration " + selectedConfiguration.Name + " could not be uploaded.\r\nError details: " + ex.Message);
+                    }
+                }
+                await refreshConfigurations();
+                if (count == 1) endBackgroundWork("Uploaded " + name);
+                else if (count > 1) endBackgroundWork("Uploaded " + count + " configurations.");
+                else endBackgroundWork();
+            }
+            catch (Exception ex)
+            {
+                endBackgroundWork("Error uploading configurations.");
+                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                SetButtonStatesForSelectedConfiguration();
+            }
+        }
+
         private async void ButtonTestRunbook_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -1172,6 +1532,41 @@ namespace AutomationISE
             }
         }
 
+        private async void ButtonCompileConfiguration_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (DSCListView.SelectedItems.Count > 1)
+                {
+                    string message = "Batch compilation of test jobs is suppressed for performance reasons.";
+                    message += "\r\nPlease compile configurations one at a time.";
+                    MessageBox.Show(message, "Compile Configuration Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                ButtonCompileConfiguration.IsEnabled = false;
+                AutomationDSC selectedConfiguration = (AutomationDSC)DSCListView.SelectedItem;
+                if (selectedConfiguration.LastModifiedLocal > selectedConfiguration.LastModifiedCloud)
+                {
+                    var dialog = MessageBox.Show("Local copy is newer than cloud version. Continue compiling cloud version?",
+                            "Local Configuration is newer", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+                    if (dialog == MessageBoxResult.Cancel) return;
+                }
+
+                DSCCompilationJobOutputWindow jobWindow = new DSCCompilationJobOutputWindow(selectedConfiguration.Name, iseClient, Properties.Settings.Default.jobRefreshTimeInMilliseconds);
+                jobWindow.Show();
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                SetButtonStatesForSelectedConfiguration();
+                endBackgroundWork();
+            }
+        }
+
         /// <summary>
         /// Checks if a file is unsaved in the ISE and shows a dialog to ask user to confirm if they want to continue
         /// </summary>
@@ -1185,6 +1580,28 @@ namespace AutomationISE
                 if (currentFile.First().IsSaved == false)
                 {
                     String message = "The file " + runbook.localFileInfo.Name + " has unsaved changes.";
+                    message += "\r\nPlease save your changes before uploading.";
+                    System.Windows.Forms.DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(message, "Upload Warning",
+                        System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Checks if a file is unsaved in the ISE and shows a dialog to ask user to confirm if they want to continue
+        /// </summary>
+        /// <param name="configuration"></param>
+        /// <returns>false if the user clicks cancel or else returns true to continue with upload of unsaved file</returns>
+        private Boolean checkIfDSCFileIsSaved(AutomationDSC configuration)
+        {
+            var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == configuration.localFileInfo.FullName);
+            if (currentFile.Count() != 0)
+            {
+                if (currentFile.First().IsSaved == false)
+                {
+                    String message = "The file " + configuration.localFileInfo.Name + " has unsaved changes.";
                     message += "\r\nPlease save your changes before uploading.";
                     System.Windows.Forms.DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(message, "Upload Warning",
                         System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
@@ -1483,9 +1900,26 @@ namespace AutomationISE
             if (runbookCurrSortProperty != "Name")
                 RunbooksListView.Items.SortDescriptions.Add(new SortDescription("Name", ListSortDirection.Ascending));
         }
+
+        private void DSCListColumnHeader_Click(object sender, RoutedEventArgs e)
+        {
+            GridViewColumnHeader column = (GridViewColumnHeader)sender;
+            string sortProperty = column.Tag.ToString();
+            DSCListView.Items.SortDescriptions.Clear();
+            if (sortProperty != configurationCurrSortProperty || configurationCurrSortDir == ListSortDirection.Descending)
+                configurationCurrSortDir = ListSortDirection.Ascending;
+            else
+                configurationCurrSortDir = ListSortDirection.Descending;
+            configurationCurrSortProperty = sortProperty;
+            SortDescription newDescription = new SortDescription(configurationCurrSortProperty, configurationCurrSortDir);
+            DSCListView.Items.SortDescriptions.Add(newDescription);
+            if (configurationCurrSortProperty != "Name")
+                DSCListView.Items.SortDescriptions.Add(new SortDescription("Name", ListSortDirection.Ascending));
+        }
+
         /*
          * Sorting logic: same as for runbooks.
-         */ 
+         */
         private void assetListColumnHeader_Click(object sender, RoutedEventArgs e)
         {
             GridViewColumnHeader column = (GridViewColumnHeader)sender;
@@ -1560,7 +1994,6 @@ namespace AutomationISE
                     AutomationRunbookManager.CreateLocalRunbook(createOptionsWindow.runbookName, iseClient.currWorkspace, createOptionsWindow.runbookType);
                     HostObject.CurrentPowerShellTab.Files.Add(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.runbookName + ".ps1"));
 
-                    await refreshRunbooks();
                     /* Select new runbook from list*/
                     foreach (AutomationRunbook runbook in runbookListViewModel)
                     {
@@ -1580,6 +2013,44 @@ namespace AutomationISE
             {
                 endBackgroundWork();
                 SetButtonStatesForSelectedRunbook();
+            }
+        }
+
+        private async void ButtonCreateConfiguration_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                ButtonCreateConfiguration.IsEnabled = false;
+                beginBackgroundWork("Creating new configuration...");
+                CreateConfigurationDialog createOptionsWindow = new CreateConfigurationDialog();
+                bool? result = createOptionsWindow.ShowDialog();
+                if (result.HasValue && result.Value)
+                {
+                    if (createOptionsWindow.configurationName.Contains(Constants.nodeConfigurationIdentifier))
+                        AutomationDSCManager.CreateLocalConfigurationData(createOptionsWindow.configurationName, iseClient.currWorkspace);
+                    else
+                        AutomationDSCManager.CreateLocalConfiguration(createOptionsWindow.configurationName, iseClient.currWorkspace);
+                    HostObject.CurrentPowerShellTab.Files.Add(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.configurationName + ".ps1"));
+
+                    /* Select new configuration from list*/
+                    foreach (AutomationDSC configuraiton in DSCListViewModel)
+                    {
+                        if (configuraiton.Name.Equals(createOptionsWindow.configurationName))
+                        {
+                            DSCListView.SelectedItem = configuraiton;
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Could not create the new configuraiton.\r\nError details: " + ex.Message);
+            }
+            finally
+            {
+                endBackgroundWork();
+                SetButtonStatesForSelectedConfiguration();
             }
         }
 
@@ -1646,6 +2117,70 @@ namespace AutomationISE
             }
         }
 
+        private async void ButtonDeleteConfiguration_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                beginBackgroundWork("Deleting selected configurations...");
+                foreach (Object obj in DSCListView.SelectedItems)
+                {
+                    AutomationDSC configuration = (AutomationDSC)obj;
+                    if (configuration.SyncStatus == AutomationDSC.Constants.SyncStatus.CloudOnly)
+                    {
+                        String message = "Are you sure you wish to delete the cloud copy of " + configuration.Name + "?  ";
+                        message += "There is no local copy.";
+                        MessageBoxResult result = MessageBox.Show(message, "Confirm configuration Deletion", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            await AutomationDSCManager.DeleteCloudConfiguration(configuration, iseClient.automationManagementClient,
+                                iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                        }
+                    }
+                    else if (configuration.SyncStatus == AutomationDSC.Constants.SyncStatus.LocalOnly)
+                    {
+                        String message = "Are you sure you wish to delete the local copy of " + configuration.Name + "?  ";
+                        message += "There is no cloud copy.";
+                        MessageBoxResult result = MessageBox.Show(message, "Confirm Configuration Deletion", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            if (configuration.localFileInfo != null && File.Exists(configuration.localFileInfo.FullName))
+                                AutomationDSCManager.DeleteLocalConfiguration(configuration);
+                        }
+                    }
+                    else
+                    {
+                        DeleteConfigurationDialog deleteOptionsWindow = new DeleteConfigurationDialog();
+                        bool? result = deleteOptionsWindow.ShowDialog();
+                        if (result.HasValue && result.Value)
+                        {
+                            if (deleteOptionsWindow.deleteLocalOnly)
+                            {
+                                if (configuration.localFileInfo != null && File.Exists(configuration.localFileInfo.FullName))
+                                    AutomationDSCManager.DeleteLocalConfiguration(configuration);
+                            }
+                            else
+                            {
+                                await AutomationDSCManager.DeleteCloudConfiguration(configuration, iseClient.automationManagementClient,
+                                    iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                                if (configuration.localFileInfo != null && File.Exists(configuration.localFileInfo.FullName))
+                                    AutomationDSCManager.DeleteLocalConfiguration(configuration);
+                            }
+                        }
+                    }
+                }
+                await refreshConfigurations();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Could not delete the selected configurations(s).\r\nError details: " + ex.Message);
+            }
+            finally
+            {
+                endBackgroundWork();
+            }
+        }
+
+
         private void RunbooksListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             try
@@ -1654,6 +2189,19 @@ namespace AutomationISE
                 if (runbook != null)
                 {
                     ButtonOpenRunbook_Click(null, null);
+                }
+            }
+            catch { }
+        }
+
+        private void DSCListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            try
+            {
+                AutomationDSC configuration = ((FrameworkElement)e.OriginalSource).DataContext as AutomationDSC;
+                if (configuration != null)
+                {
+                    ButtonOpenConfiguration_Click(null, null);
                 }
             }
             catch { }
@@ -1682,7 +2230,17 @@ namespace AutomationISE
             catch { }
         }
 
-        private bool doBasicFiltering(object item)
+        private void ConfigurationFilter_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            try
+            {
+
+                CollectionViewSource.GetDefaultView(DSCListView.ItemsSource).Refresh();
+            }
+            catch { }
+        }
+
+        private bool doBasicRunbookFiltering(object item)
         {
             bool authoringStateMatch = ((item as AutomationRunbook).AuthoringState.IndexOf(RunbookFilterTextBox.Text, StringComparison.OrdinalIgnoreCase) >= 0);
             bool syncStatusMatch = ((item as AutomationRunbook).SyncStatus.IndexOf(RunbookFilterTextBox.Text, StringComparison.OrdinalIgnoreCase) >= 0);
@@ -1690,7 +2248,15 @@ namespace AutomationISE
             return (authoringStateMatch || syncStatusMatch || nameMatch);
         }
 
-        private bool doAdvancedFiltering(object item)
+        private bool doBasicConfigurationFiltering(object item)
+        {
+            bool authoringStateMatch = ((item as AutomationDSC).AuthoringState.IndexOf(ConfigurationFilterTextBox.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+            bool syncStatusMatch = ((item as AutomationDSC).SyncStatus.IndexOf(ConfigurationFilterTextBox.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+            bool nameMatch = ((item as AutomationDSC).Name.IndexOf(ConfigurationFilterTextBox.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+            return (authoringStateMatch || syncStatusMatch || nameMatch);
+        }
+
+        private bool doAdvancedRunbookFiltering(object item)
         {
             string[] queries = RunbookFilterTextBox.Text.Split(null);
             string nameQuery = null;
@@ -1735,14 +2301,71 @@ namespace AutomationISE
             return (authoringStateMatch && syncStatusMatch && nameMatch);
         }
 
+
+        private bool doAdvancedConfigurationFiltering(object item)
+        {
+            string[] queries = ConfigurationFilterTextBox.Text.Split(null);
+            string nameQuery = null;
+            string statusQuery = null;
+            string syncStatusQuery = null;
+            string nameQueryPrefix = "name:";
+            string statusQueryPrefix = "status:";
+            string syncStatusQueryPrefix = "syncStatus:";
+            foreach (string query in queries)
+            {
+                if (String.IsNullOrEmpty(query)) continue;
+                int nameQueryPrefixStart = query.IndexOf(nameQueryPrefix, StringComparison.OrdinalIgnoreCase);
+                int statusQueryPrefixStart = query.IndexOf(statusQueryPrefix, StringComparison.OrdinalIgnoreCase);
+                int syncStatusQueryPrefixStart = query.IndexOf(syncStatusQueryPrefix, StringComparison.OrdinalIgnoreCase);
+                if (nameQueryPrefixStart >= 0)
+                {
+                    nameQuery = query.Substring(nameQueryPrefixStart + nameQueryPrefix.Length);
+                }
+                else if (syncStatusQueryPrefixStart >= 0)
+                {
+                    syncStatusQuery = query.Substring(syncStatusQueryPrefixStart + syncStatusQueryPrefix.Length);
+                }
+                else if (statusQueryPrefixStart >= 0)
+                {
+                    statusQuery = query.Substring(statusQueryPrefixStart + statusQueryPrefix.Length);
+                }
+                else if (nameQuery == null)
+                {
+                    nameQuery = query;
+                }
+            }
+            bool authoringStateMatch = String.IsNullOrEmpty(statusQuery) ? true : false;
+            bool syncStatusMatch = String.IsNullOrEmpty(syncStatusQuery) ? true : false;
+            bool nameMatch = String.IsNullOrEmpty(nameQuery) ? true : false;
+            if (!String.IsNullOrEmpty(statusQuery) && statusQuery.Length > 1)
+                authoringStateMatch = ((item as AutomationDSC).AuthoringState.IndexOf(statusQuery, StringComparison.OrdinalIgnoreCase) >= 0);
+            if (!String.IsNullOrEmpty(syncStatusQuery) && syncStatusQuery.Length > 1)
+                syncStatusMatch = ((item as AutomationDSC).SyncStatus.IndexOf(syncStatusQuery, StringComparison.OrdinalIgnoreCase) >= 0);
+            if (!String.IsNullOrEmpty(nameQuery) && nameQuery.Length > 1)
+                nameMatch = ((item as AutomationDSC).Name.IndexOf(nameQuery, StringComparison.OrdinalIgnoreCase) >= 0);
+
+            return (authoringStateMatch && syncStatusMatch && nameMatch);
+        }
+
+
         private bool FilterRunbook(object item)
         {
             if (String.IsNullOrEmpty(RunbookFilterTextBox.Text) || RunbookFilterTextBox.Text.Length < 2 || RunbookFilterTextBox.Text == "Search")
                 return true;
             if (RunbookFilterTextBox.Text.IndexOf(':') >= 0)
-                return doAdvancedFiltering(item);
+                return doAdvancedRunbookFiltering(item);
             else
-                return doBasicFiltering(item);
+                return doBasicRunbookFiltering(item);
+        }
+
+        private bool FilterConfiguration(object item)
+        {
+            if (String.IsNullOrEmpty(ConfigurationFilterTextBox.Text) || ConfigurationFilterTextBox.Text.Length < 2 || ConfigurationFilterTextBox.Text == "Search")
+                return true;
+            if (ConfigurationFilterTextBox.Text.IndexOf(':') >= 0)
+                return doAdvancedConfigurationFiltering(item);
+            else
+                return doBasicConfigurationFiltering(item);
         }
 
         private void RunbookFilterFocus(object sender, RoutedEventArgs e)
@@ -1756,6 +2379,17 @@ namespace AutomationISE
 
         }
 
+        private void ConfigurationFilterFocus(object sender, RoutedEventArgs e)
+        {
+            if (ConfigurationFilterTextBox.Text == "Search")
+            {
+                ConfigurationFilterTextBox.FontWeight = FontWeights.Normal;
+                ConfigurationFilterTextBox.FontStyle = FontStyles.Normal;
+                ConfigurationFilterTextBox.Text = "";
+            }
+
+        }
+
         private void RunbookFilterLostFocus(object sender, RoutedEventArgs e)
         {
             if (RunbookFilterTextBox.Text == "")
@@ -1763,6 +2397,17 @@ namespace AutomationISE
                 RunbookFilterTextBox.FontWeight = FontWeights.Light;
                 RunbookFilterTextBox.FontStyle = FontStyles.Italic;
                 RunbookFilterTextBox.Text = "Search";
+            }
+
+        }
+
+        private void ConfigurationFilterLostFocus(object sender, RoutedEventArgs e)
+        {
+            if (ConfigurationFilterTextBox.Text == "")
+            {
+                ConfigurationFilterTextBox.FontWeight = FontWeights.Light;
+                ConfigurationFilterTextBox.FontStyle = FontStyles.Italic;
+                ConfigurationFilterTextBox.Text = "Search";
             }
 
         }

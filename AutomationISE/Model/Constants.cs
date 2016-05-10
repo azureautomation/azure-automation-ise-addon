@@ -62,7 +62,11 @@ namespace AutomationISE.Model
             public const String Graphical = "Graph";
 
             public const String PowerShellScript = "PowerShell";
+
+            public const String GraphPowerShell = "GraphPowerShellWorkflow";
         }
+
+        public const string nodeConfigurationIdentifier = "_Configuration_Data";
 
         public class ConnectionTypeFieldType
         {

@@ -43,9 +43,9 @@ namespace AutomationISE.Model
                 certObj.FriendlyName = Properties.Settings.Default.certFriendlyName;
                 certObj.ExpirationLengthInDays = Constants.ExpirationLengthInDaysForSelfSignedCert;
             }
-            catch (Exception ex)
+            catch
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -70,9 +70,9 @@ namespace AutomationISE.Model
                 }
                 return thumbprint;
             }
-            catch (Exception ex)
+            catch
             {
-                throw ex;
+                throw;
             }
         }
 

@@ -96,9 +96,9 @@ namespace AutomationISE.Model
                 this.ExportableFlags = X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet;
 
             }
-            catch (Exception ex)
+            catch
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -148,9 +148,9 @@ namespace AutomationISE.Model
                 stringResponse = objEnroll.CreateRequest(this.EncodingType);
 
             }
-            catch (Exception ex)
+            catch
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -179,9 +179,9 @@ namespace AutomationISE.Model
                     System.Convert.FromBase64String(base64encoded), this.Password,
                     this.ExportableFlags);
             }
-            catch (Exception ex)
+            catch
             {
-                throw ex;
+                throw;
             }
         }
 
