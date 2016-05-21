@@ -59,7 +59,7 @@ namespace AutomationISE.Model
         {
             public const String Workflow = "Script";
 
-            public const String Graphical = "Graph";
+            public const String Graphical = "GraphPowerShell";
 
             public const String PowerShellScript = "PowerShell";
 
