@@ -166,20 +166,48 @@ namespace AutomationISE.Model
                 accountResourceGroups = new Dictionary<AutomationAccount, ResourceGroupExtended>();
             else
                 accountResourceGroups.Clear();
+
             IList<AutomationAccount> result = new List<AutomationAccount>();
-            IList<ResourceGroupExtended> resourceGroups = await this.GetResourceGroups();
-            foreach (ResourceGroupExtended resourceGroup in resourceGroups)
+
+            // Get ARM automation account resources
+            var automationResources = await GetAutomationResources();
+
+            // Retrieve all of the automation accounts found
+            foreach (var resource in automationResources.Resources)
             {
                 CancellationTokenSource cts = new CancellationTokenSource();
                 cts.CancelAfter(TIMEOUT_MS);
-                AutomationAccountListResponse accountListResponse = await automationManagementClient.AutomationAccounts.ListAsync(resourceGroup.Name, cts.Token);
-                foreach (AutomationAccount account in accountListResponse.AutomationAccounts)
-                {
-                    result.Add(account);
-                    accountResourceGroups.Add(account, resourceGroup);
-                }
+
+                // Find the resource group name from the resource id.
+                var startPosition = resource.Id.IndexOf("/resourceGroups/");
+                var endPosition = resource.Id.IndexOf("/", startPosition + 16);
+                var resourceGroup = resource.Id.Substring(startPosition + 16, endPosition - startPosition - 16);
+
+                AutomationAccountGetResponse account = await automationManagementClient.AutomationAccounts.GetAsync(resourceGroup,resource.Name, cts.Token);
+                result.Add(account.AutomationAccount);
+                var accountResourceGroup = new ResourceGroupExtended();
+                accountResourceGroup.Name  = resourceGroup;
+                accountResourceGroups.Add(account.AutomationAccount, accountResourceGroup);
             }
             return result;
+        }
+
+        public async Task<ResourceListResult> GetAutomationResources()
+        {
+
+            if (currSubscription.Name == null)
+                throw new Exception(Properties.Resources.SubscriptionNotSet);
+
+            // Get the token for the tenant on this subscription.
+            var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(azureARMAuthResult.TenantId);
+            subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, cloudtoken.AccessToken);
+            resourceManagementClient = new ResourceManagementClient(subscriptionCreds);
+
+            // Only get automation account resources
+            ResourceListParameters automationResourceParams = new ResourceListParameters();
+            automationResourceParams.ResourceType = "Microsoft.Automation/automationAccounts";
+            ResourceListResult resources = await resourceManagementClient.Resources.ListAsync(automationResourceParams);
+            return resources;
         }
 
         public async Task<IList<ResourceGroupExtended>> GetResourceGroups()
@@ -194,6 +222,7 @@ namespace AutomationISE.Model
             resourceManagementClient = new ResourceManagementClient(subscriptionCreds);
 
             ResourceGroupListResult resourceGroupResult = await resourceManagementClient.ResourceGroups.ListAsync(null);
+
             return resourceGroupResult.ResourceGroups;
         }
 

@@ -168,7 +168,7 @@ namespace AutomationISE
         {
             if (e.PropertyName == "LastEditorWithFocus")
             {
-                if (runbookListViewModel != null && DSCListViewModel != null)
+                if (runbookListViewModel != null && DSCListViewModel != null && HostObject.CurrentPowerShellTab.Files.Count > 0)
                 {
                     foreach (AutomationRunbook runbook in runbookListViewModel)
                     {
