@@ -692,8 +692,9 @@ namespace AutomationISE
                 if (lastWriteTime != lastUpdated)
                 {
                     lastUpdated = lastWriteTime;
-                    Task t = new Task(delegate { refreshLocalScripts(); });
+                    Task t = new Task(delegate { refreshLocalScripts(e.FullPath); });
                     t.Start();
+            //        t.Wait();
                     foreach (AutomationRunbook runbook in runbookListViewModel)
                     {
                         if (runbook.Name.Equals(Path.GetFileNameWithoutExtension(e.Name)))
@@ -1134,7 +1135,7 @@ namespace AutomationISE
             SetButtonStatesForSelectedRunbook();
             AutomationRunbook runbook = (AutomationRunbook)RunbooksListView.SelectedItem;
 
-            if (RunbooksListView.SelectedItem != null && runbook.localFileInfo != null)
+            if ((RunbooksListView.SelectedItem != null && runbook != null) && runbook.localFileInfo != null)
             {
                 var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == runbook.localFileInfo.FullName);
                 if (currentFile.Count() > 0)
@@ -1149,7 +1150,7 @@ namespace AutomationISE
         {
             AutomationDSC dsc = (AutomationDSC)DSCListView.SelectedItem;
 
-            if (RunbooksListView.SelectedItem != null)
+            if ((RunbooksListView.SelectedItem != null) && (dsc != null))
             {
                 var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == dsc.localFileInfo.FullName);
                 if (currentFile.Count() > 0)
@@ -1283,6 +1284,34 @@ namespace AutomationISE
             }
         }
 
+        private void addLocalRunbookToView(String localFile)
+        {
+
+            AutomationRunbook runbook = new AutomationRunbook(new System.IO.FileInfo(localFile));
+            runbookListViewModel.Add(runbook);
+        }
+
+        private void removeLocalRunbookToView(String localFile)
+        {
+
+            AutomationRunbook runbook = new AutomationRunbook(new System.IO.FileInfo(localFile));
+            runbookListViewModel.Remove(runbook);
+        }
+
+        private void addLocalConfigurationToView(String localFile)
+        {
+
+            AutomationDSC configuration = new AutomationDSC(new System.IO.FileInfo(localFile));
+            DSCListViewModel.Add(configuration);
+        }
+
+        private void removeLocalConfigurationToView(String localFile)
+        {
+
+            AutomationDSC configuration = new AutomationDSC(new System.IO.FileInfo(localFile));
+            DSCListViewModel.Remove(configuration);
+        }
+
         private async Task refreshRunbooks()
         {
             var localScripts = await getLocalScripts();
@@ -1319,30 +1348,71 @@ namespace AutomationISE
             }
         }
 
-        private async Task refreshLocalScripts()
+        private async Task refreshLocalScripts(string localFile = null)
         {
             System.Management.Automation.Language.Token[] AST;
             System.Management.Automation.Language.ParseError[] ASTError = null;
             Dictionary<string, string> copyScripts = new Dictionary<string, string>();
 
-            if (Directory.Exists(iseClient.currWorkspace))
+            try {
+                if (Directory.Exists(iseClient.currWorkspace))
                 {
-                string[] localScripts = Directory.GetFiles(iseClient.currWorkspace, "*.ps1");
-                foreach (string path in localScripts)
-                {
-                    String PSScriptText = File.ReadAllText(path);
-                    var ASTScript = System.Management.Automation.Language.Parser.ParseInput(PSScriptText, out AST, out ASTError);
-                    if ((ASTScript.EndBlock.Extent.Text.ToLower().StartsWith("configuration")))
+                    string[] localScripts = null;
+                    if (localFile == null) localScripts = Directory.GetFiles(iseClient.currWorkspace, "*.ps1");
+                    else
                     {
-                        copyScripts.Add(path, "configuration");
+                        if (localFile.EndsWith(".ps1"))
+                        {
+                            localScripts = new string[1];
+                            localScripts[0] = localFile;
+                        }
                     }
-                    else copyScripts.Add(path, "script");
+
+                    foreach (string path in localScripts)
+                    {
+                        if (File.Exists(path))
+                        {
+                            String PSScriptText = File.ReadAllText(path);
+                            var ASTScript = System.Management.Automation.Language.Parser.ParseInput(PSScriptText, out AST, out ASTError);
+                            if (ASTScript.EndBlock != null)
+                            {
+                                if ((ASTScript.EndBlock.Extent.Text.ToLower().StartsWith("configuration")))
+                                {
+                                    copyScripts.Add(path, "configuration");
+                                }
+                                else copyScripts.Add(path, "script");
+                            }
+                            else copyScripts.Add(path, "script");
+                        }
+                    }
+                    // Lock access to localScriptsParsed dictionary so it is not overwritten when accessed by other threads.
+                    lock (refreshScriptsLock)
+                    {
+                        if (localFile != null)
+                        {
+                            // If the file has been deleted, remove it from the dictionary
+                            if (!(File.Exists(localFile)))
+                            {
+                                localScriptsParsed.Remove(localFile);
+                            }
+                            else
+                            {
+                                // If the file already exists, skip, else add the new file to the dictionary
+                                if (localScriptsParsed.ContainsKey(copyScripts.Keys.FirstOrDefault()) == false)
+                                {
+                                    localScriptsParsed.Add(copyScripts.Keys.FirstOrDefault(), copyScripts.Values.FirstOrDefault());
+                                }
+                            }
+                        }
+                        else localScriptsParsed = new Dictionary<string, string>(copyScripts);
+                    }
                 }
-                // Lock access to localScriptsParsed dictionary so it is not overwritten when accessed by other threads.
-                lock (refreshScriptsLock)
-                {
-                    localScriptsParsed = new Dictionary<string, string>(copyScripts);
-                }
+            }
+            catch (Exception ex)
+            {
+                // Ignore the case where the refresh is happening when the user is saving the file ("The process cannot access the file")
+                if (ex.HResult.ToString() != "-2147024864")
+                MessageBox.Show("Error reading local files.\r\nDetails: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -1994,6 +2064,7 @@ namespace AutomationISE
                     AutomationRunbookManager.CreateLocalRunbook(createOptionsWindow.runbookName, iseClient.currWorkspace, createOptionsWindow.runbookType);
                     HostObject.CurrentPowerShellTab.Files.Add(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.runbookName + ".ps1"));
 
+                    addLocalRunbookToView(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.runbookName + ".ps1"));
                     /* Select new runbook from list*/
                     foreach (AutomationRunbook runbook in runbookListViewModel)
                     {
@@ -2032,6 +2103,8 @@ namespace AutomationISE
                         AutomationDSCManager.CreateLocalConfiguration(createOptionsWindow.configurationName, iseClient.currWorkspace);
                     HostObject.CurrentPowerShellTab.Files.Add(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.configurationName + ".ps1"));
 
+                    addLocalConfigurationToView(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.configurationName + ".ps1"));
+
                     /* Select new configuration from list*/
                     foreach (AutomationDSC configuraiton in DSCListViewModel)
                     {
@@ -2056,12 +2129,16 @@ namespace AutomationISE
 
         private async void ButtonDeleteRunbook_Click(object sender, RoutedEventArgs e)
         {
+            var runbookList = new List<AutomationRunbook>();
+            foreach (Object obj in RunbooksListView.SelectedItems)
+            {
+                runbookList.Add((AutomationRunbook)obj);
+            }
             try
             {
                 beginBackgroundWork("Deleting selected runbooks...");
-                foreach (Object obj in RunbooksListView.SelectedItems)
+                foreach (AutomationRunbook runbook in runbookList)
                 {
-                    AutomationRunbook runbook = (AutomationRunbook)obj;
                     if (runbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.CloudOnly)
                     {
                         String message = "Are you sure you wish to delete the cloud copy of " + runbook.Name + "?  ";
@@ -2081,7 +2158,11 @@ namespace AutomationISE
                         if (result == MessageBoxResult.Yes)
                         {
                             if (runbook.localFileInfo != null && File.Exists(runbook.localFileInfo.FullName))
+                            {
                                 AutomationRunbookManager.DeleteLocalRunbook(runbook);
+                                removeLocalRunbookToView(runbook.localFileInfo.FullName);
+                                await refreshLocalScripts(runbook.localFileInfo.FullName);
+                            }
                         }
                     }
                     else
@@ -2100,7 +2181,11 @@ namespace AutomationISE
                                 await AutomationRunbookManager.DeleteCloudRunbook(runbook, iseClient.automationManagementClient,
                                     iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
                                 if (runbook.localFileInfo != null && File.Exists(runbook.localFileInfo.FullName))
+                                {
                                     AutomationRunbookManager.DeleteLocalRunbook(runbook);
+                                    removeLocalRunbookToView(runbook.localFileInfo.FullName);
+                                    await refreshLocalScripts(runbook.localFileInfo.FullName);
+                                }
                             }
                         }
                     }
@@ -2119,12 +2204,17 @@ namespace AutomationISE
 
         private async void ButtonDeleteConfiguration_Click(object sender, RoutedEventArgs e)
         {
+            var DSCList = new List<AutomationDSC>();
+            foreach (Object obj in DSCListView.SelectedItems)
+            {
+                DSCList.Add((AutomationDSC)obj);
+            }
+
             try
             {
                 beginBackgroundWork("Deleting selected configurations...");
-                foreach (Object obj in DSCListView.SelectedItems)
+                foreach (AutomationDSC configuration in DSCList)
                 {
-                    AutomationDSC configuration = (AutomationDSC)obj;
                     if (configuration.SyncStatus == AutomationDSC.Constants.SyncStatus.CloudOnly)
                     {
                         String message = "Are you sure you wish to delete the cloud copy of " + configuration.Name + "?  ";
@@ -2144,7 +2234,11 @@ namespace AutomationISE
                         if (result == MessageBoxResult.Yes)
                         {
                             if (configuration.localFileInfo != null && File.Exists(configuration.localFileInfo.FullName))
+                            {
                                 AutomationDSCManager.DeleteLocalConfiguration(configuration);
+                                removeLocalConfigurationToView(configuration.localFileInfo.FullName);
+                                await refreshLocalScripts(configuration.localFileInfo.FullName);
+                            }
                         }
                     }
                     else
@@ -2163,7 +2257,11 @@ namespace AutomationISE
                                 await AutomationDSCManager.DeleteCloudConfiguration(configuration, iseClient.automationManagementClient,
                                     iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
                                 if (configuration.localFileInfo != null && File.Exists(configuration.localFileInfo.FullName))
+                                {
                                     AutomationDSCManager.DeleteLocalConfiguration(configuration);
+                                    removeLocalConfigurationToView(configuration.localFileInfo.FullName);
+                                    await refreshLocalScripts(configuration.localFileInfo.FullName);
+                                }
                             }
                         }
                     }
