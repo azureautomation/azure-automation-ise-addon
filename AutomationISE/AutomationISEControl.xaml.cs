@@ -633,10 +633,14 @@ namespace AutomationISE
                     RunbooksListView.ItemsSource = runbookListViewModel;
                     CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(RunbooksListView.ItemsSource);
                     view.Filter = FilterRunbook;
+                    RunbooksListView.Items.SortDescriptions.Clear();
+                    RunbooksListView.Items.SortDescriptions.Add(new SortDescription("LastModifiedLocal", ListSortDirection.Descending));
 
                     DSCListView.ItemsSource = DSCListViewModel;
                     CollectionView DSCview = (CollectionView)CollectionViewSource.GetDefaultView(DSCListView.ItemsSource);
                     DSCview.Filter = FilterConfiguration;
+                    DSCListView.Items.SortDescriptions.Clear();
+                    DSCListView.Items.SortDescriptions.Add(new SortDescription("LastModifiedLocal", ListSortDirection.Descending));
 
                     assetsListView.ItemsSource = assetListViewModel;
                     // Set credentials assets to be selected
@@ -2098,12 +2102,18 @@ namespace AutomationISE
                 if (result.HasValue && result.Value)
                 {
                     if (createOptionsWindow.configurationName.Contains(Constants.nodeConfigurationIdentifier))
+                    {
                         AutomationDSCManager.CreateLocalConfigurationData(createOptionsWindow.configurationName, iseClient.currWorkspace);
+                        HostObject.CurrentPowerShellTab.Files.Add(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.configurationName + ".ps1"));
+                        addLocalRunbookToView(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.configurationName + ".ps1"));
+                        this.runbookTab.Focus();
+                    }
                     else
+                    {
                         AutomationDSCManager.CreateLocalConfiguration(createOptionsWindow.configurationName, iseClient.currWorkspace);
-                    HostObject.CurrentPowerShellTab.Files.Add(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.configurationName + ".ps1"));
-
-                    addLocalConfigurationToView(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.configurationName + ".ps1"));
+                        HostObject.CurrentPowerShellTab.Files.Add(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.configurationName + ".ps1"));
+                        addLocalConfigurationToView(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.configurationName + ".ps1"));
+                    }
 
                     /* Select new configuration from list*/
                     foreach (AutomationDSC configuraiton in DSCListViewModel)
