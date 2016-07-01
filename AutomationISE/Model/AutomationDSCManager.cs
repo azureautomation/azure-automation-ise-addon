@@ -110,7 +110,7 @@ namespace AutomationISE.Model
                 // Draft not supported yet
             }
             String configFilePath = System.IO.Path.Combine(workspace, configuration.Name + ".ps1");
-            File.WriteAllText(configFilePath, configurationContentResponse.Content.ToString());
+            File.WriteAllText(configFilePath, configurationContentResponse.Content.ToString(),Encoding.UTF8);
             configuration.localFileInfo = new FileInfo(configFilePath);
 
             if (response.Configuration.Properties.State == "Published")
@@ -231,6 +231,14 @@ namespace AutomationISE.Model
             if (File.Exists(configurationFilePath))
                 throw new Exception("A script with that name already exists");
 
+            // Create the file with a UTF8 Byte Order Mark
+            using (FileStream stream = new FileStream(configurationFilePath, FileMode.Create))
+            {
+                using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8))
+                {
+                    writer.Write(Encoding.UTF8.GetPreamble());
+                }
+            }
             File.WriteAllText(configurationFilePath, "Configuration " + configurationName + "\r\n{\r\n}");
         }
 
@@ -240,7 +248,15 @@ namespace AutomationISE.Model
             if (File.Exists(configurationFilePath))
                 throw new Exception("A configuration with that name already exists");
 
-            File.WriteAllText(configurationFilePath, "@{\r\n\tAllNodes = @(\r\n\t\t@{\r\n\t\t\tNodeName = '*'\r\r\n\t\t}\r\n\t)\r\n}");
+            // Create the file with a UTF8 Byte Order Mark
+            using (FileStream stream = new FileStream(configurationFilePath, FileMode.Create))
+            {
+                using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8))
+                {
+                    writer.Write(Encoding.UTF8.GetPreamble());
+                }
+            }
+            File.WriteAllText(configurationFilePath, "@{\r\n\tAllNodes = @(\r\n\t\t@{\r\n\t\t\tNodeName = '*'\r\r\n\t\t}\r\n\t)\r\n}",Encoding.UTF8);
         }
 
         public static void DeleteLocalConfiguration(AutomationDSC configuration)

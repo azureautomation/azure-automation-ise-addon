@@ -167,7 +167,7 @@ namespace AutomationISE.Model
                 draftResponse = await automationManagementClient.RunbookDraft.GetAsync(resourceGroupName, account.Name, runbook.Name, cts.Token);
             }
             String runbookFilePath = System.IO.Path.Combine(workspace, runbook.Name + ".ps1");
-            File.WriteAllText(runbookFilePath, runbookContentResponse.Stream.ToString());
+            File.WriteAllText(runbookFilePath, runbookContentResponse.Stream.ToString(),Encoding.UTF8);
             runbook.AuthoringState = AutomationRunbook.AuthoringStates.InEdit;
             runbook.localFileInfo = new FileInfo(runbookFilePath);
             /* This is the only way I can see to "check out" the runbook using the SDK.
@@ -276,15 +276,23 @@ namespace AutomationISE.Model
             String runbookFilePath = System.IO.Path.Combine(workspace, runbookName + ".ps1");
             if (File.Exists(runbookFilePath))
                 throw new Exception("A runbook with that name already exists");
+
+            // Create the file with a UTF8 Byte Order Mark
+            using (FileStream stream = new FileStream(runbookFilePath, FileMode.Create))
+            {
+                using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8))
+                {
+                    writer.Write(Encoding.UTF8.GetPreamble());
+                }
+            }
+
             if (runbookType.Equals(Constants.RunbookType.Workflow))
             {
-                File.WriteAllText(runbookFilePath, "workflow " + runbookName + "\r\n{\r\n}");
+                File.WriteAllText(runbookFilePath, "workflow " + runbookName + "\r\n{\r\n}",Encoding.UTF8);
             }
             else if (runbookType.Equals(Constants.RunbookType.PowerShellScript))
             {
-                using (FileStream fs = File.Create(runbookFilePath))
-                {
-                }
+                File.WriteAllText(runbookFilePath, " ",Encoding.UTF8);
             }
             else
             {
