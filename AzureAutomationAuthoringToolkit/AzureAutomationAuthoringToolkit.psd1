@@ -34,7 +34,7 @@ NestedModules = @('.\AzureAutomationAuthoringToolkitInner.psm1')
 RequiredAssemblies = @(".\ISEAddon\AutomationISE.dll")
 
 # HelpInfo URI of this module
-HelpInfoURI = 'http://aka.ms/azureautomationauthoringtoolkit'
+#HelpInfoURI = 'http://aka.ms/azureautomationauthoringtoolkit'
 
 # Functions to export from this module
 FunctionsToExport = @("Get-AutomationVariable", "Get-AutomationCertificate", "Get-AutomationPSCredential", "Get-AutomationConnection", "Set-AutomationVariable", "Get-AzureAutomationAuthoringToolkitLocalAsset", "Get-AzureAutomationAuthoringToolkitConfiguration", "Install-AzureAutomationIseAddOn", "Uninstall-AzureAutomationIseAddOn")
