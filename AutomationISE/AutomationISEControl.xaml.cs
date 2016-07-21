@@ -1154,7 +1154,7 @@ namespace AutomationISE
         {
             AutomationDSC dsc = (AutomationDSC)DSCListView.SelectedItem;
 
-            if ((RunbooksListView.SelectedItem != null) && (dsc != null))
+            if ((RunbooksListView.SelectedItem != null) && (dsc != null) && (dsc.localFileInfo != null))
             {
                 var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == dsc.localFileInfo.FullName);
                 if (currentFile.Count() > 0)
