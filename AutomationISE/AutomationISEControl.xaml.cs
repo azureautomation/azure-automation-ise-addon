@@ -593,6 +593,7 @@ namespace AutomationISE
                     beginBackgroundWork("Getting runbook data for " + account.Name);
                     if (runbookListViewModel != null) runbookListViewModel.Clear();
                     if (assetListViewModel != null) assetListViewModel.Clear();
+                    localScriptsParsed = null;
                     await refreshLocalScripts();
                     var localScripts = await getLocalScripts();
                     runbookListViewModel = new ObservableCollection<AutomationRunbook>(await AutomationRunbookManager.GetAllRunbookMetadata(iseClient.automationManagementClient, 
