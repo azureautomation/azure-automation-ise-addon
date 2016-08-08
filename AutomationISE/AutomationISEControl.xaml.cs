@@ -1427,7 +1427,7 @@ namespace AutomationISE
             // Lock access to localScriptsParsed dictionary so it is not overwritten when accessed by other threads.
             lock (refreshScriptsLock)
             {
-                copyOfScripts = new Dictionary<string, string>(localScriptsParsed);
+                if (localScriptsParsed != null) copyOfScripts = new Dictionary<string, string>(localScriptsParsed);
             }
             return copyOfScripts;
 

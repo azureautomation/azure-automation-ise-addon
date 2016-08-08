@@ -136,25 +136,28 @@ namespace AutomationISE.Model
 
 
             Dictionary<string, string> filePathForConfiguration = new Dictionary<string, string>();
-            foreach (string path in localScriptsParsed.Keys)
+            if (localScriptsParsed != null)
             {
-                if (localScriptsParsed[path] == "configuration")
+                foreach (string path in localScriptsParsed.Keys)
                 {
-                    /*
-                    Possible that the ps1 file name is not the same as the configuration name
-                    but this is not supported in the service any more. Have some parsing here if required later...
-
-                    int configurationNameLocation = ASTScript.EndBlock.Extent.Text.ToLower().Substring("configuration".Length + 1).IndexOf("{");
-                    if (configurationNameLocation > 0)
+                    if (localScriptsParsed[path] == "configuration")
                     {
-                        string configurationName = ASTScript.EndBlock.Extent.Text.Substring("Configuration".Length + 1, configurationNameLocation);
-                        if (!(filePathForConfiguration.ContainsKey(configurationName.Trim())))
+                        /*
+                        Possible that the ps1 file name is not the same as the configuration name
+                        but this is not supported in the service any more. Have some parsing here if required later...
+
+                        int configurationNameLocation = ASTScript.EndBlock.Extent.Text.ToLower().Substring("configuration".Length + 1).IndexOf("{");
+                        if (configurationNameLocation > 0)
                         {
-                            filePathForConfiguration.Add(configurationName.Trim(), path);
+                            string configurationName = ASTScript.EndBlock.Extent.Text.Substring("Configuration".Length + 1, configurationNameLocation);
+                            if (!(filePathForConfiguration.ContainsKey(configurationName.Trim())))
+                            {
+                                filePathForConfiguration.Add(configurationName.Trim(), path);
+                            }
                         }
+                        */
+                        filePathForConfiguration.Add(System.IO.Path.GetFileNameWithoutExtension(path), path);
                     }
-                    */
-                    filePathForConfiguration.Add(System.IO.Path.GetFileNameWithoutExtension(path), path);
                 }
             }
             /* Start by checking the downloaded configurations */

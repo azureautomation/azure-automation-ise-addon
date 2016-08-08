@@ -195,10 +195,13 @@ namespace AutomationISE.Model
 
             /* Create a Dictionary of (filename, filepath) tuples found on disk. This will come in handy */
             Dictionary<string, string> filePathForRunbook = new Dictionary<string, string>();
-            foreach (string path in localScriptsParsed.Keys)
+            if (localScriptsParsed != null)
             {
-                if (localScriptsParsed[path] == ("script"))
-                    filePathForRunbook.Add(System.IO.Path.GetFileNameWithoutExtension(path), path);
+                foreach (string path in localScriptsParsed.Keys)
+                {
+                    if (localScriptsParsed[path] == ("script"))
+                        filePathForRunbook.Add(System.IO.Path.GetFileNameWithoutExtension(path), path);
+                }
             }
             /* Start by checking the downloaded runbooks */
             foreach (Runbook cloudRunbook in cloudRunbooks)
