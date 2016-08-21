@@ -280,6 +280,7 @@ namespace AutomationISE
         {
             try
             {
+                connectionTypes.Clear();
                 await AutomationAssetManager.DownloadAllFromCloud(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint(), connectionTypes);
             }
             catch (Exception exception)
@@ -476,7 +477,8 @@ namespace AutomationISE
                 if (subscriptions.Count > 0)
                 {
                     endBackgroundWork(Properties.Resources.FoundSubscriptions);
-                    subscriptionComboBox.ItemsSource = subscriptions;
+                    var subscriptionList = subscriptions.OrderBy(x => x.Name);
+                    subscriptionComboBox.ItemsSource = subscriptionList;
                     subscriptionComboBox.DisplayMemberPath = "Name";
                     foreach (AutomationISEClient.SubscriptionObject selectedSubscription in subscriptionComboBox.Items)
                     {
