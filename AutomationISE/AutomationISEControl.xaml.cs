@@ -2044,14 +2044,14 @@ namespace AutomationISE
             {
                 if (promptShortened)
                 {
-                    HostObject.CurrentPowerShellTab.Invoke("cd '" + iseClient.currWorkspace + "'" + ";function prompt {'PS ' + $(Get-Location) + '> '}");
+                    HostObject.CurrentPowerShellTab.Invoke("cd \"" + iseClient.currWorkspace + "\"" + ";function prompt {'PS ' + $(Get-Location) + '> '}");
                     promptShortened = false;
                 }
                 else
                 {
                     //TODO: factor this into the iseClient
                     string pathHint = Path.GetPathRoot(iseClient.currWorkspace) + "..." + Path.DirectorySeparatorChar + Path.GetFileName(iseClient.currWorkspace);
-                    HostObject.CurrentPowerShellTab.Invoke("cd '" + iseClient.currWorkspace + "'" + ";function prompt {'PS " + pathHint + "> '}");
+                    HostObject.CurrentPowerShellTab.Invoke("cd \"" + iseClient.currWorkspace + "\"" + ";function prompt {'PS " + pathHint + "> '}");
                     promptShortened = true;
                 }
             }
