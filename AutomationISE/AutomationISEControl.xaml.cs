@@ -798,7 +798,6 @@ namespace AutomationISE
                 case "settingsTab":
                     break;
                 case "feedbackTab":
-                    surveyBrowserControl.Navigate(new Uri(Constants.feedbackURI));
                     break;
                 case "helpTab":
                     helpBrowserControl.Navigate(new Uri(Constants.helpURI + "?version=" + addOnVersion));
