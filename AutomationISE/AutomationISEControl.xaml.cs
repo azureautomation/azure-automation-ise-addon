@@ -1394,7 +1394,7 @@ namespace AutomationISE
                     // Lock access to localScriptsParsed dictionary so it is not overwritten when accessed by other threads.
                     lock (refreshScriptsLock)
                     {
-                        if (localFile != null)
+                        if (localFile != null && localScriptsParsed != null)
                         {
                             // If the file has been deleted, remove it from the dictionary
                             if (!(File.Exists(localFile)))
