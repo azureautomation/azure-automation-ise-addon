@@ -933,7 +933,7 @@ namespace AutomationISE
                         MessageBox.Show("The runbook " + runbook.Name + " could not be downloaded.\r\nError details: " + ex.Message);
                     }
                 }
-                await refreshRunbooks();
+
                 if (count == 1) endBackgroundWork("Downloaded " + name + ".");
                 else if (count > 1) endBackgroundWork("Downloaded " + count + " runbooks.");
                 else endBackgroundWork();
@@ -989,7 +989,7 @@ namespace AutomationISE
                         MessageBox.Show("The configuration " + configuration.Name + " could not be downloaded.\r\nError details: " + ex.Message);
                     }
                 }
-                await refreshConfigurations();
+
                 if (count == 1) endBackgroundWork("Downloaded " + name + ".");
                 else if (count > 1) endBackgroundWork("Downloaded " + count + " configurations.");
                 else endBackgroundWork();
@@ -1264,6 +1264,7 @@ namespace AutomationISE
                                     iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
                         count++;
                         name = selectedRunbook.Name;
+                        selectedRunbook.UpdateSyncStatus();
                         endBackgroundWork("Published runbook " + selectedRunbook.Name);
                     }
                     catch (Exception ex)
@@ -1272,7 +1273,7 @@ namespace AutomationISE
                         MessageBox.Show("The runbook could not be published.\r\nDetails: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
-                await refreshRunbooks();
+
                 if (count == 1) endBackgroundWork("Published " + name);
                 else if (count > 1) endBackgroundWork("Published " + count + " runbooks.");
                 else endBackgroundWork();
@@ -1502,7 +1503,7 @@ namespace AutomationISE
                         MessageBox.Show("The runbook " + selectedRunbook.Name + " could not be uploaded.\r\nError details: " + ex.Message);
                     }
                 }
-                await refreshRunbooks();
+
                 if (count == 1) endBackgroundWork("Uploaded " + name);
                 else if (count > 1) endBackgroundWork("Uploaded " + count + " runbooks.");
                 else endBackgroundWork();
@@ -1551,7 +1552,7 @@ namespace AutomationISE
                         MessageBox.Show("The configuration " + selectedConfiguration.Name + " could not be uploaded.\r\nError details: " + ex.Message);
                     }
                 }
-                await refreshConfigurations();
+
                 if (count == 1) endBackgroundWork("Uploaded " + name);
                 else if (count > 1) endBackgroundWork("Uploaded " + count + " configurations.");
                 else endBackgroundWork();

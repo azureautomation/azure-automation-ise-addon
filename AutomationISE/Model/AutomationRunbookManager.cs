@@ -219,6 +219,7 @@ namespace AutomationISE.Model
                     catch
                     {
                         draftResponse = null;
+                        continue;
                     }
                     if (filePathForRunbook.ContainsKey(cloudRunbook.Name))
                     {

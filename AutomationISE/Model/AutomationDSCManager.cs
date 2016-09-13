@@ -175,6 +175,7 @@ namespace AutomationISE.Model
                 catch
                 {
                     draftResponse = null;
+                    continue;
                 }
                 if (filePathForConfiguration.ContainsKey(cloudConfiguration.Name))
                 {
