@@ -921,7 +921,7 @@ namespace AutomationISE
                         endBackgroundWork("Downloaded " + runbook.Name + ".");
                         count++;
                         name = runbook.Name;
-                        runbook.UpdateSyncStatus();
+                        runbook.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
                     }
                     catch (OperationCanceledException)
                     {
@@ -977,7 +977,7 @@ namespace AutomationISE
                         endBackgroundWork("Downloaded " + configuration.Name + ".");
                         count++;
                         name = configuration.Name;
-                        configuration.UpdateSyncStatus();
+                        configuration.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
                     }
                     catch (OperationCanceledException)
                     {
@@ -1264,7 +1264,7 @@ namespace AutomationISE
                                     iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
                         count++;
                         name = selectedRunbook.Name;
-                        selectedRunbook.UpdateSyncStatus();
+                        selectedRunbook.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
                         endBackgroundWork("Published runbook " + selectedRunbook.Name);
                     }
                     catch (Exception ex)
@@ -1493,7 +1493,7 @@ namespace AutomationISE
                                         iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
                             count++;
                             name = selectedRunbook.Name;
-                            selectedRunbook.UpdateSyncStatus();
+                            selectedRunbook.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
                             endBackgroundWork("Uploaded " + selectedRunbook.Name);
                         }
                     }
@@ -1542,7 +1542,7 @@ namespace AutomationISE
                                         iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
                             count++;
                             name = selectedConfiguration.Name;
-                            selectedConfiguration.UpdateSyncStatus();
+                            selectedConfiguration.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
                             endBackgroundWork("Uploaded " + selectedConfiguration.Name);
                         }
                     }
