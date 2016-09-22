@@ -420,12 +420,15 @@ namespace AutomationISE.Model
                     foreach (var localConnectionAsset in localAssetsSecure.Connection)
                     {
                         IDictionary<string, FieldDefinition> connectionFieldDefinitions = new Dictionary<string, FieldDefinition>();
-                        foreach (var connectionType in connectionTypes)
+                        if (connectionTypes != null)
                         {
-                            if (connectionType.Name.Equals(localConnectionAsset.ConnectionType))
+                            foreach (var connectionType in connectionTypes)
                             {
-                                connectionFieldDefinitions = connectionType.Properties.FieldDefinitions;
-                                break;
+                                if (connectionType.Name.Equals(localConnectionAsset.ConnectionType))
+                                {
+                                    connectionFieldDefinitions = connectionType.Properties.FieldDefinitions;
+                                    break;
+                                }
                             }
                         }
                         

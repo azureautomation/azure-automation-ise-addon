@@ -44,6 +44,7 @@ namespace AutomationISE.Model
             {
                 response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, account.Name, runbook.Name, cts.Token);
                 draftProperties.Description = response.Runbook.Properties.Description;
+                draftProperties.RunbookType = response.Runbook.Properties.RunbookType;
             }
 
             // Create draft properties

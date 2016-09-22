@@ -52,7 +52,7 @@ namespace AutomationISE.Model
             }
         }
 	    public Dictionary<AutomationAccount, ResourceGroupExtended> accountResourceGroups { get; set; }
-        private static int TIMEOUT_MS = 30000;
+        private static int TIMEOUT_MS = 60000;
 
         public AutomationISEClient()
         {

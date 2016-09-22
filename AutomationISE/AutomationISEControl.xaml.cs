@@ -280,7 +280,7 @@ namespace AutomationISE
         {
             try
             {
-                connectionTypes.Clear();
+                if (connectionTypes != null) connectionTypes.Clear();
                 await AutomationAssetManager.DownloadAllFromCloud(iseClient.currWorkspace, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, getEncryptionCertificateThumbprint(), connectionTypes);
             }
             catch (Exception exception)
