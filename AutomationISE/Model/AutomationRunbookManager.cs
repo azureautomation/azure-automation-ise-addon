@@ -43,8 +43,6 @@ namespace AutomationISE.Model
             if (runbook.SyncStatus != AutomationAuthoringItem.Constants.SyncStatus.LocalOnly)
             {
                 response = await automationManagementClient.Runbooks.GetAsync(resourceGroupName, account.Name, runbook.Name, cts.Token);
-                draftProperties.Description = response.Runbook.Properties.Description;
-                draftProperties.RunbookType = response.Runbook.Properties.RunbookType;
             }
 
             // Create draft properties
@@ -58,6 +56,8 @@ namespace AutomationISE.Model
                 draftParams.Tags = response.Runbook.Tags;
                 draftParams.Properties.LogProgress = response.Runbook.Properties.LogProgress;
                 draftParams.Properties.LogVerbose = response.Runbook.Properties.LogVerbose;
+                draftProperties.Description = response.Runbook.Properties.Description;
+                draftProperties.RunbookType = response.Runbook.Properties.RunbookType;
             }
             cts = new CancellationTokenSource();
             cts.CancelAfter(TIMEOUT_MS);
