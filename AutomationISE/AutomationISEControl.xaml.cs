@@ -440,6 +440,10 @@ namespace AutomationISE
                     refreshAccountDataTimer.Stop();
                   //  MessageBox.Show("Your session has expired. Please sign in again.", "Session Expired", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
+                if (exception.HResult == -2146233029)
+                {
+                    // Waiting for data error from query. Ignore this as it is transient.
+                }
                 else
                 {
                     MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
