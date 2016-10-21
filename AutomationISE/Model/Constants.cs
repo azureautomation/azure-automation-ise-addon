@@ -57,7 +57,7 @@ namespace AutomationISE.Model
 
         public class RunbookType
         {
-            public const String Workflow = "Script";
+            public const String Workflow = "PowerShellWorkflow";
 
             public const String Graphical = "GraphPowerShell";
 
