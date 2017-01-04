@@ -71,29 +71,22 @@ namespace AutomationISE.Model
             subscriptionClient = new Microsoft.Azure.Subscriptions.SubscriptionClient(subscriptionCredentials);
 
             var cancelToken = new CancellationToken();
-            Microsoft.Azure.Subscriptions.Models.SubscriptionListResult subscriptionResults = await subscriptionClient.Subscriptions.ListAsync(cancelToken);
 
-            // Add any ARM subscriptions to the common subscription object
-            foreach (var subscription in subscriptionResults.Subscriptions)
+            var tenants = subscriptionClient.Tenants.ListAsync(cancelToken).Result;
+            // Get subscriptions for each tenant
+            foreach (var tenant in tenants.TenantIds)
             {
-                var subList = new SubscriptionObject();
-                subList.Name = subscription.DisplayName;
-                subList.SubscriptionId = subscription.SubscriptionId;
-                subList.Authority = "common";
-                subscriptionList.Add(subList);
-            }
+                AuthenticationResult tenantTokenCreds = AuthenticateHelper.RefreshTokenByAuthority(tenant.TenantId);
+                subscriptionCredentials = new Microsoft.Azure.TokenCloudCredentials(tenantTokenCreds.AccessToken);
+                var tenantSubscriptionClient = new Microsoft.Azure.Subscriptions.SubscriptionClient((subscriptionCredentials));
+                var subscriptionListResults = tenantSubscriptionClient.Subscriptions.ListAsync(cancelToken).Result;
 
-            // Add any RDFE subscriptions to the common subscription object
-            IList<Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse.Subscription> RDFEsubscriptions = await GetRDFESubscriptions();
-            foreach (var subscription in RDFEsubscriptions)
-            {
-                // Only add subscriptions that are not already in the subscription list
-                if (subscriptionList.Where(x => x.SubscriptionId == subscription.SubscriptionId).Count() == 0)
+                foreach (var subscription in subscriptionListResults.Subscriptions)
                 {
                     var subList = new SubscriptionObject();
-                    subList.Name = subscription.SubscriptionName;
+                    subList.Name = subscription.DisplayName;
                     subList.SubscriptionId = subscription.SubscriptionId;
-                    subList.Authority = subscription.ActiveDirectoryTenantId;
+                    subList.Authority = tenant.TenantId;
                     subscriptionList.Add(subList);
                 }
             }
