@@ -75,11 +75,18 @@ namespace AutomationISE
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            _password = PasswordTextbox.Password;
-            _exportable = bool.Parse(exportableComboBox.SelectedItem.ToString());
-            _certPath = certificatePathTextbox.Text;
-            _thumbprint = importCertificate();
-            this.DialogResult = true;
+            try
+            {
+                _password = PasswordTextbox.Password;
+                _exportable = bool.Parse(exportableComboBox.SelectedItem.ToString());
+                _certPath = certificatePathTextbox.Text;
+                _thumbprint = importCertificate();
+                this.DialogResult = true;
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void buttonCertificate_Click(object sender, RoutedEventArgs e)
@@ -109,22 +116,31 @@ namespace AutomationISE
 
         private string importCertificate()
         {
-            // Load the certificate into the users current store
-            X509Certificate2 cert = new X509Certificate2();
-            if (Path.GetExtension(_certPath) == ".cer")
+            X509Certificate2 cert = null;
+            try
             {
-                cert.Import(_certPath);
+                // Load the certificate into the users current store
+                cert = new X509Certificate2();
+                if (Path.GetExtension(_certPath) == ".cer")
+                {
+                    cert.Import(_certPath);
+                }
+                else
+                {
+                    if (_exportable) cert.Import(_certPath, _password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet);
+                    else cert.Import(_certPath, _password, X509KeyStorageFlags.DefaultKeySet);
+                }
+                var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+                store.Open(OpenFlags.ReadWrite);
+                store.Add(cert);
+                store.Close();
+                _certBase64 = Convert.ToBase64String(cert.Export(X509ContentType.Cert));
             }
-            else
+            catch (Exception exception)
             {
-                if (_exportable) cert.Import(_certPath, _password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet);
-                else cert.Import(_certPath, _password, X509KeyStorageFlags.DefaultKeySet);
+                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return null;
             }
-            var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
-            store.Open(OpenFlags.ReadWrite);
-            store.Add(cert);
-            store.Close();
-            _certBase64 = Convert.ToBase64String(cert.Export(X509ContentType.Cert));
 
             return cert.Thumbprint;
         }

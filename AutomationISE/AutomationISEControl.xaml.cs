@@ -1160,7 +1160,7 @@ namespace AutomationISE
         {
             AutomationDSC dsc = (AutomationDSC)DSCListView.SelectedItem;
 
-            if ((RunbooksListView.SelectedItem != null) && (dsc != null) && (dsc.localFileInfo != null))
+            if ((DSCListView.SelectedItem != null) && (dsc != null) && (dsc.localFileInfo != null))
             {
                 var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == dsc.localFileInfo.FullName);
                 if (currentFile.Count() > 0)
@@ -1384,6 +1384,7 @@ namespace AutomationISE
                         if (File.Exists(path))
                         {
                             String PSScriptText = File.ReadAllText(path);
+
                             var ASTScript = System.Management.Automation.Language.Parser.ParseInput(PSScriptText, out AST, out ASTError);
                             if (ASTScript.EndBlock != null)
                             {
@@ -1391,9 +1392,13 @@ namespace AutomationISE
                                 {
                                     copyScripts.Add(path, "configuration");
                                 }
-                                else copyScripts.Add(path, "script");
+                                else
+                                {
+                                    copyScripts.Add(path, "script");
+                                }
                             }
                             else copyScripts.Add(path, "script");
+                            ASTScript = null;
                         }
                     }
                     // Lock access to localScriptsParsed dictionary so it is not overwritten when accessed by other threads.
@@ -1421,8 +1426,6 @@ namespace AutomationISE
             }
             catch (Exception ex)
             {
-                // Ignore the case where the refresh is happening when the user is saving the file ("The process cannot access the file")
-                if (ex.HResult.ToString() != "-2147024864")
                 MessageBox.Show("Error reading local files.\r\nDetails: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -1547,6 +1550,7 @@ namespace AutomationISE
                             count++;
                             name = selectedConfiguration.Name;
                             selectedConfiguration.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
+                            selectedConfiguration.LastModifiedCloud = selectedConfiguration.LastModifiedLocal;
                             endBackgroundWork("Uploaded " + selectedConfiguration.Name);
                         }
                     }
@@ -2072,9 +2076,11 @@ namespace AutomationISE
                 bool? result = createOptionsWindow.ShowDialog();
                 if (result.HasValue && result.Value)
                 {
+                    fileWatcher.EnableRaisingEvents = false;
                     AutomationRunbookManager.CreateLocalRunbook(createOptionsWindow.runbookName, iseClient.currWorkspace, createOptionsWindow.runbookType);
                     HostObject.CurrentPowerShellTab.Files.Add(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.runbookName + ".ps1"));
-
+                    fileWatcher.EnableRaisingEvents = true;
+                    await refreshLocalScripts(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.runbookName + ".ps1"));
                     addLocalRunbookToView(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.runbookName + ".ps1"));
                     /* Select new runbook from list*/
                     foreach (AutomationRunbook runbook in runbookListViewModel)
@@ -2093,6 +2099,7 @@ namespace AutomationISE
             } 
             finally
             {
+                fileWatcher.EnableRaisingEvents = true;
                 endBackgroundWork();
                 SetButtonStatesForSelectedRunbook();
             }
@@ -2108,6 +2115,7 @@ namespace AutomationISE
                 bool? result = createOptionsWindow.ShowDialog();
                 if (result.HasValue && result.Value)
                 {
+                    fileWatcher.EnableRaisingEvents = false;
                     if (createOptionsWindow.configurationName.Contains(Constants.nodeConfigurationIdentifier))
                     {
                         AutomationDSCManager.CreateLocalConfigurationData(createOptionsWindow.configurationName, iseClient.currWorkspace);
@@ -2121,7 +2129,8 @@ namespace AutomationISE
                         HostObject.CurrentPowerShellTab.Files.Add(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.configurationName + ".ps1"));
                         addLocalConfigurationToView(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.configurationName + ".ps1"));
                     }
-
+                    fileWatcher.EnableRaisingEvents = true;
+                    await refreshLocalScripts(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.configurationName + ".ps1"));
                     /* Select new configuration from list*/
                     foreach (AutomationDSC configuraiton in DSCListViewModel)
                     {
@@ -2139,6 +2148,7 @@ namespace AutomationISE
             }
             finally
             {
+                fileWatcher.EnableRaisingEvents = true;
                 endBackgroundWork();
                 SetButtonStatesForSelectedConfiguration();
             }
