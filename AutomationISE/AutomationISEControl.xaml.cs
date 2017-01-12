@@ -35,6 +35,7 @@ using System.Windows.Data;
 using System.Windows.Media.Animation;
 using System.Text;
 using System.Drawing;
+using System.Net;
 
 namespace AutomationISE
 {
@@ -400,6 +401,93 @@ namespace AutomationISE
             });
         }
 
+        private async Task<Boolean> CheckRunAs()
+        {
+            // Indicates whether the RunAs can be used successfully.
+            var runAsSuccess = false;
+            try
+            {
+                // Check if local runas certificate is available in the automation account
+                AutomationConnection runAsConnection = (AutomationConnection)assets.FirstOrDefault(x => x.Name == "AzureRunAsConnection" && x.GetType().Name == "AutomationConnection");
+                if (runAsConnection == null)
+                {
+                    MessageBox.Show("RunAs account is not configured. Please create from the portal", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
+                }
+                // Check if a certificate for RunAs is already present. It will be in the form (RunAs + account name + hostname)
+                AutomationCertificate certificateAsset = (AutomationCertificate)assets.FirstOrDefault(x => x.Name == ("RunAs" + ((AutomationAccount)accountsComboBox.SelectedValue).Name + Dns.GetHostName()) && x.GetType().Name == "AutomationCertificate");
+                // If certificate is present in cloud, update RunAsConnection connection thumbprint if needed
+                if (certificateAsset != null && certificateAsset.SyncStatus != "Local Only")
+                {
+                    var thumbprint = certificateAsset.getThumbprint();
+                    var connectionFields = runAsConnection.getFields();
+                    // If local RunAs connection does not contain the local certificate thumprint, then update it
+                    if (connectionFields["CertificateThumbprint"].ToString() != thumbprint)
+                    {
+                        connectionFields["CertificateThumbprint"] = thumbprint;
+                        var assetsToSave = new List<AutomationAsset>();
+                        assetsToSave.Add(runAsConnection);
+                        AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint(), connectionTypes);
+                        refreshAssets();
+                        certificateAsset.UpdateSyncStatus();
+                    }
+                    runAsSuccess = true;
+                }
+                else
+                {
+                    // Create local cert and upload to the cloud
+
+                    // Refresh token to work against graph API
+                    var token = AuthenticateHelper.RefreshTokenByAuthority(iseClient.currSubscription.Authority, Constants.graphURI);
+                    
+                    // Create new instance of the runAsClient so we can update the AD application with the new certificate
+                    var runAsClient = new RunAs(token);
+
+                    // Create certificate and update AD application with new certificate
+                    var connectionFields = runAsConnection.getFields();
+                    var newCertificate = await runAsClient.CreateLocalRunAs(connectionFields["ApplicationId"].ToString(), "RunAs" + ((AutomationAccount)accountsComboBox.SelectedValue).Name + Dns.GetHostName());
+                    if (newCertificate != null)
+                    {
+                        // Upload local certificate to automation account so it could work in the service also
+                        // if the local RunAs connection is uploaded. 
+                        var properties = new CertificateCreateOrUpdateProperties()
+                        {
+                            Base64Value = Convert.ToBase64String(newCertificate.Export(X509ContentType.Pkcs12)),
+                            Thumbprint = newCertificate.Thumbprint,
+                            IsExportable = true
+                        };
+
+                        var cts = new CancellationTokenSource();
+                        cts.CancelAfter(30000);
+                        await iseClient.automationManagementClient.Certificates.CreateOrUpdateAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, new CertificateCreateOrUpdateParameters(newCertificate.FriendlyName, properties), cts.Token);
+
+                        // Update RunAs connection with the new certificate
+                        connectionFields["CertificateThumbprint"] = newCertificate.Thumbprint;
+                        var assetsToSave = new List<AutomationAsset>();
+                        assetsToSave.Add(runAsConnection);
+                        AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint(), connectionTypes);
+
+                        // Save new certificate to local assets store.
+                        assetsToSave = new List<AutomationAsset>();
+                        var newCert = new AutomationCertificate(newCertificate.FriendlyName, newCertificate.Thumbprint, null, null, true, true);
+                        assetsToSave.Add(newCert);
+                        AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint(), connectionTypes);
+
+                        // Refresh assets and set sync status
+                        refreshAssets();
+                        newCert.UpdateSyncStatus();
+                        runAsSuccess = true;
+                    }
+                }
+            }
+            catch (Exception Ex)
+            {
+                MessageBox.Show("Error configuring RunAs: " + Ex.Message, "Error",MessageBoxButton.OK, MessageBoxImage.Error);
+                runAsSuccess = false;
+            }
+            return runAsSuccess;
+        }
+
         public async Task refreshAssets(bool useExistingAssetValues = false)
         {
             try
@@ -593,7 +681,6 @@ namespace AutomationISE
                     UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
                     if (iseClient.AccountWorkspaceExists())
                         accountPathTextBox.Text = iseClient.currWorkspace;
-
                     /* Update Runbooks */
                     beginBackgroundWork("Getting account data");
                     beginBackgroundWork("Getting runbook data for " + account.Name);
@@ -669,11 +756,21 @@ namespace AutomationISE
 
                     /* Change current directory to new workspace location */
                     accountPathTextBox.Text = iseClient.currWorkspace;
+
                     string pathHint = Path.GetPathRoot(iseClient.currWorkspace) + "..." + Path.DirectorySeparatorChar + Path.GetFileName(iseClient.currWorkspace);
-                    HostObject.CurrentPowerShellTab.Invoke("cd \"" + iseClient.currWorkspace + "\"" + ";function prompt {'PS " + pathHint + "> '}");
+                    HostObject.CurrentPowerShellTab.InvokeSynchronous("cd \"" + iseClient.currWorkspace + "\"" + ";function prompt {'PS " + pathHint + "> '}", false, 5000);
                     promptShortened = true;
                     endBackgroundWork("Finished getting data for " + account.Name);
                     refreshAccountDataTimer.Start();
+
+                    if (Properties.Settings.Default.RunAs)
+                    {
+                        if (await CheckRunAs())
+                        {
+                            // Use RunAs connection in account to authenticate with Azure.
+                            HostObject.CurrentPowerShellTab.Invoke("$RunAsConnection = Get-AutomationConnection -Name AzureRunAsConnection;try {$Login=Add-AzureRmAccount -ServicePrincipal -TenantId $RunAsConnection.TenantId -ApplicationId $RunAsConnection.ApplicationId -CertificateThumbprint $RunAsConnection.CertificateThumbprint -ErrorAction Stop}catch{Sleep 10;$Login=Add-AzureRmAccount -ServicePrincipal -TenantId $RunAsConnection.TenantId -ApplicationId $RunAsConnection.ApplicationId -CertificateThumbprint $RunAsConnection.CertificateThumbprint};Select-AzureRmSubscription -SubscriptionId $RunAsConnection.SubscriptionID");
+                        }
+                    }
 
                     /* Set up file watch on the current workspace */
                     fileWatcher.Path = iseClient.currWorkspace + "\\";
@@ -689,6 +786,7 @@ namespace AutomationISE
             catch (Exception exception)
             {
                 endBackgroundWork("Error getting account data");
+                UpdateStatusBox(configurationStatusTextBox, exception.StackTrace);
                 var detailsDialog = MessageBox.Show(exception.Message);
             }
         }
@@ -2549,6 +2647,18 @@ namespace AutomationISE
         private void Hyperlink_ScriptAnalyzer(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
         {
             System.Diagnostics.Process.Start(e.Uri.AbsoluteUri);            
-        }        
+        }
+
+        private void runAscheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+                Properties.Settings.Default.RunAs = true;
+                Properties.Settings.Default.Save();
+        }
+
+        private void runAscheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+                Properties.Settings.Default.RunAs = false;
+                Properties.Settings.Default.Save();
+        }
     }
 }

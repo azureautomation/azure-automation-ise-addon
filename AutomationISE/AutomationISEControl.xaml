@@ -56,6 +56,7 @@
                     <Label x:Name="versionLabel" Content="Version" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="7" Grid.Column="0"/>
                     <Button x:Name="versionButton" Content="Update" Margin="5" VerticalAlignment="Bottom" Click="updateButton_Click" Grid.Column="1" Grid.Row="7"/>
                     <Button x:Name="PortalButton" Content="Portal" Grid.Column="2" Margin="5" Grid.Row="3" VerticalAlignment="Bottom"  Click="PortalButton_Click"/>
+                    <CheckBox x:Name="runAscheckBox" Content="Run As" Grid.Column="2" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="5" Grid.Row="2" VerticalAlignment="Top" Checked="runAscheckBox_Checked" Unchecked="runAscheckBox_Unchecked" ToolTip="Create local integration with Run As account" IsChecked="True"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="runbookTab" Header="Runbooks">

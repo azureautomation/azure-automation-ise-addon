@@ -44,18 +44,18 @@ namespace AutomationISE.Model
             return ctx.AcquireToken(Constants.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Always);
         }
 
-        public static AuthenticationResult RefreshTokenByAuthority(String authority)
+        public static AuthenticationResult RefreshTokenByAuthority(String authority,String appIdURI = Constants.appIdURI )
         {
             var ctx = new AuthenticationContext(string.Format(Constants.loginAuthority + authority, Constants.tenant));
             // Refresh the token for the logged in user only.
             UserIdentifier userName = new UserIdentifier(Properties.Settings.Default["ADUserName"].ToString(), UserIdentifierType.OptionalDisplayableId);
             try
             {
-                return ctx.AcquireToken(Constants.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Never, userName);
+                return ctx.AcquireToken(appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Never, userName);
             }
             catch
             {
-                return ctx.AcquireToken(Constants.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Auto, userName);
+                return ctx.AcquireToken(appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Auto, userName);
             }
         }
     }
