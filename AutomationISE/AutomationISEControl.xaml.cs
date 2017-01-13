@@ -151,7 +151,7 @@ namespace AutomationISE
                     versionLabel.Visibility = Visibility.Collapsed;
                     versionButton.Visibility = Visibility.Collapsed;
                 }
-
+                runAscheckBox.IsChecked = Properties.Settings.Default.RunAs;
             }
             catch (Exception exception)
             {
