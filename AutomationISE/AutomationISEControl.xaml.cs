@@ -1598,6 +1598,7 @@ namespace AutomationISE
                                         iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
                             count++;
                             name = selectedRunbook.Name;
+                            selectedRunbook.LastModifiedCloud = selectedRunbook.LastModifiedLocal;
                             selectedRunbook.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
                             endBackgroundWork("Uploaded " + selectedRunbook.Name);
                         }
@@ -1647,8 +1648,8 @@ namespace AutomationISE
                                         iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
                             count++;
                             name = selectedConfiguration.Name;
-                            selectedConfiguration.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
                             selectedConfiguration.LastModifiedCloud = selectedConfiguration.LastModifiedLocal;
+                            selectedConfiguration.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
                             endBackgroundWork("Uploaded " + selectedConfiguration.Name);
                         }
                     }
