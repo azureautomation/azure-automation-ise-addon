@@ -60,7 +60,7 @@ namespace AutomationISE.Model
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show(exception.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
         }
 
@@ -169,6 +169,10 @@ namespace AutomationISE.Model
                     else if (assetToDelete is AutomationCertificate)
                     {
                         automationApi.Certificates.Delete(resourceGroupName, automationAccountName, assetToDelete.Name);
+                    }
+                    else if (assetToDelete is AutomationConnection)
+                    {
+                        automationApi.Connections.Delete(resourceGroupName, automationAccountName, assetToDelete.Name);
                     }
                 }
             }

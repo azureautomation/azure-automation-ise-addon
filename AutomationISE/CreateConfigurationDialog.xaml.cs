@@ -39,7 +39,7 @@ namespace AutomationISE
             }
             else
             {
-                MessageBox.Show("You must enter a name for the new configuration.");
+                System.Windows.Forms.MessageBox.Show("You must enter a name for the new configuration.");
             }
         }
 
@@ -53,7 +53,7 @@ namespace AutomationISE
             }
             else
             {
-                MessageBox.Show("You must enter a name for the new configuration data.");
+                System.Windows.Forms.MessageBox.Show("You must enter a name for the new configuration data.");
             }
         }
         private bool textBoxFilled()

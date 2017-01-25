@@ -286,7 +286,7 @@ namespace AutomationISE
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show(exception.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
             }
         }
 
@@ -298,8 +298,9 @@ namespace AutomationISE
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            } 
+                System.Windows.Forms.MessageBox.Show(exception.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+
+            }
         }
 
         public async Task uploadAssets(ICollection<AutomationAsset> assetsToUpload)
@@ -314,7 +315,7 @@ namespace AutomationISE
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show(exception.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
             }
         }
 
@@ -331,17 +332,17 @@ namespace AutomationISE
                 {
                     if (assetToDelete.LastModifiedCloud != null && assetToDelete.LastModifiedLocal != null)
                     {
-                        var messageBoxResult = System.Windows.MessageBox.Show(
+                        var messageBoxResult = System.Windows.Forms.MessageBox.Show(
                             "At least some of the selected assets have both local and cloud versions. Do you want to also delete the cloud versions of these assets?",
                             "Delete Confirmation",
-                            System.Windows.MessageBoxButton.YesNo
+                            System.Windows.Forms.MessageBoxButtons.YesNoCancel, System.Windows.Forms.MessageBoxIcon.Warning
                         );
 
-                        if (messageBoxResult == MessageBoxResult.No)
+                        if (messageBoxResult == System.Windows.Forms.DialogResult.No)
                         {
                             deleteFromCloud = false;
                         }
-                        else if (messageBoxResult == MessageBoxResult.Cancel)
+                        else if (messageBoxResult == System.Windows.Forms.DialogResult.Cancel)
                         {
                             deleteFromCloud = false;
                             deleteLocally = false;
@@ -355,7 +356,7 @@ namespace AutomationISE
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show(exception.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
             }
         }
 
@@ -371,7 +372,7 @@ namespace AutomationISE
             catch (Exception exception)
             {
                 refreshAuthTokenTimer.Stop();
-                MessageBox.Show("Your session expired and could not be refreshed. Please sign in again./r/nDetails: " + exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show("Your session expired and could not be refreshed. Please sign in again./r/nDetails: " + exception.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
         }
 
@@ -395,7 +396,8 @@ namespace AutomationISE
                     }
                     else
                     {
-                        MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        System.Windows.Forms.MessageBox.Show(exception.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+
                     }
                 }
             });
@@ -411,7 +413,7 @@ namespace AutomationISE
                 AutomationConnection runAsConnection = (AutomationConnection)assets.FirstOrDefault(x => x.Name == "AzureRunAsConnection" && x.GetType().Name == "AutomationConnection");
                 if (runAsConnection == null)
                 {
-                    MessageBox.Show("RunAs account is not configured. Please create from the portal", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    System.Windows.Forms.MessageBox.Show("RunAs account is not configured. Please create from the portal", "Warning", System.Windows.Forms.MessageBoxButtons.OK,System.Windows.Forms.MessageBoxIcon.Warning);
                     return false;
                 }
                 // Check if a certificate for RunAs is already present. It will be in the form (RunAs + account name + hostname)
@@ -482,7 +484,7 @@ namespace AutomationISE
             }
             catch (Exception Ex)
             {
-                MessageBox.Show("Error configuring RunAs: " + Ex.Message, "Error",MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show("Error configuring RunAs: " + Ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                 runAsSuccess = false;
             }
             return runAsSuccess;
@@ -526,7 +528,7 @@ namespace AutomationISE
                 if (exception.HResult == tokenExpiredResult)
                 {
                     refreshAccountDataTimer.Stop();
-                  //  MessageBox.Show("Your session has expired. Please sign in again.", "Session Expired", MessageBoxButton.OK, MessageBoxImage.Warning);
+                  //  MessageBox.Show("Your session has expired. Please sign in again.", "Session Expired", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                 }
                 if (exception.HResult == -2146233029)
                 {
@@ -534,7 +536,7 @@ namespace AutomationISE
                 }
                 else
                 {
-                    MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    System.Windows.Forms.MessageBox.Show(exception.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                 }
             }
         }
@@ -721,7 +723,8 @@ namespace AutomationISE
                         string message = "Could not configure the " + PSModuleConfiguration.ModuleData.ModuleName + " module.\r\n";
                         message += "This module is required for your runbooks to run locally.\r\n";
                         message += "Make sure it exists in your module path (env:PSModulePath).";
-                        MessageBox.Show(message);
+                        System.Windows.Forms.MessageBox.Show(message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+
                     }
                     /* Update UI */
                     RunbooksListView.ItemsSource = runbookListViewModel;
@@ -787,7 +790,7 @@ namespace AutomationISE
             {
                 endBackgroundWork("Error getting account data");
                 UpdateStatusBox(configurationStatusTextBox, exception.StackTrace);
-                var detailsDialog = MessageBox.Show(exception.Message);
+                System.Windows.Forms.MessageBox.Show(exception.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
         }
 
@@ -827,7 +830,7 @@ namespace AutomationISE
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Runbook could not be refreshed.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show("Runbook could not be refreshed.\r\nError details: " + ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
         }
 
@@ -845,8 +848,8 @@ namespace AutomationISE
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Assets could not be refreshed.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+                System.Windows.Forms.MessageBox.Show("Assets could not be refreshed.\r\nError details: " + ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+           }
         }
 
         private void workspaceTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -872,7 +875,7 @@ namespace AutomationISE
             }
             catch (Exception exception)
             {
-                var detailsDialog = System.Windows.Forms.MessageBox.Show(exception.Message);
+                System.Windows.Forms.MessageBox.Show(exception.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
         }
 
@@ -922,8 +925,8 @@ namespace AutomationISE
             catch (Exception ex)
             {
                 endBackgroundWork("Error downloading assets.");
-                MessageBox.Show("Assets could not be downloaded.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+                System.Windows.Forms.MessageBox.Show("Assets could not be downloaded.\r\nError details: " + ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+           }
         }
 
         private async void ButtonUploadAsset_Click(object sender, RoutedEventArgs e)
@@ -938,8 +941,8 @@ namespace AutomationISE
             catch (Exception ex)
             {
                 endBackgroundWork("Error uploading assets.");
-                MessageBox.Show("Assets could not be uploaded.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+                System.Windows.Forms.MessageBox.Show("Assets could not be uploaded.\r\nError details: " + ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+         }
         }
 
         private async void ButtonDeleteAsset_Click(object sender, RoutedEventArgs e)
@@ -954,8 +957,8 @@ namespace AutomationISE
             catch (Exception ex)
             {
                 endBackgroundWork("Error deleting assets.");
-                MessageBox.Show("Assets could not be deleted.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+                System.Windows.Forms.MessageBox.Show("Assets could not be deleted.\r\nError details: " + ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+           }
         }
 
         private void ButtonInsertAsset_Click(object sender, RoutedEventArgs e)
@@ -967,7 +970,7 @@ namespace AutomationISE
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Asset could not be inserted.\r\nError details: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show("Asset could not be inserted.\r\nError details: " + ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
         }
 
@@ -1032,7 +1035,7 @@ namespace AutomationISE
                     catch (Exception ex)
                     {
                         endBackgroundWork("Error downloading runbook " + runbook.Name);
-                        MessageBox.Show("The runbook " + runbook.Name + " could not be downloaded.\r\nError details: " + ex.Message);
+                        System.Windows.Forms.MessageBox.Show("The runbook " + runbook.Name + " could not be downloaded.\r\nError details: " + ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                     }
                 }
 
@@ -1043,7 +1046,7 @@ namespace AutomationISE
             catch (Exception ex)
             {
                 endBackgroundWork("Error downloading runbooks.");
-                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
             finally
             {
@@ -1088,7 +1091,7 @@ namespace AutomationISE
                     catch (Exception ex)
                     {
                         endBackgroundWork("Error downloading configuration " + configuration.Name);
-                        MessageBox.Show("The configuration " + configuration.Name + " could not be downloaded.\r\nError details: " + ex.Message);
+                        System.Windows.Forms.MessageBox.Show("The configuration " + configuration.Name + " could not be downloaded.\r\nError details: " + ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                     }
                 }
 
@@ -1099,7 +1102,7 @@ namespace AutomationISE
             catch (Exception ex)
             {
                 endBackgroundWork("Error downloading configurations.");
-                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
             finally
             {
@@ -1279,8 +1282,8 @@ namespace AutomationISE
                     AutomationRunbook selectedRunbook = (AutomationRunbook)obj;
                     if (selectedRunbook.SyncStatus == AutomationRunbook.Constants.SyncStatus.CloudOnly)
                     {
-                        MessageBox.Show("There is no local copy of the selected runbook to open. Please download the runbook.",
-                                "No Local Runbook", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        System.Windows.Forms.MessageBox.Show("There is no local copy of the selected runbook to open. Please download the runbook.",
+                                "No Local Runbook", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                         continue;
                     }
                     var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == selectedRunbook.localFileInfo.FullName);
@@ -1292,8 +1295,8 @@ namespace AutomationISE
                         }
                         catch
                         {
-                            MessageBox.Show("Could not select " + selectedRunbook.localFileInfo.Name + " in the ISE.",
-                                "Open Runbook", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            System.Windows.Forms.MessageBox.Show("Could not select " + selectedRunbook.localFileInfo.Name + " in the ISE.",
+                                "Open Runbook", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                         }
                     }
                     else
@@ -1302,7 +1305,7 @@ namespace AutomationISE
             }
             catch (Exception ex)
             {
-                MessageBox.Show("The runbook could not be opened.\r\nError details: " + ex.Message, "Error");
+                System.Windows.Forms.MessageBox.Show("The runbook could not be opened.\r\nError details: " + ex.Message, "Error");
             }
         }
 
@@ -1315,8 +1318,8 @@ namespace AutomationISE
                     AutomationDSC selectedConfiguration = (AutomationDSC)obj;
                     if (selectedConfiguration.SyncStatus == AutomationDSC.Constants.SyncStatus.CloudOnly)
                     {
-                        MessageBox.Show("There is no local copy of the selected configuration to open. Please download the configuration.",
-                                "No Local configuration", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        System.Windows.Forms.MessageBox.Show("There is no local copy of the selected configuration to open. Please download the configuration.",
+                                "No Local configuration", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                         continue;
                     }
                     var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == selectedConfiguration.localFileInfo.FullName);
@@ -1329,8 +1332,8 @@ namespace AutomationISE
                         }
                         catch
                         {
-                            MessageBox.Show("There are unsaved changes to " + selectedConfiguration.localFileInfo.Name + ", so it cannot be re-opened.",
-                                "Unsaved configuration Changes", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            System.Windows.Forms.MessageBox.Show("There are unsaved changes to " + selectedConfiguration.localFileInfo.Name + ", so it cannot be re-opened.",
+                                "Unsaved configuration Changes", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                         }
                     }
                     HostObject.CurrentPowerShellTab.Files.Add(selectedConfiguration.localFileInfo.FullName);
@@ -1338,7 +1341,7 @@ namespace AutomationISE
             }
             catch (Exception ex)
             {
-                MessageBox.Show("The configuration could not be opened.\r\nError details: " + ex.Message, "Error");
+                System.Windows.Forms.MessageBox.Show("The configuration could not be opened.\r\nError details: " + ex.Message, "Error");
             }
         }
 
@@ -1367,12 +1370,13 @@ namespace AutomationISE
                         count++;
                         name = selectedRunbook.Name;
                         selectedRunbook.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
+                        selectedRunbook.AuthoringState = AutomationRunbook.AuthoringStates.Published;
                         endBackgroundWork("Published runbook " + selectedRunbook.Name);
                     }
                     catch (Exception ex)
                     {
                         endBackgroundWork("Error publishing runbook " + selectedRunbook.Name);
-                        MessageBox.Show("The runbook could not be published.\r\nDetails: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        System.Windows.Forms.MessageBox.Show("The runbook could not be published.\r\nDetails: " + ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                     }
                 }
 
@@ -1383,7 +1387,7 @@ namespace AutomationISE
             catch (Exception ex)
             {
                 endBackgroundWork("Error publishing runbooks.");
-                MessageBox.Show("Error publishing runbooks.\r\nDetails: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show("Error publishing runbooks.\r\nDetails: " + ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
             finally
             {
@@ -1524,8 +1528,12 @@ namespace AutomationISE
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error reading local files.\r\nDetails: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+                // Don't throw exception for file in use error as this will get picked up on the next sync and is not destructive.
+                if (ex.HResult != -2147024864)
+                {
+                    System.Windows.Forms.MessageBox.Show("Error reading local files.\r\nDetails: " + ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                }
+                }
         }
 
         private async Task<Dictionary<string, string>> getLocalScripts()
@@ -1600,13 +1608,14 @@ namespace AutomationISE
                             name = selectedRunbook.Name;
                             selectedRunbook.LastModifiedCloud = selectedRunbook.LastModifiedLocal;
                             selectedRunbook.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
+                            selectedRunbook.AuthoringState = AutomationRunbook.AuthoringStates.InEdit;
                             endBackgroundWork("Uploaded " + selectedRunbook.Name);
                         }
                     }
                     catch (Exception ex)
                     {
                         endBackgroundWork("Error uploading runbook " + selectedRunbook.Name);
-                        MessageBox.Show("The runbook " + selectedRunbook.Name + " could not be uploaded.\r\nError details: " + ex.Message);
+                        System.Windows.Forms.MessageBox.Show("The runbook " + selectedRunbook.Name + " could not be uploaded.\r\nError details: " + ex.Message);
                     }
                 }
 
@@ -1617,7 +1626,7 @@ namespace AutomationISE
             catch (Exception ex)
             {
                 endBackgroundWork("Error uploading runbooks.");
-                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
             finally
             {
@@ -1656,7 +1665,7 @@ namespace AutomationISE
                     catch (Exception ex)
                     {
                         endBackgroundWork("Error uploading configuration " + selectedConfiguration.Name);
-                        MessageBox.Show("The configuration " + selectedConfiguration.Name + " could not be uploaded.\r\nError details: " + ex.Message);
+                        System.Windows.Forms.MessageBox.Show("The configuration " + selectedConfiguration.Name + " could not be uploaded.\r\nError details: " + ex.Message);
                     }
                 }
 
@@ -1667,7 +1676,7 @@ namespace AutomationISE
             catch (Exception ex)
             {
                 endBackgroundWork("Error uploading configurations.");
-                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
             finally
             {
@@ -1683,7 +1692,7 @@ namespace AutomationISE
                 {
                     string message = "Batch creation of test jobs is suppressed for performance reasons.";
                     message += "\r\nPlease create test jobs one at a time.";
-                    MessageBox.Show(message, "Test Job Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    System.Windows.Forms.MessageBox.Show(message, "Test Job Warning", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                     return;
                 }
                 ButtonTestRunbook.IsEnabled = false;
@@ -1691,9 +1700,9 @@ namespace AutomationISE
 
                 if (selectedRunbook.LastModifiedLocal > selectedRunbook.LastModifiedCloud)
                 {
-                    var dialog = MessageBox.Show("Local copy is newer than cloud version. Continue testing cloud version?",
-                            "Local Runbook is newer", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
-                    if (dialog == MessageBoxResult.Cancel) return;
+                    var dialog = System.Windows.Forms.MessageBox.Show("Local copy is newer than cloud version. Continue testing cloud version?",
+                            "Local Runbook is newer", System.Windows.Forms.MessageBoxButtons.OKCancel, System.Windows.Forms.MessageBoxIcon.Warning);
+                    if (dialog == System.Windows.Forms.DialogResult.Cancel) return;
                 }
 
                 if (selectedRunbook.AuthoringState == AutomationRunbook.AuthoringStates.Published)
@@ -1707,7 +1716,7 @@ namespace AutomationISE
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show(exception.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
             finally
             {
@@ -1724,7 +1733,7 @@ namespace AutomationISE
                 {
                     string message = "Batch compilation of test jobs is suppressed for performance reasons.";
                     message += "\r\nPlease compile configurations one at a time.";
-                    MessageBox.Show(message, "Compile Configuration Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    System.Windows.Forms.MessageBox.Show(message, "Compile Configuration Warning", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -1732,9 +1741,9 @@ namespace AutomationISE
                 AutomationDSC selectedConfiguration = (AutomationDSC)DSCListView.SelectedItem;
                 if (selectedConfiguration.LastModifiedLocal > selectedConfiguration.LastModifiedCloud)
                 {
-                    var dialog = MessageBox.Show("Local copy is newer than cloud version. Continue compiling cloud version?",
-                            "Local Configuration is newer", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
-                    if (dialog == MessageBoxResult.Cancel) return;
+                    var dialog = System.Windows.Forms.MessageBox.Show("Local copy is newer than cloud version. Continue compiling cloud version?",
+                            "Local Configuration is newer", System.Windows.Forms.MessageBoxButtons.YesNo, System.Windows.Forms.MessageBoxIcon.Warning);
+                    if (dialog == System.Windows.Forms.DialogResult.No) return;
                 }
 
                 DSCCompilationJobOutputWindow jobWindow = new DSCCompilationJobOutputWindow(selectedConfiguration.Name, iseClient, Properties.Settings.Default.jobRefreshTimeInMilliseconds);
@@ -1742,7 +1751,7 @@ namespace AutomationISE
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show(exception.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
             finally
             {
@@ -1819,7 +1828,7 @@ namespace AutomationISE
                 }
                 catch (Exception exception)
                 {
-                    MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    System.Windows.Forms.MessageBox.Show(exception.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                 }
             }
         }
@@ -1849,7 +1858,7 @@ namespace AutomationISE
                 }
                 catch (Exception exception)
                 {
-                    MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    System.Windows.Forms.MessageBox.Show(exception.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                 }
             }
         }
@@ -1879,7 +1888,7 @@ namespace AutomationISE
                 }
                 catch (Exception exception)
                 {
-                    MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    System.Windows.Forms.MessageBox.Show(exception.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                 }
             }
         }
@@ -1909,7 +1918,7 @@ namespace AutomationISE
                 }
                 catch (Exception exception)
                 {
-                    MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    System.Windows.Forms.MessageBox.Show(exception.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                 }
             }
         }
@@ -1945,7 +1954,7 @@ namespace AutomationISE
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
         }
 
@@ -1974,7 +1983,7 @@ namespace AutomationISE
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
         }
 
@@ -1999,7 +2008,7 @@ namespace AutomationISE
             catch (Exception ex)
             {
                 certificateTextBox.Text = certificateThumbprint;
-                MessageBox.Show("The thumbprint could not be updated:\r\n" + ex.Message + ".", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show("The thumbprint could not be updated:\r\n" + ex.Message + ".", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
         }
 
@@ -2015,7 +2024,7 @@ namespace AutomationISE
             }
             catch (Exception ex)
             {
-                MessageBox.Show("The source control job could not be started. " + ex.Message, "Error");
+                System.Windows.Forms.MessageBox.Show("The source control job could not be started. " + ex.Message, "Error");
             }
         }
 
@@ -2028,7 +2037,7 @@ namespace AutomationISE
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message, "Couldn't open path", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show(exception.Message, "Couldn't open path", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
         }
 
@@ -2141,7 +2150,7 @@ namespace AutomationISE
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message, "Could not launch portal", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show(exception.Message, "Could not launch portal", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
         }
 
@@ -2194,7 +2203,7 @@ namespace AutomationISE
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Could not create the new runbook.\r\nError details: " + ex.Message);
+                System.Windows.Forms.MessageBox.Show("Could not create the new runbook.\r\nError details: " + ex.Message);
             } 
             finally
             {
@@ -2243,7 +2252,7 @@ namespace AutomationISE
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Could not create the new configuraiton.\r\nError details: " + ex.Message);
+                System.Windows.Forms.MessageBox.Show("Could not create the new configuraiton.\r\nError details: " + ex.Message);
             }
             finally
             {
@@ -2269,8 +2278,8 @@ namespace AutomationISE
                     {
                         String message = "Are you sure you wish to delete the cloud copy of " + runbook.Name + "?  ";
                         message += "There is no local copy.";
-                        MessageBoxResult result = MessageBox.Show(message, "Confirm Runbook Deletion", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                        if (result == MessageBoxResult.Yes)
+                        System.Windows.Forms.DialogResult result = System.Windows.Forms.MessageBox.Show(message, "Confirm Runbook Deletion", System.Windows.Forms.MessageBoxButtons.YesNo, System.Windows.Forms.MessageBoxIcon.Warning);
+                        if (result == System.Windows.Forms.DialogResult.Yes)
                         {
                             await AutomationRunbookManager.DeleteCloudRunbook(runbook, iseClient.automationManagementClient,
                                 iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
@@ -2280,8 +2289,8 @@ namespace AutomationISE
                     {
                         String message = "Are you sure you wish to delete the local copy of " + runbook.Name + "?  ";
                         message += "There is no cloud copy.";
-                        MessageBoxResult result = MessageBox.Show(message, "Confirm Runbook Deletion", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                        if (result == MessageBoxResult.Yes)
+                        System.Windows.Forms.DialogResult result = System.Windows.Forms.MessageBox.Show(message, "Confirm Runbook Deletion", System.Windows.Forms.MessageBoxButtons.YesNo, System.Windows.Forms.MessageBoxIcon.Warning);
+                        if (result == System.Windows.Forms.DialogResult.Yes)
                         {
                             if (runbook.localFileInfo != null && File.Exists(runbook.localFileInfo.FullName))
                             {
@@ -2320,7 +2329,7 @@ namespace AutomationISE
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Could not delete the selected runbook(s).\r\nError details: " + ex.Message);
+                System.Windows.Forms.MessageBox.Show("Could not delete the selected runbook(s).\r\nError details: " + ex.Message);
             }
             finally
             {
@@ -2345,8 +2354,8 @@ namespace AutomationISE
                     {
                         String message = "Are you sure you wish to delete the cloud copy of " + configuration.Name + "?  ";
                         message += "There is no local copy.";
-                        MessageBoxResult result = MessageBox.Show(message, "Confirm configuration Deletion", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                        if (result == MessageBoxResult.Yes)
+                        System.Windows.Forms.DialogResult result = System.Windows.Forms.MessageBox.Show(message, "Confirm configuration Deletion", System.Windows.Forms.MessageBoxButtons.YesNo, System.Windows.Forms.MessageBoxIcon.Warning);
+                        if (result == System.Windows.Forms.DialogResult.Yes)
                         {
                             await AutomationDSCManager.DeleteCloudConfiguration(configuration, iseClient.automationManagementClient,
                                 iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
@@ -2356,8 +2365,8 @@ namespace AutomationISE
                     {
                         String message = "Are you sure you wish to delete the local copy of " + configuration.Name + "?  ";
                         message += "There is no cloud copy.";
-                        MessageBoxResult result = MessageBox.Show(message, "Confirm Configuration Deletion", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                        if (result == MessageBoxResult.Yes)
+                        System.Windows.Forms.DialogResult result = System.Windows.Forms.MessageBox.Show(message, "Confirm Configuration Deletion", System.Windows.Forms.MessageBoxButtons.YesNo, System.Windows.Forms.MessageBoxIcon.Warning);
+                        if (result == System.Windows.Forms.DialogResult.Yes)
                         {
                             if (configuration.localFileInfo != null && File.Exists(configuration.localFileInfo.FullName))
                             {
@@ -2396,7 +2405,7 @@ namespace AutomationISE
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Could not delete the selected configurations(s).\r\nError details: " + ex.Message);
+                System.Windows.Forms.MessageBox.Show("Could not delete the selected configurations(s).\r\nError details: " + ex.Message);
             }
             finally
             {

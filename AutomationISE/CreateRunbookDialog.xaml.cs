@@ -39,7 +39,7 @@ namespace AutomationISE
             }
             else
             {
-                MessageBox.Show("You must enter a name for the new runbook.");
+                System.Windows.Forms.MessageBox.Show("You must enter a name for the new runbook.");
             }
         }
 
@@ -53,7 +53,7 @@ namespace AutomationISE
             }
             else
             {
-                MessageBox.Show("You must enter a name for the new runbook.");
+                System.Windows.Forms.MessageBox.Show("You must enter a name for the new runbook.");
             }
         }
 

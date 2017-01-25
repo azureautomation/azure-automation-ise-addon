@@ -168,7 +168,19 @@ namespace AutomationISE.Model
                 draftResponse = await automationManagementClient.RunbookDraft.GetAsync(resourceGroupName, account.Name, runbook.Name, cts.Token);
             }
             String runbookFilePath = System.IO.Path.Combine(workspace, runbook.Name + ".ps1");
-            File.WriteAllText(runbookFilePath, runbookContentResponse.Stream.ToString(),Encoding.UTF8);
+            try
+            {
+                File.WriteAllText(runbookFilePath, runbookContentResponse.Stream.ToString(), Encoding.UTF8);
+            }
+            catch (Exception Ex)
+            {
+                // Atempting to write the file while it is being read. Wait a second and retry.
+                if (Ex.HResult == -2147024864)
+                {
+                    Thread.Sleep(1000);
+                    File.WriteAllText(runbookFilePath, runbookContentResponse.Stream.ToString(), Encoding.UTF8);
+                }
+            }
             runbook.AuthoringState = AutomationRunbook.AuthoringStates.InEdit;
             runbook.localFileInfo = new FileInfo(runbookFilePath);
             /* This is the only way I can see to "check out" the runbook using the SDK.
@@ -293,11 +305,35 @@ namespace AutomationISE.Model
 
             if (runbookType.Equals(Constants.RunbookType.Workflow))
             {
-                File.WriteAllText(runbookFilePath, "workflow " + runbookName + "\r\n{\r\n}",Encoding.UTF8);
+                try
+                {
+                    File.WriteAllText(runbookFilePath, "workflow " + runbookName + "\r\n{\r\n}", Encoding.UTF8);
+                }
+                catch (Exception Ex)
+                {
+                    // Atempting to write the file while it is being read. Wait a second and retry.
+                    if (Ex.HResult == -2147024864)
+                    {
+                        Thread.Sleep(1000);
+                        File.WriteAllText(runbookFilePath, "workflow " + runbookName + "\r\n{\r\n}", Encoding.UTF8);
+                    }
+                }
             }
             else if (runbookType.Equals(Constants.RunbookType.PowerShellScript))
             {
-                File.WriteAllText(runbookFilePath, " ",Encoding.UTF8);
+                try
+                {
+                    File.WriteAllText(runbookFilePath, " ", Encoding.UTF8);
+                }
+                catch (Exception Ex)
+                {
+                    // Atempting to write the file while it is being read. Wait a second and retry.
+                    if (Ex.HResult == -2147024864)
+                    {
+                        Thread.Sleep(1000);
+                        File.WriteAllText(runbookFilePath, " ", Encoding.UTF8);
+                    }
+                }
             }
             else
             {

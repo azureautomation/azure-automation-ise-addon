@@ -110,7 +110,19 @@ namespace AutomationISE.Model
                 // Draft not supported yet
             }
             String configFilePath = System.IO.Path.Combine(workspace, configuration.Name + ".ps1");
-            File.WriteAllText(configFilePath, configurationContentResponse.Content.ToString(),Encoding.UTF8);
+            try
+            {
+                File.WriteAllText(configFilePath, configurationContentResponse.Content.ToString(), Encoding.UTF8);
+            }
+            catch (Exception Ex)
+            {
+                // Atempting to write the file while it is being read. Wait a second and retry.
+                if (Ex.HResult == -2147024864)
+                {
+                    Thread.Sleep(1000);
+                    File.WriteAllText(configFilePath, configurationContentResponse.Content.ToString(), Encoding.UTF8);
+                }
+            }
             configuration.localFileInfo = new FileInfo(configFilePath);
 
             if (response.Configuration.Properties.State == "Published")
@@ -243,7 +255,21 @@ namespace AutomationISE.Model
                     writer.Write(Encoding.UTF8.GetPreamble());
                 }
             }
-            File.WriteAllText(configurationFilePath, "Configuration " + configurationName + "\r\n{\r\n}");
+
+            try
+            {
+                File.WriteAllText(configurationFilePath, "Configuration " + configurationName + "\r\n{\r\n}");
+            }
+            catch (Exception Ex)
+            {
+                // Atempting to write the file while it is being read. Wait a second and retry.
+                if (Ex.HResult == -2147024864)
+                {
+                    Thread.Sleep(1000);
+                    File.WriteAllText(configurationFilePath, "Configuration " + configurationName + "\r\n{\r\n}");
+                }
+            }
+
         }
 
         public static void CreateLocalConfigurationData(string configurationName, string workspace)
@@ -260,7 +286,19 @@ namespace AutomationISE.Model
                     writer.Write(Encoding.UTF8.GetPreamble());
                 }
             }
-            File.WriteAllText(configurationFilePath, "@{\r\n\tAllNodes = @(\r\n\t\t@{\r\n\t\t\tNodeName = '*'\r\r\n\t\t}\r\n\t)\r\n}",Encoding.UTF8);
+            try
+            {
+                File.WriteAllText(configurationFilePath, "@{\r\n\tAllNodes = @(\r\n\t\t@{\r\n\t\t\tNodeName = '*'\r\r\n\t\t}\r\n\t)\r\n}", Encoding.UTF8);
+            }
+            catch (Exception Ex)
+            {
+                // Atempting to write the file while it is being read. Wait a second and retry.
+                if (Ex.HResult == -2147024864)
+                {
+                    Thread.Sleep(1000);
+                    File.WriteAllText(configurationFilePath, "@{\r\n\tAllNodes = @(\r\n\t\t@{\r\n\t\t\tNodeName = '*'\r\r\n\t\t}\r\n\t)\r\n}", Encoding.UTF8);
+                }
+            }
         }
 
         public static void DeleteLocalConfiguration(AutomationDSC configuration)

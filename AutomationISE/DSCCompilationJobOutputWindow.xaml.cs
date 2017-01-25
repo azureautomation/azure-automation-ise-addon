@@ -213,7 +213,7 @@ namespace AutomationISE
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message, "Refresh Failure", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show(exception.Message, "Refresh Failure", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                 refreshTimer.Enabled = true;
             }
         }
@@ -267,7 +267,7 @@ namespace AutomationISE
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message, "Compilation Job Start Failure", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.Forms.MessageBox.Show(exception.Message, "Compilation Job Start Failure", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
             finally
             {
