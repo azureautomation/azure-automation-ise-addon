@@ -45,6 +45,10 @@ namespace AutomationISE.Model
         public const String assetConnection = "Connection";
         public const String assetModule = "Module";
 
+        public const String moduleContainer = "modules";
+        public static readonly String[] excludeModules = new String[] { "Microsoft.PowerShell.Core", "Microsoft.PowerShell.Diagnostics", "Microsoft.PowerShell.Management", "Microsoft.PowerShell.Security", "Microsoft.PowerShell.Utility", "Orchestrator.AssetManagement.Cmdlets", "Microsoft.WSMan.Management" };
+
+
         public const String feedbackURI = "http://iseautomation.azurewebsites.net/FeedbackForm.aspx";
         public const String helpURI = "http://iseautomation.azurewebsites.net/Help.html";
 

@@ -36,6 +36,8 @@ using System.Windows.Media.Animation;
 using System.Text;
 using System.Drawing;
 using System.Net;
+using System.Management.Automation;
+using Microsoft.Azure.Management.Storage.Models;
 
 namespace AutomationISE
 {
@@ -50,17 +52,21 @@ namespace AutomationISE
         private ObservableCollection<AutomationRunbook> runbookListViewModel;
         private ObservableCollection<AutomationDSC> DSCListViewModel;
         private ObservableCollection<AutomationAsset> assetListViewModel;
+        private ObservableCollection<AutomationModule> moduleListViewModel;
         private ISet<ConnectionType> connectionTypes;
         private ISet<AutomationAsset> assets;
         private ListSortDirection runbookCurrSortDir;
         private string runbookCurrSortProperty;
         private ListSortDirection configurationCurrSortDir;
         private string configurationCurrSortProperty;
+        private ListSortDirection moduleCurrSortDir;
+        private string moduleCurrSortProperty;
         private ListSortDirection assetCurrSortDir;
         private string assetCurrSortProperty;
         private int numBackgroundTasks = 0;
         private Object backgroundWorkLock;
         private Object refreshScriptsLock;
+        private Object refreshModulesLock;
         private Storyboard progressSpinnerStoryboard;
         private Storyboard progressSpinnerStoryboardReverse;
         private Storyboard miniProgressSpinnerStoryboard;
@@ -72,6 +78,8 @@ namespace AutomationISE
         string lastUpdated = "";
         private string addOnVersion = null;
         Dictionary<string, string> localScriptsParsed = new Dictionary<string, string>();
+        Dictionary<string, PSObject> localModulesParsed = new Dictionary<string, PSObject>();
+        private bool collectUsage = true;
 
 
         public AutomationISEControl()
@@ -83,6 +91,7 @@ namespace AutomationISE
                 /* Spinner animation stuff */
                 backgroundWorkLock = new Object();
                 refreshScriptsLock = new Object();
+                refreshModulesLock = new Object();
                 progressSpinnerStoryboard = (Storyboard)FindResource("bigGearRotationStoryboard");
                 progressSpinnerStoryboardReverse = (Storyboard)FindResource("bigGearRotationStoryboardReverse");
                 miniProgressSpinnerStoryboard = (Storyboard)FindResource("smallGearRotationStoryboard");
@@ -122,12 +131,15 @@ namespace AutomationISE
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCredential);
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetVariable);
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCertificate);
+                assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetModule);
+
 
                 setCreationButtonStatesTo(false);
                 setAllAssetButtonStatesTo(false);
                 assetsComboBox.IsEnabled = false;
                 setAllRunbookButtonStatesTo(false);
                 setAllConfigurationButtonStatesTo(false);
+                ButtonRefreshModule.IsEnabled = false;
 
                 // Generate self-signed certificate for encrypting local assets in the current user store Cert:\CurrentUser\My\
                 var certObj = new AutomationSelfSignedCertificate();
@@ -226,6 +238,12 @@ namespace AutomationISE
             ButtonUploadConfiguration.IsEnabled = enabled;
             ButtonCompileConfiguration.IsEnabled = enabled;
         }
+        public void setAllModuleButtonStatesTo(bool enabled)
+        {
+            ButtonDeleteModule.IsEnabled = enabled;
+            ButtonUploadModule.IsEnabled = enabled;
+        }
+
 
         public void setAllAssetButtonStatesTo(bool enabled)
         {
@@ -514,6 +532,10 @@ namespace AutomationISE
                 {
                     mergeAssetListWith(getAssetsOfType("AutomationConnection"));
                 }
+                else if (selectedAssetType == AutomationISE.Model.Constants.assetModule)
+                {
+                    mergeAssetListWith(getAssetsOfType("AutomationModule"));
+                }
                 else if (selectedAssetType == AutomationISE.Model.Constants.assetCertificate)
                 {
                     mergeAssetListWith(getAssetsOfType("AutomationCertificate"));
@@ -528,7 +550,6 @@ namespace AutomationISE
                 if (exception.HResult == tokenExpiredResult)
                 {
                     refreshAccountDataTimer.Stop();
-                  //  MessageBox.Show("Your session has expired. Please sign in again.", "Session Expired", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                 }
                 if (exception.HResult == -2146233029)
                 {
@@ -675,6 +696,8 @@ namespace AutomationISE
             try
             {
                 AutomationAccount account = (AutomationAccount)accountsComboBox.SelectedValue;
+                accountsComboBox.IsEnabled = false;
+                ButtonRefreshModule.IsEnabled = false;
                 iseClient.currAccount = account;
                 refreshAccountDataTimer.Stop();
                 if (account != null)
@@ -683,6 +706,15 @@ namespace AutomationISE
                     UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
                     if (iseClient.AccountWorkspaceExists())
                         accountPathTextBox.Text = iseClient.currWorkspace;
+                    // Refresh local modules
+
+                    //Set up module view and start looking for modules
+                    if (runbookListViewModel != null) runbookListViewModel.Clear();
+                    ModuleListView.ItemsSource = null;
+                    if (moduleListViewModel != null) moduleListViewModel.Clear();
+                    RefreshModulesTask();
+                    moduleListViewModel = new ObservableCollection<AutomationModule>();
+
                     /* Update Runbooks */
                     beginBackgroundWork("Getting account data");
                     beginBackgroundWork("Getting runbook data for " + account.Name);
@@ -738,6 +770,14 @@ namespace AutomationISE
                     DSCview.Filter = FilterConfiguration;
                     DSCListView.Items.SortDescriptions.Clear();
                     DSCListView.Items.SortDescriptions.Add(new SortDescription("LastModifiedLocal", ListSortDirection.Descending));
+         
+                    ModuleListView.ItemsSource = moduleListViewModel;
+                    RefreshModulesTask();
+
+                    CollectionView Moduleview = (CollectionView)CollectionViewSource.GetDefaultView(ModuleListView.ItemsSource);
+                    Moduleview.Filter = FilterModule;
+                    ModuleListView.Items.SortDescriptions.Clear();
+                    ModuleListView.Items.SortDescriptions.Add(new SortDescription("LastModifiedCloud", ListSortDirection.Descending));
 
                     assetsListView.ItemsSource = assetListViewModel;
                     // Set credentials assets to be selected
@@ -784,10 +824,13 @@ namespace AutomationISE
                     fileWatcher.Created += new FileSystemEventHandler(FileSystemChanged);
                     fileWatcher.Deleted += new FileSystemEventHandler(FileSystemChanged);
                     fileWatcher.EnableRaisingEvents = true;
+                    accountsComboBox.IsEnabled = true;
+                    ButtonRefreshModule.IsEnabled = true;
                 }
             }
             catch (Exception exception)
             {
+                accountsComboBox.IsEnabled = true;
                 endBackgroundWork("Error getting account data");
                 UpdateStatusBox(configurationStatusTextBox, exception.StackTrace);
                 System.Windows.Forms.MessageBox.Show(exception.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
@@ -806,7 +849,6 @@ namespace AutomationISE
                     lastUpdated = lastWriteTime;
                     Task t = new Task(delegate { refreshLocalScripts(e.FullPath); });
                     t.Start();
-            //        t.Wait();
                     foreach (AutomationRunbook runbook in runbookListViewModel)
                     {
                         if (runbook.Name.Equals(Path.GetFileNameWithoutExtension(e.Name)))
@@ -889,7 +931,7 @@ namespace AutomationISE
             System.Windows.Forms.Application.DoEvents();
         }
 
-        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             TabItem selectedTab = (TabItem)((TabControl)sender).SelectedItem;
             switch (selectedTab.Name)
@@ -902,6 +944,8 @@ namespace AutomationISE
                     break;
                 case "settingsTab":
                     break;
+                case "ModuleTab":
+                        break;
                 case "feedbackTab":
                     break;
                 case "helpTab":
@@ -1241,6 +1285,36 @@ namespace AutomationISE
             }
         }
 
+        private void SetButtonStatesForSelectedModule()
+        {
+            AutomationModule selectedModule = (AutomationModule)ModuleListView.SelectedItem;
+            if (selectedModule == null)
+            {
+                setAllModuleButtonStatesTo(false);
+                return;
+            }
+            if (selectedModule.SyncStatus == AutomationModule.Constants.SyncStatus.CloudOnly)
+            {
+                ButtonDeleteModule.IsEnabled = true;
+                ButtonUploadModule.IsEnabled = false;
+            }
+            else if (selectedModule.SyncStatus == AutomationModule.Constants.SyncStatus.LocalOnly)
+            {
+                ButtonDeleteModule.IsEnabled = false;
+                ButtonUploadModule.IsEnabled = true;
+            }
+            else
+            {
+                setAllModuleButtonStatesTo(true);
+            }
+
+            if (Properties.Settings.Default.StorageAccount == "na")
+            {
+                ButtonUploadModule.IsEnabled = false;
+            }
+
+        }
+
         private void RunbooksListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             SetButtonStatesForSelectedRunbook();
@@ -1271,6 +1345,16 @@ namespace AutomationISE
 
             }
             SetButtonStatesForSelectedConfiguration();
+        }
+
+        private void ModuleListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            AutomationModule module = (AutomationModule)ModuleListView.SelectedItem;
+
+            if ((ModuleListView.SelectedItem != null) && (module != null))
+            {
+                SetButtonStatesForSelectedModule();
+            }
         }
 
         private void ButtonOpenRunbook_Click(object sender, RoutedEventArgs e)
@@ -1342,6 +1426,19 @@ namespace AutomationISE
             catch (Exception ex)
             {
                 System.Windows.Forms.MessageBox.Show("The configuration could not be opened.\r\nError details: " + ex.Message, "Error");
+            }
+        }
+
+        private void ButtonOpenModule_Click(object sender, RoutedEventArgs e)
+        {
+
+            if (ModuleListView.SelectedItem != null)
+            {
+                var module = (AutomationModule)ModuleListView.SelectedItem;
+                var message = "Module name: " + module.Name + "\nLocal version: " + module.localVersion + "\nCloud version: " + module.cloudVersion;
+                message = message + "\nLocal path: " + module.localModulePath;
+                System.Windows.Forms.MessageBox.Show(message, "Information", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
+                ButtonUploadModule.IsEnabled = true;
             }
         }
 
@@ -1418,11 +1515,25 @@ namespace AutomationISE
             DSCListViewModel.Add(configuration);
         }
 
+        private void addLocalModuleToView(String localFile)
+        {
+
+            AutomationModule module = new AutomationModule(localFile);
+            moduleListViewModel.Add(module);
+        }
+
         private void removeLocalConfigurationToView(String localFile)
         {
 
             AutomationDSC configuration = new AutomationDSC(new System.IO.FileInfo(localFile));
             DSCListViewModel.Remove(configuration);
+        }
+
+        private void removeLocalModuleToView(String localFile)
+        {
+
+            AutomationModule module = new AutomationModule(localFile);
+            moduleListViewModel.Remove(module);
         }
 
         private async Task refreshRunbooks()
@@ -1536,6 +1647,64 @@ namespace AutomationISE
                 }
         }
 
+
+        private async Task refreshLocalModules(string localFile = null)
+        {
+            System.Management.Automation.Language.Token[] AST;
+            System.Management.Automation.Language.ParseError[] ASTError = null;
+            Dictionary<string, PSObject> copyModules = new Dictionary<string, PSObject>();
+
+            try
+            {
+                if (Directory.Exists(iseClient.currWorkspace))
+                {
+                    List<string> localModules = new List<string>();
+                    PowerShell ps = PowerShell.Create();
+                    ps.AddScript("Get-Module -ListAvailable");
+
+                    var psModulePath = Environment.GetEnvironmentVariable("psmodulepath");
+                    var psPaths = psModulePath.Split(';');
+                    if (localFile == null)
+                    {
+                        foreach (PSObject result in ps.Invoke())
+                        {
+                            var a = result;
+
+                            var moduleName = result.Properties["Name"].Value.ToString();
+                            if (!(copyModules.ContainsKey(moduleName))) copyModules.Add(moduleName, result);
+                        }
+                    }
+                    // Lock access to localModulesParsed dictionary so it is not overwritten when accessed by other threads.
+                    lock (refreshModulesLock)
+                    {
+                        if (localFile != null && localModulesParsed != null)
+                        {
+                            // If the file has been deleted, remove it from the dictionary
+                            if (!(Directory.Exists(localFile)))
+                            {
+                                localModulesParsed.Remove(localFile);
+                            }
+                            else
+                            {
+                                // If the file already exists, skip, else add the new file to the dictionary
+                                if (localModulesParsed.ContainsKey(copyModules.Keys.FirstOrDefault()) == false)
+                                {
+                                    localModulesParsed.Add(copyModules.Keys.FirstOrDefault(), copyModules.Values.FirstOrDefault());
+                                }
+                            }
+                        }
+                        else localModulesParsed = new Dictionary<string, PSObject>(copyModules);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Ignore the case where the refresh is happening when the user is saving the file ("The process cannot access the file")
+                if (ex.HResult.ToString() != "-2147024864")
+                    MessageBox.Show("Error reading local files.\r\nDetails: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private async Task<Dictionary<string, string>> getLocalScripts()
         {
             Dictionary<string, string> copyOfScripts = null;
@@ -1547,6 +1716,19 @@ namespace AutomationISE
             return copyOfScripts;
 
         }
+
+        private async Task<Dictionary<string, PSObject>> getLocalModules()
+        {
+            Dictionary<string, PSObject> copyOfModules = null;
+            // Lock access to localScriptsParsed dictionary so it is not overwritten when accessed by other threads.
+            lock (refreshModulesLock)
+            {
+                if (localModulesParsed != null) copyOfModules = new Dictionary<string, PSObject>(localModulesParsed);
+            }
+            return copyOfModules;
+
+        }
+
         private async Task refreshConfigurations()
         {
             var localScripts = await getLocalScripts();
@@ -2110,6 +2292,22 @@ namespace AutomationISE
                 DSCListView.Items.SortDescriptions.Add(new SortDescription("Name", ListSortDirection.Ascending));
         }
 
+        private void ModuleListColumnHeader_Click(object sender, RoutedEventArgs e)
+        {
+            GridViewColumnHeader column = (GridViewColumnHeader)sender;
+            string sortProperty = column.Tag.ToString();
+            ModuleListView.Items.SortDescriptions.Clear();
+            if (sortProperty != moduleCurrSortProperty || moduleCurrSortDir == ListSortDirection.Descending)
+                moduleCurrSortDir = ListSortDirection.Ascending;
+            else
+                moduleCurrSortDir = ListSortDirection.Descending;
+            moduleCurrSortProperty = sortProperty;
+            SortDescription newDescription = new SortDescription(moduleCurrSortProperty, moduleCurrSortDir);
+            ModuleListView.Items.SortDescriptions.Add(newDescription);
+            if (moduleCurrSortProperty != "Name")
+                ModuleListView.Items.SortDescriptions.Add(new SortDescription("Name", ListSortDirection.Ascending));
+        }
+
         /*
          * Sorting logic: same as for runbooks.
          */
@@ -2440,6 +2638,19 @@ namespace AutomationISE
             catch { }
         }
 
+        private void ModuleListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            try
+            {
+                AutomationModule module = ((FrameworkElement)e.OriginalSource).DataContext as AutomationModule;
+                if (module != null)
+                {
+                    ButtonOpenModule_Click(null, null);
+                }
+            }
+            catch { }
+        }
+
         private void assetsListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             try
@@ -2473,6 +2684,16 @@ namespace AutomationISE
             catch { }
         }
 
+        private void ModuleFilter_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            try
+            {
+                if (ModuleListView.ItemsSource != null)
+                    CollectionViewSource.GetDefaultView(ModuleListView.ItemsSource).Refresh();
+            }
+            catch { }
+        }
+
         private bool doBasicRunbookFiltering(object item)
         {
             bool authoringStateMatch = ((item as AutomationRunbook).AuthoringState.IndexOf(RunbookFilterTextBox.Text, StringComparison.OrdinalIgnoreCase) >= 0);
@@ -2487,6 +2708,13 @@ namespace AutomationISE
             bool syncStatusMatch = ((item as AutomationDSC).SyncStatus.IndexOf(ConfigurationFilterTextBox.Text, StringComparison.OrdinalIgnoreCase) >= 0);
             bool nameMatch = ((item as AutomationDSC).Name.IndexOf(ConfigurationFilterTextBox.Text, StringComparison.OrdinalIgnoreCase) >= 0);
             return (authoringStateMatch || syncStatusMatch || nameMatch);
+        }
+
+        private bool doBasicModuleFiltering(object item)
+        {
+            bool syncStatusMatch = ((item as AutomationModule).SyncStatus.IndexOf(ModuleFilterTextBox.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+            bool nameMatch = ((item as AutomationModule).Name.IndexOf(ModuleFilterTextBox.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+            return (syncStatusMatch || nameMatch);
         }
 
         private bool doAdvancedRunbookFiltering(object item)
@@ -2580,6 +2808,48 @@ namespace AutomationISE
             return (authoringStateMatch && syncStatusMatch && nameMatch);
         }
 
+        private bool doAdvancedModuleFiltering(object item)
+        {
+            string[] queries = ModuleFilterTextBox.Text.Split(null);
+            string nameQuery = null;
+            string statusQuery = null;
+            string syncStatusQuery = null;
+            string nameQueryPrefix = "name:";
+            string statusQueryPrefix = "status:";
+            string syncStatusQueryPrefix = "syncStatus:";
+            foreach (string query in queries)
+            {
+                if (String.IsNullOrEmpty(query)) continue;
+                int nameQueryPrefixStart = query.IndexOf(nameQueryPrefix, StringComparison.OrdinalIgnoreCase);
+                int statusQueryPrefixStart = query.IndexOf(statusQueryPrefix, StringComparison.OrdinalIgnoreCase);
+                int syncStatusQueryPrefixStart = query.IndexOf(syncStatusQueryPrefix, StringComparison.OrdinalIgnoreCase);
+                if (nameQueryPrefixStart >= 0)
+                {
+                    nameQuery = query.Substring(nameQueryPrefixStart + nameQueryPrefix.Length);
+                }
+                else if (syncStatusQueryPrefixStart >= 0)
+                {
+                    syncStatusQuery = query.Substring(syncStatusQueryPrefixStart + syncStatusQueryPrefix.Length);
+                }
+                else if (statusQueryPrefixStart >= 0)
+                {
+                    statusQuery = query.Substring(statusQueryPrefixStart + statusQueryPrefix.Length);
+                }
+                else if (nameQuery == null)
+                {
+                    nameQuery = query;
+                }
+            }
+
+            bool syncStatusMatch = String.IsNullOrEmpty(syncStatusQuery) ? true : false;
+            bool nameMatch = String.IsNullOrEmpty(nameQuery) ? true : false;
+            if (!String.IsNullOrEmpty(syncStatusQuery) && syncStatusQuery.Length > 1)
+                syncStatusMatch = ((item as AutomationModule).SyncStatus.IndexOf(syncStatusQuery, StringComparison.OrdinalIgnoreCase) >= 0);
+            if (!String.IsNullOrEmpty(nameQuery) && nameQuery.Length > 1)
+                nameMatch = ((item as AutomationModule).Name.IndexOf(nameQuery, StringComparison.OrdinalIgnoreCase) >= 0);
+
+            return (syncStatusMatch && nameMatch);
+        }
 
         private bool FilterRunbook(object item)
         {
@@ -2599,6 +2869,18 @@ namespace AutomationISE
                 return doAdvancedConfigurationFiltering(item);
             else
                 return doBasicConfigurationFiltering(item);
+        }
+
+        private bool FilterModule(object item)
+        {
+            if (String.IsNullOrEmpty(ModuleFilterTextBox.Text) || ModuleFilterTextBox.Text.Length < 2 || ModuleFilterTextBox.Text == "Search")
+                return true;
+            if (ModuleFilterTextBox.Text.IndexOf(':') >= 0)
+                return doAdvancedModuleFiltering(item);
+            else
+            {
+                return doBasicModuleFiltering(item);
+            }
         }
 
         private void RunbookFilterFocus(object sender, RoutedEventArgs e)
@@ -2623,6 +2905,177 @@ namespace AutomationISE
 
         }
 
+        private void ModuleFilterFocus(object sender, RoutedEventArgs e)
+        {
+            if (ModuleFilterTextBox.Text == "Search")
+            {
+                ModuleFilterTextBox.FontWeight = FontWeights.Normal;
+                ModuleFilterTextBox.FontStyle = FontStyles.Normal;
+                ModuleFilterTextBox.Text = "";
+            }
+        }
+
+
+        private async void ButtonDeleteModule_Click(object sender, RoutedEventArgs e)
+        {
+            var moduleList = new List<AutomationModule>();
+            foreach (Object obj in ModuleListView.SelectedItems)
+            {
+                moduleList.Add((AutomationModule)obj);
+            }
+            try
+            {
+                beginBackgroundWork("Deleting selected modules...");
+                foreach (AutomationModule module in moduleList)
+                {
+                    if (module.SyncStatus == AutomationDSC.Constants.SyncStatus.CloudOnly)
+                    {
+                        String message = "Are you sure you wish to delete the cloud copy of " + module.Name + "?  ";
+                        message += "There is no local copy.";
+                        MessageBoxResult result = MessageBox.Show(message, "Confirm module deletion", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            await AutomationModuleManager.DeleteCloudModule(module, iseClient.automationManagementClient,
+                                iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                            ButtonRefreshModule_Click(true, null);
+                        }
+                    }
+                    else if (module.SyncStatus != AutomationModule.Constants.SyncStatus.LocalOnly)
+                    {
+                        String message = "Are you sure you wish to delete the cloud copy of " + module.Name + "?  ";
+                        message += "Local copy will not be deleted.";
+                        MessageBoxResult result = MessageBox.Show(message, "Confirm module Deletion", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            await AutomationModuleManager.DeleteCloudModule(module, iseClient.automationManagementClient,
+                                iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name);
+                            ButtonRefreshModule_Click(true, null);
+                       }
+                    }
+                }
+           }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Could not delete the selected module(s).\r\nError details: " + ex.Message);
+            }
+            finally
+            {
+                endBackgroundWork();
+            }
+        }
+
+        private async void ButtonUploadModule_Click(object sender, RoutedEventArgs e)
+        {
+
+            try
+            {
+                beginBackgroundWork();
+                int count = 0;
+                string name = "";
+                var moduleList = new List<AutomationModule>();
+                foreach (Object obj in ModuleListView.SelectedItems)
+                {
+                    moduleList.Add((AutomationModule)obj);
+                }
+
+                foreach (Object obj in moduleList)
+                {
+                    AutomationModule module = (AutomationModule)obj;
+                    if (module.SyncStatus == AutomationModule.Constants.SyncStatus.InSync)
+                        continue;
+                    try
+                    {
+                        var azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(iseClient.currSubscription.Authority);
+                        beginBackgroundWork("Uploading module " + module.Name + "...");
+
+                        // Get storage account information stored.
+                        var storageAccount = Properties.Settings.Default.StorageAccount;
+                        var storageResourceGroup = Properties.Settings.Default.StorageResourceGroup;
+                        var storageSubID = Properties.Settings.Default.StorageSubID;
+                        await AutomationModuleManager.UploadModule(azureARMAuthResult, module, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount, storageResourceGroup, storageSubID, storageAccount);
+                        endBackgroundWork("Uploaded " + module.Name + ".");
+                        count++;
+                        name = module.Name;
+                     }
+                    catch (OperationCanceledException)
+                    {
+                        endBackgroundWork("Uploading " + module.Name + " timed out.");
+                    }
+                    catch (Exception ex)
+                    {
+                        endBackgroundWork("Error uploading module " + module.Name);
+                        System.Windows.Forms.MessageBox.Show("The module " + module.Name + " could not be uploaded.\r\nError details: " + ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                    }
+                }
+
+                if (count == 1) endBackgroundWork("Uploaded " + name + ".");
+                else if (count > 1) endBackgroundWork("Uploaded " + count + " modules.");
+                else endBackgroundWork();
+                ButtonRefreshModule_Click(true, null);
+            }
+            catch (Exception ex)
+            {
+                endBackgroundWork("Error uploading modules.");
+                System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+            }
+            finally
+            {
+                SetButtonStatesForSelectedModule();
+            }
+        }
+
+        private async void ButtonRefreshModule_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                beginBackgroundWork();
+                ButtonRefreshModule.IsEnabled = false;
+                beginBackgroundWork("Refreshing modules");
+                RefreshModulesTask();
+                var localModules = await getLocalModules();
+                // If we don't have any local modules yet, wait 20 seconds to make sure we get them.
+                if (localModules.Count < 1)
+                {
+                    await Task.Delay(20000);
+                    localModules = await getLocalModules();
+                }
+                ModuleListView.ItemsSource = await AutomationModuleManager.GetAllModuleMetadata(iseClient.automationManagementClient,
+                                          iseClient.currWorkspace, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount.Name, localModules);
+                CollectionView Moduleview = (CollectionView)CollectionViewSource.GetDefaultView(ModuleListView.ItemsSource);
+                Moduleview.Filter = FilterModule;
+                ModuleListView.Items.SortDescriptions.Clear();
+                ModuleListView.Items.SortDescriptions.Add(new SortDescription("LastModifiedCloud", ListSortDirection.Descending));
+                ButtonRefreshModule.IsEnabled = true;
+                endBackgroundWork("Modules refreshed");
+                endBackgroundWork();
+            }
+            catch (Exception Ex)
+            {
+                endBackgroundWork("Error refreshing modules");
+                endBackgroundWork();
+                ButtonRefreshModule.IsEnabled = true;
+            }
+        }
+
+        private async void RefreshModulesTask()
+        {
+
+            Task t = new Task(delegate { RefreshModules(); });
+            t.Start();
+        }
+
+        private async Task RefreshModules()
+        {
+            try
+            {
+                await refreshLocalModules();
+            }
+            catch (Exception Ex)
+            {
+                var a = Ex;
+            }
+        }
+
         private void RunbookFilterLostFocus(object sender, RoutedEventArgs e)
         {
             if (RunbookFilterTextBox.Text == "")
@@ -2641,6 +3094,17 @@ namespace AutomationISE
                 ConfigurationFilterTextBox.FontWeight = FontWeights.Light;
                 ConfigurationFilterTextBox.FontStyle = FontStyles.Italic;
                 ConfigurationFilterTextBox.Text = "Search";
+            }
+
+        }
+
+        private void ModuleFilterLostFocus(object sender, RoutedEventArgs e)
+        {
+            if (ModuleFilterTextBox.Text == "")
+            {
+                ModuleFilterTextBox.FontWeight = FontWeights.Light;
+                ModuleFilterTextBox.FontStyle = FontStyles.Italic;
+                ModuleFilterTextBox.Text = "Search";
             }
 
         }
@@ -2669,6 +3133,65 @@ namespace AutomationISE
         {
                 Properties.Settings.Default.RunAs = false;
                 Properties.Settings.Default.Save();
+        }
+
+        private async void ButtonStorageModule_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var storageDialog = new StorageAccountForModulesDialog();
+                storageDialog.subscriptionComboBox.ItemsSource = subscriptionComboBox.Items;
+                storageDialog.subscriptionComboBox.DisplayMemberPath = "Name";
+                AutomationISEClient.SubscriptionObject existingSubscription = new AutomationISEClient.SubscriptionObject();
+
+                // Set existing subscription if one has been saved
+                foreach (AutomationISEClient.SubscriptionObject item in subscriptionComboBox.Items)
+                {
+                    if (item.SubscriptionId == Properties.Settings.Default.StorageSubID)
+                    {
+                        existingSubscription = item;
+                        break;
+                    }
+                }
+
+                // Set existing storage account if one has been saved
+                if (!(String.IsNullOrEmpty(existingSubscription.SubscriptionId)))
+                {
+                    storageDialog.subscriptionComboBox.SelectedItem = existingSubscription;
+                    storageDialog.resourceGroupcomboBox.SelectedItem = Properties.Settings.Default.StorageResourceGroup;
+                    foreach (StorageAccount item in storageDialog.storageAccountcomboBox.Items)
+                    {
+                        if (item.Name == Properties.Settings.Default.StorageAccount)
+                        {
+                            storageDialog.storageAccountcomboBox.SelectedItem = item;
+                            break;
+                        }
+                    }
+                }
+
+                storageDialog.Owner = (System.Windows.Window) this.Parent;
+                var result = storageDialog.ShowDialog();
+                if (result.Value && storageDialog.storageAccountName != null && storageDialog.storageResourceGroupName != null && storageDialog.storageSubID != null)
+                {
+                    if (storageDialog.createNewStorageAccount)
+                    {
+                        beginBackgroundWork("Creating storage account " + storageDialog.storageAccountName + "...");
+                        await AutomationModuleManager.CreateStorageAccount(storageDialog.authority, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount, storageDialog.storageResourceGroupName, storageDialog.storageSubID, storageDialog.storageAccountName,storageDialog.region);
+                        endBackgroundWork();
+                    }
+                    // Save storage account information in user.config 
+                    Properties.Settings.Default.StorageAccount = storageDialog.storageAccountName;
+                    Properties.Settings.Default.StorageResourceGroup = storageDialog.storageResourceGroupName;
+                    Properties.Settings.Default.StorageSubID = storageDialog.storageSubID;
+                    Properties.Settings.Default.Save();
+                    ButtonUploadModule.IsEnabled = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                endBackgroundWork();
+                System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+            }
         }
     }
 }

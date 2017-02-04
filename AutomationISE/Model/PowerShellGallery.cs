@@ -44,7 +44,7 @@ namespace AutomationISE.Model
         public static bool CheckGalleryVersion()
         {
             String localVersion = GetLocalVersion();
-            String galleryVersion = GetGalleryVersion();
+            String galleryVersion = GetGalleryVersionISEToolkit();
 
             if (String.Compare(galleryVersion, localVersion, StringComparison.CurrentCulture) > 0)
             {
@@ -79,12 +79,114 @@ namespace AutomationISE.Model
             }
             return version;
         }
-        
+
+
+        public static String GetGalleryModuleUri(String moduleName, String Version)
+        {
+            var address = new Uri("https://www.powershellgallery.com/api/v2/package/" + moduleName + "/" + Version);
+
+            try
+            {
+                var request = WebRequest.Create(address) as HttpWebRequest;
+                // Get response  
+                using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
+                {
+                    return response.ResponseUri.AbsoluteUri;
+                }
+            }
+            catch (Exception Ex)
+            {
+                return null;
+            }
+        }
+        public class GalleryInfo
+        {
+            public GalleryInfo() { }
+            public String moduleName;
+            public String moduleVersion;
+            public String URI;
+        }
+
+        /// <summary>
+        /// Gets the module depdendencies from the PowerShell Gallery
+        /// </summary>
+        /// <returns></returns>
+        public static List<GalleryInfo> GetGalleryModuleDependencies(String moduleName, String Version)
+        {
+
+            List<GalleryInfo> dependencyList = new List<GalleryInfo>();
+            Uri address = new Uri("https://www.powershellgallery.com/api/v2/FindPackagesById()?id='" + moduleName + "'");
+
+            HttpWebRequest request = WebRequest.Create(address) as HttpWebRequest;
+            String requestContent = null;
+
+            // Get response  
+            using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
+            {
+                StreamReader reader = new StreamReader(response.GetResponseStream());
+                requestContent = reader.ReadToEnd();
+            }
+
+            // Load up the XML response
+            XmlDocument doc = new XmlDocument();
+            doc.XmlResolver = null;
+            XmlReaderSettings settings = new XmlReaderSettings();
+            settings.XmlResolver = null;
+            using (XmlReader reader = XmlReader.Create(new StringReader(requestContent), settings))
+            {
+                doc.Load(reader);
+            }
+            // Add the namespaces for the gallery xml content
+            XmlNamespaceManager nsmgr = new XmlNamespaceManager(doc.NameTable);
+            nsmgr.AddNamespace("ps", "http://www.w3.org/2005/Atom");
+            nsmgr.AddNamespace("d", "http://schemas.microsoft.com/ado/2007/08/dataservices");            nsmgr.AddNamespace("m", "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata");
+
+            // Find the version information
+            XmlNode root = doc.DocumentElement;
+            var props = root.SelectNodes("//m:properties/d:Version", nsmgr);
+
+            // Find the dependencies
+            foreach (XmlNode node in props)
+            {
+                if (String.Compare(node.FirstChild.Value, Version, StringComparison.CurrentCulture) == 0)
+                {
+                    // Get the dependency list
+                    var dependencies = node.ParentNode.ChildNodes[4].InnerText;
+                    if (!(String.IsNullOrEmpty(dependencies)))
+                        {
+                        var splitDependencies = dependencies.Split('|');
+                        foreach (var dependent in splitDependencies)
+                        {
+                            var Parts = dependent.Split(':');
+                            var DependentmoduleName = Parts[0];
+                            var DependencyVersion = Parts[1].Replace("[", "").Replace("]", "");
+                     //       DependencyVersion = DependencyVersion.Replace("]", "");
+                            address = new Uri("https://www.powershellgallery.com/api/v2/package/" + DependentmoduleName + "/" + DependencyVersion);
+
+                            request = WebRequest.Create(address) as HttpWebRequest;
+                            // Get response  
+                            using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
+                            {
+                                var dependency = response.ResponseUri.AbsoluteUri;
+                                // Set gallery properties and add to dependency list
+                                var galleryInfo = new GalleryInfo();
+                                galleryInfo.URI = dependency;
+                                galleryInfo.moduleVersion = DependencyVersion;
+                                galleryInfo.moduleName = DependentmoduleName;
+                                dependencyList.Add(galleryInfo);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return dependencyList;
+        }
         /// <summary>
         /// Gets the version of the authoring toolkit from the PowerShell Gallery
         /// </summary>
         /// <returns></returns>
-        public static string GetGalleryVersion()
+        public static string GetGalleryVersionISEToolkit()
         {
             Uri address = new Uri("https://www.powershellgallery.com/api/v2/FindPackagesById()?id='AzureAutomationAuthoringToolkit'");
  

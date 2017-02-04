@@ -23,5 +23,14 @@
     <Setting Name="RunAs" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="StorageSubID" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="StorageResourceGroup" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="StorageAccount" Type="System.String" Scope="User">
+      <Value Profile="(Default)">na</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

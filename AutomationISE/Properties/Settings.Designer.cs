@@ -106,5 +106,41 @@ namespace AutomationISE.Properties {
                 this["RunAs"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string StorageSubID {
+            get {
+                return ((string)(this["StorageSubID"]));
+            }
+            set {
+                this["StorageSubID"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string StorageResourceGroup {
+            get {
+                return ((string)(this["StorageResourceGroup"]));
+            }
+            set {
+                this["StorageResourceGroup"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("na")]
+        public string StorageAccount {
+            get {
+                return ((string)(this["StorageAccount"]));
+            }
+            set {
+                this["StorageAccount"] = value;
+            }
+        }
     }
 }
