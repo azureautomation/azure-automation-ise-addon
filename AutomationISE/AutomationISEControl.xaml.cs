@@ -131,7 +131,6 @@ namespace AutomationISE
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCredential);
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetVariable);
                 assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetCertificate);
-                assetsComboBox.Items.Add(AutomationISE.Model.Constants.assetModule);
 
 
                 setCreationButtonStatesTo(false);
@@ -531,10 +530,6 @@ namespace AutomationISE
                 else if (selectedAssetType == AutomationISE.Model.Constants.assetConnection)
                 {
                     mergeAssetListWith(getAssetsOfType("AutomationConnection"));
-                }
-                else if (selectedAssetType == AutomationISE.Model.Constants.assetModule)
-                {
-                    mergeAssetListWith(getAssetsOfType("AutomationModule"));
                 }
                 else if (selectedAssetType == AutomationISE.Model.Constants.assetCertificate)
                 {
@@ -2977,7 +2972,6 @@ namespace AutomationISE
                 {
                     moduleList.Add((AutomationModule)obj);
                 }
-
                 foreach (Object obj in moduleList)
                 {
                     AutomationModule module = (AutomationModule)obj;

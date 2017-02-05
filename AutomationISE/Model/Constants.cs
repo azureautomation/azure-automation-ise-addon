@@ -43,7 +43,6 @@ namespace AutomationISE.Model
         public const String assetVariable = "Variable";
         public const String assetCertificate = "Certificate";
         public const String assetConnection = "Connection";
-        public const String assetModule = "Module";
 
         public const String moduleContainer = "modules";
         public static readonly String[] excludeModules = new String[] { "Microsoft.PowerShell.Core", "Microsoft.PowerShell.Diagnostics", "Microsoft.PowerShell.Management", "Microsoft.PowerShell.Security", "Microsoft.PowerShell.Utility", "Orchestrator.AssetManagement.Cmdlets", "Microsoft.WSMan.Management" };
