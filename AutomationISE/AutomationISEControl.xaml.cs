@@ -1510,25 +1510,11 @@ namespace AutomationISE
             DSCListViewModel.Add(configuration);
         }
 
-        private void addLocalModuleToView(String localFile)
-        {
-
-            AutomationModule module = new AutomationModule(localFile);
-            moduleListViewModel.Add(module);
-        }
-
         private void removeLocalConfigurationToView(String localFile)
         {
 
             AutomationDSC configuration = new AutomationDSC(new System.IO.FileInfo(localFile));
             DSCListViewModel.Remove(configuration);
-        }
-
-        private void removeLocalModuleToView(String localFile)
-        {
-
-            AutomationModule module = new AutomationModule(localFile);
-            moduleListViewModel.Remove(module);
         }
 
         private async Task refreshRunbooks()

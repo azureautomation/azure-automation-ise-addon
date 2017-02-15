@@ -264,7 +264,9 @@ namespace AutomationISE.Model
                 }
                 if (localModulesParsed != null && localModulesParsed.ContainsKey(cloudModule.Name))
                 {
-                    result.Add(new AutomationModule(localModulesParsed[cloudModule.Name], cloudModule, draftResponse.Module));
+                    var moduleFileInfo = new FileInfo(localModulesParsed[cloudModule.Name].Properties["Path"].Value.ToString());
+                    result.Add(new AutomationModule(localModulesParsed[cloudModule.Name], cloudModule, draftResponse.Module,moduleFileInfo.LastWriteTime));
+                    moduleFileInfo = null;
                 }
                 else
                 {
@@ -278,7 +280,9 @@ namespace AutomationISE.Model
                 {
                     if (result.FirstOrDefault(x => x.Name == localModuleName) == null)
                     {
-                        result.Add(new AutomationModule(localModulesParsed[localModuleName]));
+                        var moduleFileInfo = new FileInfo(localModulesParsed[localModuleName].Properties["Path"].Value.ToString());
+                        result.Add(new AutomationModule(localModulesParsed[localModuleName], moduleFileInfo.LastWriteTime));
+                        moduleFileInfo = null;
                     }
                 }
             }

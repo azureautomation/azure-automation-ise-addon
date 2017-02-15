@@ -46,16 +46,16 @@ namespace AutomationISE.Model
         }
 
         //Module exists on disk, but not in the cloud.
-        public AutomationModule(PSObject localModule)
-            : base(localModule.Properties["Name"].Value.ToString(), DateTime.Now, null)
+        public AutomationModule(PSObject localModule, DateTime modifiedDate)
+            : base(localModule.Properties["Name"].Value.ToString(), modifiedDate, null)
         {
             this.localVersion = localModule.Properties["Version"].Value.ToString();
             this.localModulePath = localModule.Properties["ModuleBase"].Value.ToString();
         }
 
         //Module exists both on disk and in the cloud. But are they in sync?
-        public AutomationModule(PSObject localModule, Module cloudModule, Module cloudModuleDraft)
-            : base(cloudModule.Name, DateTime.Now, cloudModule.Properties.LastModifiedTime.LocalDateTime)
+        public AutomationModule(PSObject localModule, Module cloudModule, Module cloudModuleDraft, DateTime modifiedDate)
+            : base(cloudModule.Name, modifiedDate, cloudModule.Properties.LastModifiedTime.LocalDateTime)
         {
             this.localVersion = localModule.Properties["Version"].Value.ToString();
             this.localModulePath = localModule.Properties["ModuleBase"].Value.ToString();
