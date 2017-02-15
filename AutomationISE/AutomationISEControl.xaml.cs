@@ -3119,6 +3119,7 @@ namespace AutomationISE
         {
             try
             {
+                ButtonStorageModule.IsEnabled = false;
                 var storageDialog = new StorageAccountForModulesDialog();
                 storageDialog.subscriptionComboBox.ItemsSource = subscriptionComboBox.Items;
                 storageDialog.subscriptionComboBox.DisplayMemberPath = "Name";
@@ -3171,6 +3172,10 @@ namespace AutomationISE
             {
                 endBackgroundWork();
                 System.Windows.Forms.MessageBox.Show(ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+            }
+            finally
+            {
+                ButtonStorageModule.IsEnabled = true;
             }
         }
     }
