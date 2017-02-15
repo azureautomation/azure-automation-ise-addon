@@ -29,7 +29,7 @@ namespace AutomationISE.Model
             var ASTScript = System.Management.Automation.Language.Parser.ParseInput(PSScriptText, out AST, out ASTError);
 
             // If the script starts with workflow, then create a PS Workflow script runbook or else create a native PS script runbook
-            if (ASTScript.EndBlock.Extent.Text.ToLower().StartsWith("workflow"))
+            if (ASTScript.EndBlock != null && ASTScript.EndBlock.Extent.Text.ToLower().StartsWith("workflow"))
             {
                 draftProperties = new RunbookCreateOrUpdateDraftProperties(Constants.RunbookType.Workflow, new RunbookDraft());
             }
@@ -77,6 +77,7 @@ namespace AutomationISE.Model
             runbook.localFileInfo.LastWriteTime = draft.LastModifiedTime.LocalDateTime;
             runbook.LastModifiedLocal = draft.LastModifiedTime.LocalDateTime;
             runbook.LastModifiedCloud = draft.LastModifiedTime.LocalDateTime;
+            runbook.UpdateSyncStatus();
         }
 
         /* This is the only way I can see to "check out" a runbook (get it from Published to Edit state) using the SDK. */
@@ -120,6 +121,7 @@ namespace AutomationISE.Model
                 runbook.localFileInfo.LastWriteTime = draft.LastModifiedTime.LocalDateTime;
                 runbook.LastModifiedLocal = draft.LastModifiedTime.LocalDateTime;
                 runbook.LastModifiedCloud = draft.LastModifiedTime.LocalDateTime;
+                runbook.UpdateSyncStatus();
             }
         }
 
@@ -142,6 +144,7 @@ namespace AutomationISE.Model
                 runbook.localFileInfo.LastWriteTime = response.Runbook.Properties.LastModifiedTime.LocalDateTime;
                 runbook.LastModifiedLocal = response.Runbook.Properties.LastModifiedTime.LocalDateTime;
                 runbook.LastModifiedCloud = response.Runbook.Properties.LastModifiedTime.LocalDateTime;
+                runbook.UpdateSyncStatus();
             }
             /* Return the publish response */
             return resultResponse;
@@ -198,6 +201,7 @@ namespace AutomationISE.Model
                 runbook.localFileInfo.LastWriteTime = draftResponse.RunbookDraft.LastModifiedTime.LocalDateTime;
                 runbook.LastModifiedLocal = draftResponse.RunbookDraft.LastModifiedTime.LocalDateTime;
                 runbook.LastModifiedCloud = draftResponse.RunbookDraft.LastModifiedTime.LocalDateTime;
+                runbook.UpdateSyncStatus();
             }
         }
 
