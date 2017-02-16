@@ -77,7 +77,6 @@ namespace AutomationISE.Model
             runbook.localFileInfo.LastWriteTime = draft.LastModifiedTime.LocalDateTime;
             runbook.LastModifiedLocal = draft.LastModifiedTime.LocalDateTime;
             runbook.LastModifiedCloud = draft.LastModifiedTime.LocalDateTime;
-            runbook.UpdateSyncStatus();
         }
 
         /* This is the only way I can see to "check out" a runbook (get it from Published to Edit state) using the SDK. */
@@ -121,7 +120,6 @@ namespace AutomationISE.Model
                 runbook.localFileInfo.LastWriteTime = draft.LastModifiedTime.LocalDateTime;
                 runbook.LastModifiedLocal = draft.LastModifiedTime.LocalDateTime;
                 runbook.LastModifiedCloud = draft.LastModifiedTime.LocalDateTime;
-                runbook.UpdateSyncStatus();
             }
         }
 
@@ -144,7 +142,6 @@ namespace AutomationISE.Model
                 runbook.localFileInfo.LastWriteTime = response.Runbook.Properties.LastModifiedTime.LocalDateTime;
                 runbook.LastModifiedLocal = response.Runbook.Properties.LastModifiedTime.LocalDateTime;
                 runbook.LastModifiedCloud = response.Runbook.Properties.LastModifiedTime.LocalDateTime;
-                runbook.UpdateSyncStatus();
             }
             /* Return the publish response */
             return resultResponse;
@@ -201,7 +198,6 @@ namespace AutomationISE.Model
                 runbook.localFileInfo.LastWriteTime = draftResponse.RunbookDraft.LastModifiedTime.LocalDateTime;
                 runbook.LastModifiedLocal = draftResponse.RunbookDraft.LastModifiedTime.LocalDateTime;
                 runbook.LastModifiedCloud = draftResponse.RunbookDraft.LastModifiedTime.LocalDateTime;
-                runbook.UpdateSyncStatus();
             }
         }
 

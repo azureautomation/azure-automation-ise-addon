@@ -1771,7 +1771,11 @@ namespace AutomationISE
                             name = selectedRunbook.Name;
                             selectedRunbook.LastModifiedCloud = selectedRunbook.LastModifiedLocal;
                             selectedRunbook.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
-                            selectedRunbook.AuthoringState = AutomationRunbook.AuthoringStates.InEdit;
+                            if (selectedRunbook.AuthoringState == AutomationRunbook.AuthoringStates.Published)
+                            {
+                                selectedRunbook.AuthoringState = AutomationRunbook.AuthoringStates.InEdit;
+                            }
+                            selectedRunbook.UpdateSyncStatus();
                             endBackgroundWork("Uploaded " + selectedRunbook.Name);
                         }
                     }
