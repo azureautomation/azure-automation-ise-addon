@@ -141,10 +141,7 @@ namespace AutomationISE.Model
         private static async Task UploadModuleToStorageAccount(CloudBlobClient blobClient, String containerName, String modulePath, String blobName)
         {
             CloudBlobContainer container = blobClient.GetContainerReference(containerName);
-            if (!(await container.ExistsAsync()))
-            {
-                throw new Exception("Container " + containerName + " does not exist");
-            }
+            await container.CreateIfNotExistsAsync();
 
             CloudBlockBlob blockBlob = container.GetBlockBlobReference(blobName);
 
