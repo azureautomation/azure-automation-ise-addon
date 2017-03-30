@@ -291,7 +291,7 @@ namespace AutomationISE.Model
                     var valueJson = JsonConvert.SerializeObject(Value);
                     RSACryptoServiceProvider rsaEncryptor = (RSACryptoServiceProvider)EncryptCert.PublicKey.Key;
 
-                    var EncryptedBytes = System.Text.Encoding.Default.GetBytes(valueJson);
+                    var EncryptedBytes = System.Text.Encoding.UTF8.GetBytes(valueJson);
                     byte[] EncryptedData = rsaEncryptor.Encrypt(EncryptedBytes, true);
                     return Convert.ToBase64String(EncryptedData);
                 }
@@ -313,7 +313,7 @@ namespace AutomationISE.Model
                     Byte[] EncryptedString = Convert.FromBase64String((string)EncryptedValue);
                     RSACryptoServiceProvider rsaEncryptor = (RSACryptoServiceProvider)EncryptCert.PrivateKey;
                     byte[] EncryptedData = rsaEncryptor.Decrypt(EncryptedString, true);
-                    var valueJson = System.Text.Encoding.Default.GetString(EncryptedData);
+                    var valueJson = System.Text.Encoding.UTF8.GetString(EncryptedData);
                     return JsonConvert.DeserializeObject(valueJson);
                 }
             }

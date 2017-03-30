@@ -151,7 +151,7 @@ function Install-AzureAutomationIseAddOn {
         New-Item -Path $IseProfilePath -ItemType File -Force | Out-Null
     }
 
-    $ProfileContent = Get-Content $IseProfilePath -Raw
+    $ProfileContent = Get-Content $IseProfilePath -Raw -Encoding UTF8
     if(!$ProfileContent) { $ProfileContent = "" }
     $StartProfileSnippetIndex = $ProfileContent.IndexOf($script:StartProfileSnippetForPowerShellToLoadAzureAutomationISEAddOn)
 
@@ -187,7 +187,7 @@ function Uninstall-AzureAutomationIseAddOn {
     [CmdletBinding(HelpUri='http://aka.ms/azureautomationauthoringtoolkit')]
     
     $IseProfilePath = Join-Path (Split-Path $Profile) $script:IseProfileFileName
-    $ProfileContent = Get-Content $IseProfilePath -Raw
+    $ProfileContent = Get-Content $IseProfilePath -Raw -Encoding UTF8
     
     $StartProfileSnippetIndex = $ProfileContent.IndexOf($script:StartProfileSnippetForPowerShellToLoadAzureAutomationISEAddOn)
     $EndProfileSnippetIndex = $ProfileContent.IndexOf($script:EndProfileSnippetForPowerShellToLoadAzureAutomationISEAddOn)
@@ -271,7 +271,7 @@ function Get-AzureAutomationAuthoringToolkitLocalAsset {
     Write-Verbose "AzureAutomationAuthoringToolkit: Looking for local value for $Type asset '$Name.'"
       
     try {
-        $LocalAssets = Get-Content $script:LocalAssetsPath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $LocalAssets = Get-Content $script:LocalAssetsPath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
     }
     catch {
         Write-Error $LocalAssetsError
@@ -279,7 +279,7 @@ function Get-AzureAutomationAuthoringToolkitLocalAsset {
     }
 
     try {
-        $SecureLocalAssets = Get-Content $script:SecureLocalAssetsPath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $SecureLocalAssets = Get-Content $script:SecureLocalAssetsPath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
     }
     catch {
         Write-Error $SecureLocalAssetsError
@@ -374,7 +374,7 @@ function Get-AzureAutomationAuthoringToolkitConfiguration {
     Write-Verbose "AzureAutomationAuthoringToolkit: Grabbing AzureAutomationAuthoringToolkit configuration from '$script:ConfigurationPath'"
 
     try {
-        $ConfigurationTemp = Get-Content $script:ConfigurationPath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $ConfigurationTemp = Get-Content $script:ConfigurationPath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
     }
     catch {
         Write-Error $ConfigurationError
@@ -459,8 +459,8 @@ function Set-AutomationVariable {
     $LocalAssetValue = Get-AzureAutomationAuthoringToolkitLocalAsset -Type Variable -Name $Name
 
     if($LocalAssetValue) {
-        $LocalAssets = Get-Content $script:LocalAssetsPath -Raw | ConvertFrom-Json
-        $SecureLocalAssets = Get-Content $script:SecureLocalAssetsPath -Raw | ConvertFrom-Json
+        $LocalAssets = Get-Content $script:LocalAssetsPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        $SecureLocalAssets = Get-Content $script:SecureLocalAssetsPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
         $LocalAssets.Variable | ForEach-Object {
             if($_.Name -eq $Name) {
@@ -478,8 +478,8 @@ function Set-AutomationVariable {
 
         Write-Verbose "AzureAutomationAuthoringToolkit: Setting value of local variable asset with name '$Name'"
 
-        Set-Content $script:LocalAssetsPath -Value (ConvertTo-Json -InputObject $LocalAssets -Depth 999)
-        Set-Content $script:SecureLocalAssetsPath -Value (ConvertTo-Json -InputObject $SecureLocalAssets -Depth 999)
+        Set-Content $script:LocalAssetsPath -Value (ConvertTo-Json -InputObject $LocalAssets -Depth 99)
+        Set-Content $script:SecureLocalAssetsPath -Value (ConvertTo-Json -InputObject $SecureLocalAssets -Depth 99)
     }
     else {
         throw "Variable '$Name' not found for account 'AuthoringToolkit'"
