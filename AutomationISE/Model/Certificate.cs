@@ -140,7 +140,7 @@ namespace AutomationISE.Model
                 objCertRequest.Issuer = objDN;
                 objCertRequest.HashAlgorithm = objObjectId;
 
-                objCertRequest.NotBefore = DateTime.Now;
+                objCertRequest.NotBefore = DateTime.UtcNow;
                 objCertRequest.NotAfter = DateTime.Now + (DateTime.Now.Date.AddDays(this.ExpirationLengthInDays) - DateTime.Now.Date);
 
                 objEnroll.InitializeFromRequest(objCertRequest);
