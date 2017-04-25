@@ -55,12 +55,13 @@ namespace AutomationISE.Model
         /// Updateds the Add On configuration file with the thumbprint of the generated certificate if one is created.
         /// </summary>
         /// <returns>The thumbprint of the certificate</returns>
-        public String CreateSelfSignedCertificate()
+        public String CreateSelfSignedCertificate(string baseWorkspace)
         {
             try
             {
                 String thumbprint = GetCertificateInConfigFile();
-                if (thumbprint == null || thumbprint == "none")
+                var encryptionCert = GetCertificateWithThumbprint(thumbprint);
+                if (thumbprint == null || thumbprint == "none" || encryptionCert == null)
                 {
                     certObj.CreateCertificateRequest(Properties.Settings.Default.certName);
                     var selfSignedCert= certObj.InstallCertficate();
@@ -68,12 +69,56 @@ namespace AutomationISE.Model
                     // Set thumbprint in configuration file.
                     SetCertificateInConfigFile(thumbprint);
                 }
-                return thumbprint;
+
+                // If the certificate is about to expire, then ask the user if they want to update
+                // otherwise continue using existing certificate
+                var newThumbprint = updateEncryptionCertificateIfExpiring(baseWorkspace, thumbprint);
+                return newThumbprint;
             }
             catch
             {
                 throw;
             }
+        }
+
+        private string updateEncryptionCertificateIfExpiring(String baseWorkspace, String thumbprint)
+        {
+            if (thumbprint != null)
+            {
+                var encryptionCert = AutomationSelfSignedCertificate.GetCertificateWithThumbprint(thumbprint);
+                // If the certificate will expire 30 days from now, ask to create a new one and encyprt assets with new thumbprint.
+                if (Convert.ToDateTime(encryptionCert.GetExpirationDateString()) < DateTime.Now.AddDays(30))
+                {
+                    var messageBoxResult = System.Windows.Forms.MessageBox.Show(
+                    string.Format("Your certificate to encrypt local assets will expire on '{0}'. Do you want to generate a new certificate?", encryptionCert.GetExpirationDateString())
+                    , "Expiring certificate", System.Windows.Forms.MessageBoxButtons.YesNoCancel, System.Windows.Forms.MessageBoxIcon.Warning
+                    );
+
+                    if (messageBoxResult == System.Windows.Forms.DialogResult.Yes)
+                    {
+                        // Create new certificate for encryption
+                        certObj.CreateCertificateRequest(Properties.Settings.Default.certName);
+                        var selfSignedCert = certObj.InstallCertficate();
+                        var newThumbprint = selfSignedCert.Thumbprint;
+
+                        // Reset local assets with new encryption thumbprint
+                        string[] secureAssetFiles = Directory.GetFiles(baseWorkspace, "SecureLocalAssets.json", SearchOption.AllDirectories);
+                        foreach (var secureAssetFile in secureAssetFiles)
+                        {
+                            var localAssets = AutomationAssetManager.GetLocalEncryptedAssets(Path.GetDirectoryName(secureAssetFile), thumbprint);
+                            AutomationAssetManager.SetLocalEncryptedAssets(Path.GetDirectoryName(secureAssetFile), localAssets, newThumbprint);
+                        }
+
+                        // Set new thumbprint in configuration file.
+                        SetCertificateInConfigFile(newThumbprint);
+
+                        // Remove old thumbprint
+                        RemoveCertificateWithThumbprint(thumbprint);
+                        return newThumbprint;
+                    }
+                }
+            }
+            return thumbprint;
         }
 
         /// <summary>
@@ -170,9 +215,30 @@ namespace AutomationISE.Model
 
             if (EncryptCert.Count == 0)
             {
-                throw new Exception("Certificate with thumbprint " + thumbprint + " does not exist in HKLM\\My");
+                return null;
             }
             return EncryptCert[0];
+        }
+
+        public static void RemoveCertificateWithThumbprint(string thumbprint)
+        {
+            X509Store CertStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+            try
+            {
+                CertStore.Open(OpenFlags.ReadWrite | OpenFlags.IncludeArchived);
+
+                var CertCollection = CertStore.Certificates;
+                var EncryptCert = CertCollection.Find(X509FindType.FindByThumbprint, thumbprint, false);
+                if (EncryptCert.Count == 1)
+                {
+                    CertStore.Remove(EncryptCert[0]);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error removing certificate ", ex);
+            }
+
         }
     }
 }

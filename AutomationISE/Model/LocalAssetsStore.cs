@@ -58,6 +58,11 @@ namespace AutomationISE.Model
             return null;
         }
 
+        private static void Write(String workspacePath,LocalAssets assets, String encryptionCertThumbprint)
+        {
+            SecureLocalAssetsContainerJson.Set(workspacePath, assets, encryptionCertThumbprint, null);
+        }
+
         // updates the local assets, either removing (if replace = false) or adding/replacing (if replace = true) the specified assets
         private static void Set(String workspacePath, ICollection<AutomationAsset> assetsToAffect, bool replace, String encryptionCertThumbprint, ICollection<ConnectionType> connectionTypes)
         {
@@ -189,11 +194,16 @@ namespace AutomationISE.Model
             LocalAssetsStore.Set(workspacePath, newAssets, true, encryptionCertThumbprint, connectionTypes);
         }
 
+        public static void WriteSecureAssets(String workspacePath, LocalAssets assets, String encryptionCertThumbprint)
+        {
+            LocalAssetsStore.Write(workspacePath, assets, encryptionCertThumbprint);
+        }
+
         public static void Delete(String workspacePath, ICollection<AutomationAsset> assetsToDelete, String encryptionCertThumbprint, ICollection<ConnectionType> connectionTypes)
         {
             LocalAssetsStore.Set(workspacePath, assetsToDelete, false, encryptionCertThumbprint, connectionTypes);
         }
-
+      
         public static LocalAssets Get(String workspacePath, String encryptionCertThumbprint, ICollection<ConnectionType> connectionTypes)
         {
             LocalAssets localAssetsContainer = new LocalAssets(); 

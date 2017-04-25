@@ -142,7 +142,7 @@ namespace AutomationISE
 
                 // Generate self-signed certificate for encrypting local assets in the current user store Cert:\CurrentUser\My\
                 var certObj = new AutomationSelfSignedCertificate();
-                certificateThumbprint = certObj.CreateSelfSignedCertificate();
+                certificateThumbprint = certObj.CreateSelfSignedCertificate(iseClient.baseWorkspace);
                 certificateTextBox.Text = certificateThumbprint;
                 UpdateStatusBox(configurationStatusTextBox, "Thumbprint of certificate used to encrypt local assets: " + certificateThumbprint);
 
@@ -2969,13 +2969,14 @@ namespace AutomationISE
                         continue;
                     try
                     {
-                        var azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(iseClient.currSubscription.Authority);
+                        var azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(Properties.Settings.Default.StorageAuthority);
                         beginBackgroundWork("Uploading module " + module.Name + "...");
 
                         // Get storage account information stored.
                         var storageAccount = Properties.Settings.Default.StorageAccount;
                         var storageResourceGroup = Properties.Settings.Default.StorageResourceGroup;
                         var storageSubID = Properties.Settings.Default.StorageSubID;
+                        module.SyncStatus = "Importing...";
                         await AutomationModuleManager.UploadModule(azureARMAuthResult, module, iseClient.automationManagementClient, iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount, storageResourceGroup, storageSubID, storageAccount);
                         endBackgroundWork("Uploaded " + module.Name + ".");
                         count++;
@@ -3168,6 +3169,7 @@ namespace AutomationISE
                     Properties.Settings.Default.StorageAccount = storageDialog.storageAccountName;
                     Properties.Settings.Default.StorageResourceGroup = storageDialog.storageResourceGroupName;
                     Properties.Settings.Default.StorageSubID = storageDialog.storageSubID;
+                    Properties.Settings.Default.StorageAuthority = storageDialog.authority;
                     Properties.Settings.Default.Save();
                     ButtonUploadModule.IsEnabled = true;
                 }

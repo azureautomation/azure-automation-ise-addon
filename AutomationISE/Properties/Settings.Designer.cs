@@ -142,5 +142,17 @@ namespace AutomationISE.Properties {
                 this["StorageAccount"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string StorageAuthority {
+            get {
+                return ((string)(this["StorageAuthority"]));
+            }
+            set {
+                this["StorageAuthority"] = value;
+            }
+        }
     }
 }

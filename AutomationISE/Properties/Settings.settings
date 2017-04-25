@@ -32,5 +32,8 @@
     <Setting Name="StorageAccount" Type="System.String" Scope="User">
       <Value Profile="(Default)">na</Value>
     </Setting>
+    <Setting Name="StorageAuthority" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

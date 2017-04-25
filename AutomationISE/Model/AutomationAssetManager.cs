@@ -178,6 +178,17 @@ namespace AutomationISE.Model
             }
         }
 
+        public static LocalAssets GetLocalEncryptedAssets(String localWorkspacePath, string encryptionCertThumbprint)
+        {
+            LocalAssets localAssets = LocalAssetsStore.Get(localWorkspacePath, encryptionCertThumbprint, null);
+            return localAssets;
+        }
+
+        public static void SetLocalEncryptedAssets(String localWorkspacePath, LocalAssets locaAssets, string encryptionCertThumbprint)
+        {
+            LocalAssetsStore.WriteSecureAssets(localWorkspacePath, locaAssets, encryptionCertThumbprint);
+        }
+
         public static async Task<ISet<AutomationAsset>> GetAll(String localWorkspacePath, AutomationManagementClient automationApi, string resourceGroupName, string automationAccountName, string encryptionCertThumbprint, ICollection<ConnectionType> connectionTypes)
         {
             CancellationTokenSource cts = new CancellationTokenSource();
