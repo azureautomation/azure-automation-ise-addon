@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AddOn", "AddOn.csproj", "{017AF754-97DD-44EC-B995-EBC5B01C4EC0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutomationISE", "..\AutomationISE\AutomationISE.csproj", "{40B4B70C-0C44-44BB-89D8-0A5933192E23}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{017AF754-97DD-44EC-B995-EBC5B01C4EC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{017AF754-97DD-44EC-B995-EBC5B01C4EC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{017AF754-97DD-44EC-B995-EBC5B01C4EC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{017AF754-97DD-44EC-B995-EBC5B01C4EC0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40B4B70C-0C44-44BB-89D8-0A5933192E23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40B4B70C-0C44-44BB-89D8-0A5933192E23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40B4B70C-0C44-44BB-89D8-0A5933192E23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40B4B70C-0C44-44BB-89D8-0A5933192E23}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
