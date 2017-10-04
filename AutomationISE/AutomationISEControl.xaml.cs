@@ -508,7 +508,6 @@ namespace AutomationISE
                         assetsToSave.Add(runAsCertificate);
 
                         // Save new certificate to local assets store.
-                        assetsToSave = new List<AutomationAsset>();
                         var newCert = new AutomationCertificate(newCertificate.FriendlyName, newCertificate.Thumbprint, null, null, true, true);
                         assetsToSave.Add(newCert);
                         AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint(), connectionTypes);
