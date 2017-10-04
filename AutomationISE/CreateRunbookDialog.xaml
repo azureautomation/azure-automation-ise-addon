@@ -18,6 +18,7 @@
         <StackPanel Grid.Row="3" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button x:Name="ScriptButton" Content="Script" IsDefault="True" Margin="10,10,0,10" Width="75" Click="ScriptButton_Click" Grid.Row="2" />
             <Button x:Name="WorkflowButton" Content="Workflow" Margin="10,10,0,10" Width="75" Click="WorkflowButton_Click" Grid.Row="2" />
+            <Button x:Name="Python2" Content="Python2" Margin="10,10,0,10" Width="75" Grid.Row="2" Click="Python2Button_Click"/>
             <Button x:Name="CancelButton" Content="Cancel" Margin="10,10,0,10" IsCancel="True" Width="75" Grid.Row="2" />
         </StackPanel>
     </Grid>

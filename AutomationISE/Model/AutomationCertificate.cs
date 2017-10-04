@@ -37,7 +37,7 @@ namespace AutomationISE.Model
             {
                 this.setThumbprint(null);
             }
-            this.Encrypted = false;
+            this.Encrypted = true;
         }
 
         // local only - new
@@ -130,9 +130,13 @@ namespace AutomationISE.Model
             return this.getCertPath() != null;
         }
 
-        public override String getGetCommand()
+        public override String getGetCommand(String runbookType = AutomationISE.Model.Constants.RunbookType.PowerShellScript)
         {
-            return ("Get-AutomationCertificate -Name \"" + this.Name + "\"");
+            if (runbookType == AutomationISE.Model.Constants.RunbookType.PowerShellScript)
+                return ("Get-AutomationCertificate -Name \"" + this.Name + "\"");
+            else if (runbookType == AutomationISE.Model.Constants.RunbookType.Python2)
+                return ("automationassets.get_automation_certificate(\"" + this.Name + "\")");
+            else return "";
         }
 
         /// <summary>

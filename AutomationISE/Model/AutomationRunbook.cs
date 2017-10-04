@@ -38,6 +38,8 @@ namespace AutomationISE.Model
 
         public string Description { get; set; }
 
+        public string RunbookType { get; set; }
+
         private FileInfo _localFileInfo;
         public FileInfo localFileInfo
         {
@@ -54,6 +56,7 @@ namespace AutomationISE.Model
             this.localFileInfo = null;
             this.Description = cloudRunbook.Properties.Description;
             this.Parameters = cloudRunbook.Properties.Parameters;
+            this.RunbookType = cloudRunbook.Properties.RunbookType;
             if (cloudRunbookDraft != null)
             {
                 this.LastModifiedCloud = cloudRunbookDraft.LastModifiedTime.LocalDateTime;
@@ -68,6 +71,11 @@ namespace AutomationISE.Model
             this.AuthoringState = AutomationRunbook.AuthoringStates.New;
             this.localFileInfo = localFile;
             this.Parameters = null;
+            if (Path.GetExtension(localFile.Extension) == ".py")
+            {
+                this.RunbookType = "Python2";
+            }
+            else this.RunbookType = "PowerShell";
         }
 
         //Runbook exists both on disk and in the cloud. But are they in sync?
@@ -75,6 +83,7 @@ namespace AutomationISE.Model
             : base(cloudRunbook.Name, localFile.LastWriteTime, cloudRunbook.Properties.LastModifiedTime.LocalDateTime)
         {
             this.AuthoringState = cloudRunbook.Properties.State;
+            this.RunbookType = cloudRunbook.Properties.RunbookType;
             this.localFileInfo = localFile;
             this.Description = cloudRunbook.Properties.Description;
             this.Parameters = cloudRunbook.Properties.Parameters;

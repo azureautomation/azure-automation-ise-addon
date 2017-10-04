@@ -68,6 +68,8 @@ namespace AutomationISE.Model
             public const String PowerShellScript = "PowerShell";
 
             public const String GraphPowerShell = "GraphPowerShellWorkflow";
+
+            public const String Python2 = "Python2";
         }
 
         public const string nodeConfigurationIdentifier = "_Configuration_Data";

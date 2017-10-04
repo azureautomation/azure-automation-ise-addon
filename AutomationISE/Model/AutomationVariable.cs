@@ -83,11 +83,14 @@ namespace AutomationISE.Model
             return this.getValue() != null;
         }
 
-        public override String getGetCommand()
+        public override String getGetCommand(String runbookType = AutomationISE.Model.Constants.RunbookType.PowerShellScript)
         {
-            return ("Get-AutomationVariable -Name \"" + this.Name + "\"");
+            if (runbookType == AutomationISE.Model.Constants.RunbookType.PowerShellScript)
+                return ("Get-AutomationVariable -Name \"" + this.Name + "\"");
+            else if (runbookType == AutomationISE.Model.Constants.RunbookType.Python2)
+                return ("automationassets.get_automation_variable(\"" + this.Name + "\")");
+            else return "";
         }
-
         /// <summary>
         /// Whether the automation variable is encrypted or not.
         /// </summary>

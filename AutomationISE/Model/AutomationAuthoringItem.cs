@@ -92,8 +92,8 @@ namespace AutomationISE.Model
         {
             if (original != null)
             {
-                DateTime temp = (DateTime)original;
-                return temp.AddMilliseconds(-1 * temp.Millisecond);
+                DateTime temp = DateTime.SpecifyKind((DateTime)original, DateTimeKind.Utc);
+                return temp.AddTicks(-temp.Ticks % TimeSpan.TicksPerSecond);
             }
             else
             {

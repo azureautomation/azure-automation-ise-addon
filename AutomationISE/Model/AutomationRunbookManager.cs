@@ -22,20 +22,26 @@ namespace AutomationISE.Model
         {
             RunbookCreateOrUpdateDraftProperties draftProperties;
 
-            // Parse the script to determine if it is a PS workflow or native script
+            // Parse the script to determine if it is a python, PS workflow or native script
             String PSScriptText = File.ReadAllText(runbook.localFileInfo.FullName);
-            System.Management.Automation.Language.Token[] AST;
-            System.Management.Automation.Language.ParseError[] ASTError = null;
-            var ASTScript = System.Management.Automation.Language.Parser.ParseInput(PSScriptText, out AST, out ASTError);
-
-            // If the script starts with workflow, then create a PS Workflow script runbook or else create a native PS script runbook
-            if (ASTScript.EndBlock != null && ASTScript.EndBlock.Extent.Text.ToLower().StartsWith("workflow"))
+            if (Path.GetExtension(runbook.localFileInfo.FullName) == ".py")
             {
-                draftProperties = new RunbookCreateOrUpdateDraftProperties(Constants.RunbookType.Workflow, new RunbookDraft());
+                draftProperties = new RunbookCreateOrUpdateDraftProperties(Constants.RunbookType.Python2, new RunbookDraft());
             }
             else
-                draftProperties = new RunbookCreateOrUpdateDraftProperties(Constants.RunbookType.PowerShellScript, new RunbookDraft());
+            {
+                System.Management.Automation.Language.Token[] AST;
+                System.Management.Automation.Language.ParseError[] ASTError = null;
+                var ASTScript = System.Management.Automation.Language.Parser.ParseInput(PSScriptText, out AST, out ASTError);
 
+                // If the script starts with workflow, then create a PS Workflow script runbook or else create a native PS script runbook
+                if (ASTScript.EndBlock != null && ASTScript.EndBlock.Extent.Text.ToLower().StartsWith("workflow"))
+                {
+                    draftProperties = new RunbookCreateOrUpdateDraftProperties(Constants.RunbookType.Workflow, new RunbookDraft());
+                }
+                else
+                    draftProperties = new RunbookCreateOrUpdateDraftProperties(Constants.RunbookType.PowerShellScript, new RunbookDraft());
+            }
             // Get current properties if is not a new runbook and set these on the draft also so they are preserved.
             RunbookGetResponse response = null;
             CancellationTokenSource cts = new CancellationTokenSource();
@@ -167,7 +173,13 @@ namespace AutomationISE.Model
                 cts.CancelAfter(TIMEOUT_MS);
                 draftResponse = await automationManagementClient.RunbookDraft.GetAsync(resourceGroupName, account.Name, runbook.Name, cts.Token);
             }
-            String runbookFilePath = System.IO.Path.Combine(workspace, runbook.Name + ".ps1");
+
+            String runbookFilePath = null;
+            if (response.Runbook.Properties.RunbookType == Constants.RunbookType.Python2)
+            {
+                runbookFilePath = System.IO.Path.Combine(workspace, runbook.Name + ".py");
+            }
+            else runbookFilePath = System.IO.Path.Combine(workspace, runbook.Name + ".ps1");
             try
             {
                 File.WriteAllText(runbookFilePath, runbookContentResponse.Stream.ToString(), Encoding.UTF8);
@@ -290,7 +302,15 @@ namespace AutomationISE.Model
 
         public static void CreateLocalRunbook(string runbookName, string workspace, string runbookType)
         {
-            String runbookFilePath = System.IO.Path.Combine(workspace, runbookName + ".ps1");
+            String runbookFilePath = null;
+            if (runbookType.Equals(Constants.RunbookType.Python2))
+            {
+                runbookFilePath = System.IO.Path.Combine(workspace, runbookName + ".py");
+            }
+            else
+            {
+                runbookFilePath = System.IO.Path.Combine(workspace, runbookName + ".ps1");
+            }
             if (File.Exists(runbookFilePath))
                 throw new Exception("A runbook with that name already exists");
 
@@ -332,6 +352,22 @@ namespace AutomationISE.Model
                     {
                         Thread.Sleep(1000);
                         File.WriteAllText(runbookFilePath, " ", Encoding.UTF8);
+                    }
+                }
+            }
+            else if (runbookType.Equals(Constants.RunbookType.Python2))
+            {
+                try
+                {
+                    File.WriteAllText(runbookFilePath, "#!/usr/bin/env python2", Encoding.UTF8);
+                }
+                catch (Exception Ex)
+                {
+                    // Atempting to write the file while it is being read. Wait a second and retry.
+                    if (Ex.HResult == -2147024864)
+                    {
+                        Thread.Sleep(1000);
+                        File.WriteAllText(runbookFilePath, "#!/usr/bin/env python2", Encoding.UTF8);
                     }
                 }
             }

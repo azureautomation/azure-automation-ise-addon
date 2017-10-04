@@ -55,7 +55,7 @@ namespace AutomationISE.Model
 
         protected abstract bool isReadyForLocalUse();
 
-        public abstract String getGetCommand();
+        public abstract String getGetCommand(String runbookType=AutomationISE.Model.Constants.RunbookType.PowerShellScript);
 
         /// <summary>
         /// The value of the asset

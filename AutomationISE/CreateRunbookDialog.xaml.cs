@@ -23,9 +23,13 @@ namespace AutomationISE
     {
         public string runbookName { get; set; }
         public string runbookType { get; set; }
-        public CreateRunbookDialog()
+        public CreateRunbookDialog(Boolean pythonSupport)
         {
             InitializeComponent();
+            if (!pythonSupport)
+            {
+                Python2.Visibility = Visibility.Collapsed;
+            }
             NameTextBox.Focus();
         }
 
@@ -62,6 +66,20 @@ namespace AutomationISE
             if (String.IsNullOrEmpty(NameTextBox.Text))
                 return false;
             return true;
+        }
+
+        private void Python2Button_Click(object sender, RoutedEventArgs e)
+        {
+            if (textBoxFilled())
+            {
+                runbookName = NameTextBox.Text;
+                runbookType = Constants.RunbookType.Python2;
+                this.DialogResult = true;
+            }
+            else
+            {
+                System.Windows.Forms.MessageBox.Show("You must enter a name for the new runbook.");
+            }
         }
     }
 }

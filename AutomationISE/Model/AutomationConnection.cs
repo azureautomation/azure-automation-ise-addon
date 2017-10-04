@@ -101,9 +101,13 @@ namespace AutomationISE.Model
             return true;
         }
 
-        public override String getGetCommand()
+        public override String getGetCommand(String runbookType = AutomationISE.Model.Constants.RunbookType.PowerShellScript)
         {
-            return ("Get-AutomationConnection -Name \"" + this.Name + "\"");
+            if (runbookType == AutomationISE.Model.Constants.RunbookType.PowerShellScript)
+                return ("Get-AutomationConnection -Name \"" + this.Name + "\"");
+            else if (runbookType == AutomationISE.Model.Constants.RunbookType.Python2)
+                return ("automationassets.get_automation_connection(\"" + this.Name + "\")");
+            else return "";
         }
 
         /// <summary>

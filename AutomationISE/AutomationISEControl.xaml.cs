@@ -41,6 +41,7 @@ using Microsoft.Azure.Management.Storage.Models;
 
 namespace AutomationISE
 {
+
     /// <summary>
     /// Interaction logic for AutomationISEControl.xaml
     /// </summary>
@@ -74,6 +75,9 @@ namespace AutomationISE
         private bool promptShortened;
         private string certificateThumbprint;
         private FileSystemWatcher fileWatcher;
+
+        private string VSStudio;
+        private string VSCode;
         public ObjectModelRoot HostObject { get; set; }
         string lastUpdated = "";
         private string addOnVersion = null;
@@ -163,6 +167,9 @@ namespace AutomationISE
                     versionButton.Visibility = Visibility.Collapsed;
                 }
                 runAscheckBox.IsChecked = Properties.Settings.Default.RunAs;
+
+                IDEComboBox.Visibility = Visibility.Collapsed;
+                IDEEditorLabel.Visibility = Visibility.Collapsed;
             }
             catch (Exception exception)
             {
@@ -178,28 +185,31 @@ namespace AutomationISE
         /// <param name="e"></param>
         private void CurrentPowerShellTab_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == "LastEditorWithFocus")
+            if (HostObject != null)
             {
-                if (runbookListViewModel != null && DSCListViewModel != null && HostObject.CurrentPowerShellTab.Files.Count > 0)
+                if (e.PropertyName == "LastEditorWithFocus")
                 {
-                    foreach (AutomationRunbook runbook in runbookListViewModel)
+                    if (runbookListViewModel != null && DSCListViewModel != null && HostObject.CurrentPowerShellTab.Files.Count > 0)
                     {
-                        if (runbook.Name.Equals(Path.GetFileNameWithoutExtension(HostObject.CurrentPowerShellTab.Files.SelectedFile.DisplayName)))
+                        foreach (AutomationRunbook runbook in runbookListViewModel)
                         {
-                            RunbooksListView.SelectedItem = runbook;
-                            RunbooksListView.ScrollIntoView(RunbooksListView.SelectedItem);
-                            break;
-                        }
-                    }
-                    foreach (AutomationDSC configuration in DSCListViewModel)
-                    {
-                        if (configuration.localFileInfo != null)
-                        {
-                            if (Path.GetFileNameWithoutExtension(configuration.localFileInfo.ToString()).Equals(Path.GetFileNameWithoutExtension(HostObject.CurrentPowerShellTab.Files.SelectedFile.DisplayName)))
+                            if (runbook.Name.Equals(Path.GetFileNameWithoutExtension(HostObject.CurrentPowerShellTab.Files.SelectedFile.DisplayName)))
                             {
-                                DSCListView.SelectedItem = configuration;
-                                DSCListView.ScrollIntoView(DSCListView.SelectedItem);
+                                RunbooksListView.SelectedItem = runbook;
+                                RunbooksListView.ScrollIntoView(RunbooksListView.SelectedItem);
                                 break;
+                            }
+                        }
+                        foreach (AutomationDSC configuration in DSCListViewModel)
+                        {
+                            if (configuration.localFileInfo != null)
+                            {
+                                if (Path.GetFileNameWithoutExtension(configuration.localFileInfo.ToString()).Equals(Path.GetFileNameWithoutExtension(HostObject.CurrentPowerShellTab.Files.SelectedFile.DisplayName)))
+                                {
+                                    DSCListView.SelectedItem = configuration;
+                                    DSCListView.ScrollIntoView(DSCListView.SelectedItem);
+                                    break;
+                                }
                             }
                         }
                     }
@@ -438,18 +448,25 @@ namespace AutomationISE
                 // If certificate is present in cloud, update RunAsConnection connection thumbprint if needed
                 if (certificateAsset != null && certificateAsset.SyncStatus != "Local Only")
                 {
+                    var assetsToSave = new List<AutomationAsset>();
                     var thumbprint = certificateAsset.getThumbprint();
                     var connectionFields = runAsConnection.getFields();
                     // If local RunAs connection does not contain the local certificate thumprint, then update it
                     if (connectionFields["CertificateThumbprint"].ToString() != thumbprint)
                     {
                         connectionFields["CertificateThumbprint"] = thumbprint;
-                        var assetsToSave = new List<AutomationAsset>();
                         assetsToSave.Add(runAsConnection);
-                        AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint(), connectionTypes);
-                        refreshAssets();
-                        certificateAsset.UpdateSyncStatus();
+
                     }
+
+                    // Update RunAsCertificate to point to this local certificate
+                    AutomationCertificate runAsCertificate = (AutomationCertificate)assets.FirstOrDefault(x => x.Name == "AzureRunAsCertificate" && x.GetType().Name == "AutomationCertificate");
+                    runAsCertificate.setThumbprint(thumbprint);
+                    assetsToSave.Add(runAsCertificate);
+                    AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint(), connectionTypes);
+                    refreshAssets();
+                    certificateAsset.UpdateSyncStatus();
+                    runAsCertificate.UpdateSyncStatus();
                     runAsSuccess = true;
                 }
                 else
@@ -484,7 +501,11 @@ namespace AutomationISE
                         connectionFields["CertificateThumbprint"] = newCertificate.Thumbprint;
                         var assetsToSave = new List<AutomationAsset>();
                         assetsToSave.Add(runAsConnection);
-                        AutomationAssetManager.SaveLocally(iseClient.currWorkspace, assetsToSave, getEncryptionCertificateThumbprint(), connectionTypes);
+
+                        // Update RunAsCertificate to point to this local certificate
+                        AutomationCertificate runAsCertificate = (AutomationCertificate)assets.FirstOrDefault(x => x.Name == "AzureRunAsCertificate" && x.GetType().Name == "AutomationCertificate");
+                        runAsCertificate.setThumbprint(newCertificate.Thumbprint);
+                        assetsToSave.Add(runAsCertificate);
 
                         // Save new certificate to local assets store.
                         assetsToSave = new List<AutomationAsset>();
@@ -575,6 +596,33 @@ namespace AutomationISE
                 iseClient.azureADAuthResult = AutomationISE.Model.AuthenticateHelper.GetInteractiveLogin(userNameTextBox.Text);
                 refreshAccountDataTimer.Stop();
 
+                if (HostObject == null)
+                {
+                    IDEEditorLabel.Visibility = Visibility.Visible;
+                    IDEComboBox.Visibility = Visibility.Visible;
+                    String editor = Properties.Settings.Default["Editor"].ToString();
+                    VSStudio = GetVisualStudioPath();
+                    if (VSStudio != null)
+                    {
+                        IDEComboBox.Items.Add("Visual Studio");
+                    }
+                    VSCode = GetVSCodePath();
+                    if (VSCode != null)
+                    {
+                        IDEComboBox.Items.Add("VS Code");
+                    }
+                    if (editor != null)
+                        IDEComboBox.SelectedValue = editor;
+                    else
+                    {
+                        if (IDEComboBox.HasItems)
+                            IDEComboBox.SelectedItem = IDEComboBox.Items[0];
+                    }
+
+                    togglePromptButton.Visibility = Visibility.Collapsed;
+                    ButtonInsertAssets.Content = "Copy to clipboard";
+                }
+
                 beginBackgroundWork(Properties.Resources.RetrieveSubscriptions);
                 userNameTextBox.Text = iseClient.azureADAuthResult.UserInfo.DisplayableId;
                 UpdateStatusBox(configurationStatusTextBox, "Logged in user: " + userNameTextBox.Text);
@@ -610,7 +658,7 @@ namespace AutomationISE
                     endBackgroundWork(Properties.Resources.NoSubscriptions);
                 }
 
-                HostObject.CurrentPowerShellTab.PropertyChanged += new PropertyChangedEventHandler(CurrentPowerShellTab_PropertyChanged);
+                if (HostObject != null) { HostObject.CurrentPowerShellTab.PropertyChanged += new PropertyChangedEventHandler(CurrentPowerShellTab_PropertyChanged); }
             }
             catch (Microsoft.IdentityModel.Clients.ActiveDirectory.AdalServiceException Ex)
             {
@@ -796,7 +844,10 @@ namespace AutomationISE
                     accountPathTextBox.Text = iseClient.currWorkspace;
 
                     string pathHint = Path.GetPathRoot(iseClient.currWorkspace) + "..." + Path.DirectorySeparatorChar + Path.GetFileName(iseClient.currWorkspace);
-                    HostObject.CurrentPowerShellTab.InvokeSynchronous("cd \"" + iseClient.currWorkspace + "\"" + ";function prompt {'PS " + pathHint + "> '}", false, 5000);
+                    if (HostObject != null)
+                    {
+                        HostObject.CurrentPowerShellTab.InvokeSynchronous("cd \"" + iseClient.currWorkspace + "\"" + ";function prompt {'PS " + pathHint + "> '}", false, 5000);
+                    }
                     promptShortened = true;
                     endBackgroundWork("Finished getting data for " + account.Name);
                     refreshAccountDataTimer.Start();
@@ -806,13 +857,16 @@ namespace AutomationISE
                         if (await CheckRunAs())
                         {
                             // Use RunAs connection in account to authenticate with Azure.
-                            HostObject.CurrentPowerShellTab.Invoke("$RunAsConnection = Get-AutomationConnection -Name AzureRunAsConnection;try {$Login=Add-AzureRmAccount -ServicePrincipal -TenantId $RunAsConnection.TenantId -ApplicationId $RunAsConnection.ApplicationId -CertificateThumbprint $RunAsConnection.CertificateThumbprint -ErrorAction Stop}catch{Sleep 10;$Login=Add-AzureRmAccount -ServicePrincipal -TenantId $RunAsConnection.TenantId -ApplicationId $RunAsConnection.ApplicationId -CertificateThumbprint $RunAsConnection.CertificateThumbprint};Select-AzureRmSubscription -SubscriptionId $RunAsConnection.SubscriptionID");
+                            if (HostObject != null)
+                            {
+                                HostObject.CurrentPowerShellTab.Invoke("$RunAsConnection = Get-AutomationConnection -Name AzureRunAsConnection;try {$Login=Add-AzureRmAccount -ServicePrincipal -TenantId $RunAsConnection.TenantId -ApplicationId $RunAsConnection.ApplicationId -CertificateThumbprint $RunAsConnection.CertificateThumbprint -ErrorAction Stop}catch{Sleep 10;$Login=Add-AzureRmAccount -ServicePrincipal -TenantId $RunAsConnection.TenantId -ApplicationId $RunAsConnection.ApplicationId -CertificateThumbprint $RunAsConnection.CertificateThumbprint};Select-AzureRmSubscription -SubscriptionId $RunAsConnection.SubscriptionID");
+                            }
                         }
                     }
 
                     /* Set up file watch on the current workspace */
                     fileWatcher.Path = iseClient.currWorkspace + "\\";
-                    fileWatcher.Filter = "*.ps1";
+                    fileWatcher.Filter = "*.p*";
                     fileWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
 
                     fileWatcher.Changed += new FileSystemEventHandler(FileSystemChanged);
@@ -929,27 +983,31 @@ namespace AutomationISE
         private async void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             TabItem selectedTab = (TabItem)((TabControl)sender).SelectedItem;
-            switch (selectedTab.Name)
+            if (selectedTab != null)
             {
-                case "configurationTab":
-                    break;
-                case "runbookTab":
-                    break;
-                case "DSCTab":
-                    break;
-                case "settingsTab":
-                    break;
-                case "ModuleTab":
+                switch (selectedTab.Name)
+                {
+                    case "configurationTab":
                         break;
-                case "feedbackTab":
-                    break;
-                case "helpTab":
-                    helpBrowserControl.Navigate(new Uri(Constants.helpURI + "?version=" + addOnVersion));
-                    break;
-                default:
-                    Debug.WriteLine("Couldn't find tab handler with name: " + selectedTab.Name);
-                    return;
+                    case "runbookTab":
+                        break;
+                    case "DSCTab":
+                        break;
+                    case "settingsTab":
+                        break;
+                    case "ModuleTab":
+                        break;
+                    case "feedbackTab":
+                        break;
+                    case "helpTab":
+                        helpBrowserControl.Navigate(new Uri(Constants.helpURI + "?version=" + addOnVersion));
+                        break;
+                    default:
+                        Debug.WriteLine("Couldn't find tab handler with name: " + selectedTab.Name);
+                        return;
+                }
             }
+            return;
         }
 
         private async void ButtonDownloadAsset_Click(object sender, RoutedEventArgs e)
@@ -958,7 +1016,12 @@ namespace AutomationISE
             {
                 beginBackgroundWork("Downloading selected assets...");
                 downloadAssets(getSelectedAssets());
-                await refreshAssets();
+                var selectedAssets = getSelectedAssets();
+                foreach (var asset in selectedAssets)
+                {
+                    asset.LastModifiedCloud = asset.LastModifiedLocal;
+                    asset.UpdateSyncStatus();
+                }
                 endBackgroundWork("Assets downloaded.");
             }
             catch (Exception ex)
@@ -974,7 +1037,12 @@ namespace AutomationISE
             {
                 beginBackgroundWork("Uploading selected assets...");
                 await uploadAssets(getSelectedAssets());
-                await refreshAssets();
+                var selectedAssets = getSelectedAssets();
+                foreach (var asset in selectedAssets)
+                {
+                    asset.LastModifiedCloud = asset.LastModifiedLocal;
+                    asset.UpdateSyncStatus();
+                }
                 endBackgroundWork("Assets uploaded.");
             }
             catch (Exception ex)
@@ -1005,7 +1073,23 @@ namespace AutomationISE
             try
             {
                 var asset = getSelectedAssets().ElementAt(0);
-                HostObject.CurrentPowerShellTab.Files.SelectedFile.Editor.InsertText(asset.getGetCommand());
+                if (HostObject != null)
+                {
+                    HostObject.CurrentPowerShellTab.Files.SelectedFile.Editor.InsertText(asset.getGetCommand());
+                }
+                else
+                {
+                    AutomationRunbook selectedRunbook = (AutomationRunbook)RunbooksListView.SelectedItem;
+                    if (selectedRunbook == null) { System.Windows.Forms.MessageBox.Show("Select a runbook so the type (PowerShell or Python) can be determined", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);  return; };
+                    if (selectedRunbook.RunbookType == Constants.RunbookType.PowerShellScript)
+                    {
+                        Clipboard.SetText(asset.getGetCommand(Constants.RunbookType.PowerShellScript));
+                    }
+                    if (selectedRunbook.RunbookType == Constants.RunbookType.Python2)
+                    {
+                        Clipboard.SetText(asset.getGetCommand(Constants.RunbookType.Python2));
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -1317,12 +1401,14 @@ namespace AutomationISE
 
             if ((RunbooksListView.SelectedItem != null && runbook != null) && runbook.localFileInfo != null)
             {
-                var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == runbook.localFileInfo.FullName);
-                if (currentFile.Count() > 0)
+                if (HostObject != null)
                 {
-                    HostObject.CurrentPowerShellTab.Files.SetSelectedFile(currentFile.FirstOrDefault());
+                    var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == runbook.localFileInfo.FullName);
+                    if (currentFile.Count() > 0)
+                    {
+                        HostObject.CurrentPowerShellTab.Files.SetSelectedFile(currentFile.FirstOrDefault());
+                    }
                 }
-
             }
         }
 
@@ -1332,12 +1418,14 @@ namespace AutomationISE
 
             if ((DSCListView.SelectedItem != null) && (dsc != null) && (dsc.localFileInfo != null))
             {
-                var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == dsc.localFileInfo.FullName);
-                if (currentFile.Count() > 0)
+                if (HostObject != null)
                 {
-                    HostObject.CurrentPowerShellTab.Files.SetSelectedFile(currentFile.FirstOrDefault());
+                    var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == dsc.localFileInfo.FullName);
+                    if (currentFile.Count() > 0)
+                    {
+                        HostObject.CurrentPowerShellTab.Files.SetSelectedFile(currentFile.FirstOrDefault());
+                    }
                 }
-
             }
             SetButtonStatesForSelectedConfiguration();
         }
@@ -1365,26 +1453,86 @@ namespace AutomationISE
                                 "No Local Runbook", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                         continue;
                     }
-                    var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == selectedRunbook.localFileInfo.FullName);
-                    if (currentFile.Count() > 0)
+                    if (HostObject != null)
                     {
-                        try
+                        var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == selectedRunbook.localFileInfo.FullName);
+                        if (currentFile.Count() > 0)
                         {
-                            HostObject.CurrentPowerShellTab.Files.SetSelectedFile(currentFile.FirstOrDefault());
+                            try
+                            {
+                                HostObject.CurrentPowerShellTab.Files.SetSelectedFile(currentFile.FirstOrDefault());
+                            }
+                            catch
+                            {
+                                System.Windows.Forms.MessageBox.Show("Could not select " + selectedRunbook.localFileInfo.Name + " in the ISE.",
+                                    "Open Runbook", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                            }
                         }
-                        catch
+                        else
+                            HostObject.CurrentPowerShellTab.Files.Add(selectedRunbook.localFileInfo.FullName);
+                    }
+                    if (HostObject == null)
+                    {
+                        if (IDEComboBox.HasItems)
                         {
-                            System.Windows.Forms.MessageBox.Show("Could not select " + selectedRunbook.localFileInfo.Name + " in the ISE.",
-                                "Open Runbook", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                            ProcessStartInfo startInfo = new ProcessStartInfo();
+                            startInfo.CreateNoWindow = false;
+                            startInfo.UseShellExecute = false;
+                            if ((string)IDEComboBox.SelectedValue == "Visual Studio")
+                            {
+                                startInfo.FileName = @VSStudio;
+                                startInfo.Arguments = "/Edit " + '"' + selectedRunbook.localFileInfo.FullName + '"';
+
+                            }
+                            if ((string)IDEComboBox.SelectedValue == "VS Code")
+                            {
+                                startInfo.FileName = @VSCode;
+                                startInfo.Arguments = '"' + selectedRunbook.localFileInfo.FullName + '"';
+                            }
+                            startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                            using (Process exeProcess = Process.Start(startInfo))
+                            {
+                                exeProcess.Start();
+                            }
                         }
                     }
-                    else
-                      HostObject.CurrentPowerShellTab.Files.Add(selectedRunbook.localFileInfo.FullName);
                 }
             }
             catch (Exception ex)
             {
                 System.Windows.Forms.MessageBox.Show("The runbook could not be opened.\r\nError details: " + ex.Message, "Error");
+            }
+        }
+
+        private string GetVisualStudioPath()
+        {
+            using (Microsoft.Win32.RegistryKey localMachineKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Wow6432Node\Microsoft\VisualStudio\Sxs\VS7"))
+            {
+                if (localMachineKey != null)
+                {
+                    var keys = localMachineKey.GetValueNames();
+                    if (keys != null)
+                    {
+                        Array.Sort(keys);
+                        Array.Reverse(keys);
+                        var devEnv = localMachineKey.GetValue(keys[0]);
+                        return (devEnv + "Common7\\IDE\\devenv.exe");
+                    }
+                }
+                return null;
+            }
+        }
+
+        private string GetVSCodePath()
+        {
+            using (Microsoft.Win32.RegistryKey VSCodeKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Classes\Applications\Code.exe\shell\open\command"))
+            {
+                if (VSCodeKey != null)
+                {
+                    var codeValue = VSCodeKey.GetValue("").ToString();
+                    return (codeValue.Substring(0, codeValue.IndexOf('%') - 1).Replace("\"", string.Empty).Trim());
+                }
+                return null;
             }
         }
 
@@ -1401,21 +1549,49 @@ namespace AutomationISE
                                 "No Local configuration", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                         continue;
                     }
-                    var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == selectedConfiguration.localFileInfo.FullName);
-                    if (currentFile.Count() > 0)
+                    if (HostObject != null)
                     {
-                        try
+                        var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == selectedConfiguration.localFileInfo.FullName);
+                        if (currentFile.Count() > 0)
                         {
-                            // If the file is opened but not saved, an exception will be thrown here
-                            HostObject.CurrentPowerShellTab.Files.Remove(currentFile.First());
+                            try
+                            {
+                                // If the file is opened but not saved, an exception will be thrown here
+                                HostObject.CurrentPowerShellTab.Files.Remove(currentFile.First());
+                            }
+                            catch
+                            {
+                                System.Windows.Forms.MessageBox.Show("There are unsaved changes to " + selectedConfiguration.localFileInfo.Name + ", so it cannot be re-opened.",
+                                    "Unsaved configuration Changes", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                            }
                         }
-                        catch
+                        HostObject.CurrentPowerShellTab.Files.Add(selectedConfiguration.localFileInfo.FullName);
+                    }
+                    if (HostObject == null)
+                    {
+                        if (IDEComboBox.HasItems)
                         {
-                            System.Windows.Forms.MessageBox.Show("There are unsaved changes to " + selectedConfiguration.localFileInfo.Name + ", so it cannot be re-opened.",
-                                "Unsaved configuration Changes", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                            ProcessStartInfo startInfo = new ProcessStartInfo();
+                            startInfo.CreateNoWindow = false;
+                            startInfo.UseShellExecute = false;
+                            if ((string)IDEComboBox.SelectedValue == "Visual Studio")
+                            {
+                                startInfo.FileName = @VSStudio;
+                                startInfo.Arguments = "/Edit " + '"' + selectedConfiguration.localFileInfo.FullName + '"';
+
+                            }
+                            if ((string)IDEComboBox.SelectedValue == "VS Code")
+                            {
+                                startInfo.FileName = @VSCode;
+                                startInfo.Arguments = '"' + selectedConfiguration.localFileInfo.FullName + '"';
+                            }
+                            startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                            using (Process exeProcess = Process.Start(startInfo))
+                            {
+                                exeProcess.Start();
+                            }
                         }
                     }
-                    HostObject.CurrentPowerShellTab.Files.Add(selectedConfiguration.localFileInfo.FullName);
                 }
             }
             catch (Exception ex)
@@ -1563,10 +1739,15 @@ namespace AutomationISE
                 if (Directory.Exists(iseClient.currWorkspace))
                 {
                     string[] localScripts = null;
-                    if (localFile == null) localScripts = Directory.GetFiles(iseClient.currWorkspace, "*.ps1");
+                    if (localFile == null)
+                    {
+                        localScripts = Directory.GetFiles(iseClient.currWorkspace, "*.*")
+                                      .Where(s => s.EndsWith(".ps1", StringComparison.OrdinalIgnoreCase) ||
+                                                  s.EndsWith(".py", StringComparison.OrdinalIgnoreCase)).ToArray();
+                    }
                     else
                     {
-                        if (localFile.EndsWith(".ps1"))
+                        if ((localFile.EndsWith(".ps1")) || (localFile.EndsWith(".py")))
                         {
                             localScripts = new string[1];
                             localScripts[0] = localFile;
@@ -1775,7 +1956,8 @@ namespace AutomationISE
                             {
                                 selectedRunbook.AuthoringState = AutomationRunbook.AuthoringStates.InEdit;
                             }
-                            selectedRunbook.UpdateSyncStatus();
+                            selectedRunbook.LastModifiedCloud = selectedRunbook.LastModifiedLocal;
+                            selectedRunbook.SyncStatus = AutomationAuthoringItem.Constants.SyncStatus.InSync;
                             endBackgroundWork("Uploaded " + selectedRunbook.Name);
                         }
                     }
@@ -1878,7 +2060,7 @@ namespace AutomationISE
                     await AutomationRunbookManager.CheckOutRunbook(selectedRunbook, iseClient.automationManagementClient,
                         iseClient.accountResourceGroups[iseClient.currAccount].Name, iseClient.currAccount);
                 }
-                JobOutputWindow jobWindow = new JobOutputWindow(selectedRunbook.Name, iseClient,Properties.Settings.Default.jobRefreshTimeInMilliseconds);
+                JobOutputWindow jobWindow = new JobOutputWindow(selectedRunbook, iseClient,Properties.Settings.Default.jobRefreshTimeInMilliseconds);
                 jobWindow.Show();
             }
             catch (Exception exception)
@@ -1934,16 +2116,19 @@ namespace AutomationISE
         /// <returns>false if the user clicks cancel or else returns true to continue with upload of unsaved file</returns>
         private Boolean checkIfFileIsSaved(AutomationRunbook runbook)
         {
-            var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == runbook.localFileInfo.FullName);
-            if (currentFile.Count() != 0)
+            if (HostObject != null)
+            {
+                var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == runbook.localFileInfo.FullName);
+                if (currentFile.Count() != 0)
                 {
-                if (currentFile.First().IsSaved == false)
-                {
-                    String message = "The file " + runbook.localFileInfo.Name + " has unsaved changes.";
-                    message += "\r\nPlease save your changes before uploading.";
-                    System.Windows.Forms.DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(message, "Upload Warning",
-                        System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
-                    return false;
+                    if (currentFile.First().IsSaved == false)
+                    {
+                        String message = "The file " + runbook.localFileInfo.Name + " has unsaved changes.";
+                        message += "\r\nPlease save your changes before uploading.";
+                        System.Windows.Forms.DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(message, "Upload Warning",
+                            System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                        return false;
+                    }
                 }
             }
             return true;
@@ -1956,16 +2141,19 @@ namespace AutomationISE
         /// <returns>false if the user clicks cancel or else returns true to continue with upload of unsaved file</returns>
         private Boolean checkIfDSCFileIsSaved(AutomationDSC configuration)
         {
-            var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == configuration.localFileInfo.FullName);
-            if (currentFile.Count() != 0)
+            if (HostObject != null)
             {
-                if (currentFile.First().IsSaved == false)
+                var currentFile = HostObject.CurrentPowerShellTab.Files.Where(x => x.FullPath == configuration.localFileInfo.FullName);
+                if (currentFile.Count() != 0)
                 {
-                    String message = "The file " + configuration.localFileInfo.Name + " has unsaved changes.";
-                    message += "\r\nPlease save your changes before uploading.";
-                    System.Windows.Forms.DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(message, "Upload Warning",
-                        System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
-                    return false;
+                    if (currentFile.First().IsSaved == false)
+                    {
+                        String message = "The file " + configuration.localFileInfo.Name + " has unsaved changes.";
+                        message += "\r\nPlease save your changes before uploading.";
+                        System.Windows.Forms.DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(message, "Upload Warning",
+                            System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                        return false;
+                    }
                 }
             }
             return true;
@@ -2341,17 +2529,20 @@ namespace AutomationISE
         {
             try
             {
-                if (promptShortened)
+                if (HostObject != null)
                 {
-                    HostObject.CurrentPowerShellTab.Invoke("cd \"" + iseClient.currWorkspace + "\"" + ";function prompt {'PS ' + $(Get-Location) + '> '}");
-                    promptShortened = false;
-                }
-                else
-                {
-                    //TODO: factor this into the iseClient
-                    string pathHint = Path.GetPathRoot(iseClient.currWorkspace) + "..." + Path.DirectorySeparatorChar + Path.GetFileName(iseClient.currWorkspace);
-                    HostObject.CurrentPowerShellTab.Invoke("cd \"" + iseClient.currWorkspace + "\"" + ";function prompt {'PS " + pathHint + "> '}");
-                    promptShortened = true;
+                    if (promptShortened)
+                    {
+                        HostObject.CurrentPowerShellTab.Invoke("cd \"" + iseClient.currWorkspace + "\"" + ";function prompt {'PS ' + $(Get-Location) + '> '}");
+                        promptShortened = false;
+                    }
+                    else
+                    {
+                        //TODO: factor this into the iseClient
+                        string pathHint = Path.GetPathRoot(iseClient.currWorkspace) + "..." + Path.DirectorySeparatorChar + Path.GetFileName(iseClient.currWorkspace);
+                        HostObject.CurrentPowerShellTab.Invoke("cd \"" + iseClient.currWorkspace + "\"" + ";function prompt {'PS " + pathHint + "> '}");
+                        promptShortened = true;
+                    }
                 }
             }
             catch { }
@@ -2363,16 +2554,61 @@ namespace AutomationISE
             {
                 ButtonCreateRunbook.IsEnabled = false;
                 beginBackgroundWork("Creating new runbook...");
-                CreateRunbookDialog createOptionsWindow = new CreateRunbookDialog();
+                CreateRunbookDialog createOptionsWindow;
+                if (HostObject != null)
+                {
+                     createOptionsWindow = new CreateRunbookDialog(false);
+                }
+                else
+                {
+                    createOptionsWindow = new CreateRunbookDialog(true);
+                }
                 bool? result = createOptionsWindow.ShowDialog();
                 if (result.HasValue && result.Value)
                 {
                     fileWatcher.EnableRaisingEvents = false;
                     AutomationRunbookManager.CreateLocalRunbook(createOptionsWindow.runbookName, iseClient.currWorkspace, createOptionsWindow.runbookType);
-                    HostObject.CurrentPowerShellTab.Files.Add(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.runbookName + ".ps1"));
+                    String runbookFileName = null;
+                    if (createOptionsWindow.runbookType == Constants.RunbookType.Python2)
+                    {
+                        runbookFileName = createOptionsWindow.runbookName + ".py";
+                    }
+                    else
+                    {
+                        runbookFileName = createOptionsWindow.runbookName + ".ps1";
+                    }
+                    if (HostObject != null)
+                    {
+                        HostObject.CurrentPowerShellTab.Files.Add(System.IO.Path.Combine(iseClient.currWorkspace, runbookFileName));
+                    }
+                    if (HostObject == null)
+                    {
+                        if (IDEComboBox.HasItems)
+                        {
+                            ProcessStartInfo startInfo = new ProcessStartInfo();
+                            startInfo.CreateNoWindow = false;
+                            startInfo.UseShellExecute = false;
+                            if ((string)IDEComboBox.SelectedValue == "Visual Studio")
+                            {
+                                startInfo.FileName = @VSStudio;
+                                startInfo.Arguments = "/Edit " + '"' + System.IO.Path.Combine(iseClient.currWorkspace, runbookFileName) + '"';
+
+                            }
+                            if ((string)IDEComboBox.SelectedValue == "VS Code")
+                            {
+                                startInfo.FileName = @VSCode;
+                                startInfo.Arguments = '"' + System.IO.Path.Combine(iseClient.currWorkspace, runbookFileName) + '"';
+                            }
+                            startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                            using (Process exeProcess = Process.Start(startInfo))
+                            {
+                                exeProcess.Start();
+                            }
+                        }
+                    }
                     fileWatcher.EnableRaisingEvents = true;
-                    await refreshLocalScripts(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.runbookName + ".ps1"));
-                    addLocalRunbookToView(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.runbookName + ".ps1"));
+                    await refreshLocalScripts(System.IO.Path.Combine(iseClient.currWorkspace, runbookFileName));
+                    addLocalRunbookToView(System.IO.Path.Combine(iseClient.currWorkspace, runbookFileName));
                     /* Select new runbook from list*/
                     foreach (AutomationRunbook runbook in runbookListViewModel)
                     {
@@ -2410,14 +2646,20 @@ namespace AutomationISE
                     if (createOptionsWindow.configurationName.Contains(Constants.nodeConfigurationIdentifier))
                     {
                         AutomationDSCManager.CreateLocalConfigurationData(createOptionsWindow.configurationName, iseClient.currWorkspace);
-                        HostObject.CurrentPowerShellTab.Files.Add(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.configurationName + ".ps1"));
+                        if (HostObject != null)
+                        {
+                            HostObject.CurrentPowerShellTab.Files.Add(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.configurationName + ".ps1"));
+                        }
                         addLocalRunbookToView(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.configurationName + ".ps1"));
                         this.runbookTab.Focus();
                     }
                     else
                     {
                         AutomationDSCManager.CreateLocalConfiguration(createOptionsWindow.configurationName, iseClient.currWorkspace);
-                        HostObject.CurrentPowerShellTab.Files.Add(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.configurationName + ".ps1"));
+                        if (HostObject != null)
+                        {
+                            HostObject.CurrentPowerShellTab.Files.Add(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.configurationName + ".ps1"));
+                        }
                         addLocalConfigurationToView(System.IO.Path.Combine(iseClient.currWorkspace, createOptionsWindow.configurationName + ".ps1"));
                     }
                     fileWatcher.EnableRaisingEvents = true;
@@ -3096,10 +3338,13 @@ namespace AutomationISE
 
         private void updateButton_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show("Do you want to install the latest PowerShell module from the PowerShell Gallery?  (You will need to restart the ISE after install)",
-              "Install AzureAutomationAuthoringToolkit Module", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            if (HostObject != null)
             {
-                HostObject.CurrentPowerShellTab.Invoke("install-module AzureAutomationAuthoringToolkit -Scope CurrentUser -verbose -force");
+                if (MessageBox.Show("Do you want to install the latest PowerShell module from the PowerShell Gallery?  (You will need to restart the ISE after install)",
+              "Install AzureAutomationAuthoringToolkit Module", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                {
+                    HostObject.CurrentPowerShellTab.Invoke("install-module AzureAutomationAuthoringToolkit -Scope CurrentUser -verbose -force");
+                }
             }
         }
 
@@ -3183,6 +3428,12 @@ namespace AutomationISE
             {
                 ButtonStorageModule.IsEnabled = true;
             }
+        }
+
+        private void IDEComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Properties.Settings.Default.Editor = IDEComboBox.SelectedItem.ToString();
+            Properties.Settings.Default.Save();
         }
     }
 }

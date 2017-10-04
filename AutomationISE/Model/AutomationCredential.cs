@@ -86,9 +86,13 @@ namespace AutomationISE.Model
             return this.getPassword() != null;
         }
 
-        public override String getGetCommand()
+        public override String getGetCommand(String runbookType = AutomationISE.Model.Constants.RunbookType.PowerShellScript)
         {
-            return ("Get-AutomationPSCredential -Name \"" + this.Name + "\"");
+            if (runbookType == AutomationISE.Model.Constants.RunbookType.PowerShellScript)
+                return ("Get-AutomationPSCredential -Name \"" + this.Name + "\"");
+            else if (runbookType == AutomationISE.Model.Constants.RunbookType.Python2)
+                return ("automationassets.get_automation_credential(\"" + this.Name + "\")");
+            else return "";
         }
     }
 

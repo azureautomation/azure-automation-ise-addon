@@ -22,6 +22,7 @@ namespace AutomationISE
         private JobCreateResponse jobCreateResponse = null;
         private AutomationISEClient iseClient;
         private String runbookName;
+        private String runbookType;
         private System.Timers.Timer refreshTimer;
         private static int TIMEOUT_MS = 30000;
         private JobStreamListParameters jobParams = new JobStreamListParameters();
@@ -36,14 +37,15 @@ namespace AutomationISE
         public static String VerboseForegroundColorCode = "#FF00FFFF";
         public static String VerboseBackgroundColorCode = "#00FFFFFF";
 
-        public JobOutputWindow(String name, AutomationISEClient client, int refreshTimerValue)
+        public JobOutputWindow(AutomationRunbook runbook, AutomationISEClient client, int refreshTimerValue)
         {
             InitializeComponent();
             StartJobButton.IsEnabled = true;
             StopJobButton.IsEnabled = false;
-            this.Title = name + " Test Job";
+            this.Title = runbook.Name + " Test Job";
             AdditionalInformation.Text = "Tip: not seeing Verbose output? Add the line \"$VerbosePreference='Continue'\" to your runbook.";
-            runbookName = name;
+            runbookName = runbook.Name;
+            runbookType = runbook.RunbookType;
             iseClient = client;
             jobParams.Time = DateTime.UtcNow.AddDays(-30).ToString("o");
             Task t = checkTestJob(true);
@@ -306,6 +308,23 @@ namespace AutomationISE
             }
         }
 
+        private async Task<TestJobGetResponse> GetLastTestJob()
+        {
+            try
+            {
+                CancellationTokenSource cts = new CancellationTokenSource();
+                cts.CancelAfter(TIMEOUT_MS);
+                return await iseClient.automationManagementClient.TestJobs.GetAsync(iseClient.accountResourceGroups[iseClient.currAccount].Name,
+                                        iseClient.currAccount.Name, runbookName, cts.Token);
+            }
+            catch
+            {
+                // return null if test job not found.
+                return null;
+            }
+        }
+
+
         private async void StartJobButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -354,12 +373,27 @@ namespace AutomationISE
             if (draft.Parameters.Count > 0 || hybridGroupResponse.HybridRunbookWorkerGroups.Count > 0)
             {
                 /* User needs to specify some things */
-                var existingParams = await GetLastTestJobParams();
-                RunbookParamDialog paramDialog = new RunbookParamDialog(draft.Parameters, existingParams, hybridGroupResponse.HybridRunbookWorkerGroups);
+                //   var existingParams = await GetLastTestJobParams();
+                IDictionary<string, string> existingParams = null;
+                String lastRunOn = null;
+                var lastJob = await GetLastTestJob();
+                if (lastJob != null)
+                {
+                    existingParams = lastJob.TestJob.Parameters;
+                    lastRunOn = lastJob.TestJob.RunOn;
+                }
+
+             //   IDictionary<string, string> jobParams = response.TestJob.Parameters;
+                RunbookParamDialog paramDialog = new RunbookParamDialog(draft.Parameters, existingParams, lastRunOn, hybridGroupResponse.HybridRunbookWorkerGroups,runbookType);
                 if (paramDialog.ShowDialog() == true)
                 {
-                    if (draft.Parameters.Count > 0)
+                    if (runbookType == "Python2")
                         jobCreationParams.Parameters = paramDialog.paramValues;
+                    else
+                    {
+                        if (draft.Parameters.Count > 0)
+                            jobCreationParams.Parameters = paramDialog.paramValues;
+                    }
                     if (!String.IsNullOrEmpty(paramDialog.runOnSelection) && !paramDialog.runOnSelection.Equals("Azure"))
                         jobCreationParams.RunOn = paramDialog.runOnSelection;
                 }

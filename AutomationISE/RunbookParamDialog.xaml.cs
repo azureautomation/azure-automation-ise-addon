@@ -13,6 +13,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
 using Microsoft.Azure.Management.Automation.Models;
+using System.Text.RegularExpressions;
+using Newtonsoft.Json;
+using System.Runtime.InteropServices;
 
 namespace AutomationISE
 {
@@ -24,23 +27,114 @@ namespace AutomationISE
         private IDictionary<string, RunbookParameter> parameterDict;
         private IList<HybridRunbookWorkerGroup> hybridGroups;
         private IDictionary<string, string> existingParamsDict;
+        private String existingRunOn;
+        private String runbookType;
         private IDictionary<string, string> _paramValues;
         public IDictionary<string, string> paramValues { get { return _paramValues; } }
         private string _runOnSelection;
         public string runOnSelection { get { return _runOnSelection; } }
 
-        public RunbookParamDialog(IDictionary<string, RunbookParameter> parameterDict, IDictionary<string, string> existingParamsDict, IList<HybridRunbookWorkerGroup> hybridGroups)
+        public RunbookParamDialog(IDictionary<string, RunbookParameter> parameterDict, IDictionary<string, string> existingParamsDict, String lastRunOn, IList<HybridRunbookWorkerGroup> hybridGroups, String runbookType)
         {
             InitializeComponent();
             this.hybridGroups = hybridGroups;
             this.parameterDict = parameterDict;
             this.existingParamsDict = existingParamsDict;
-            if (parameterDict.Count > 0)
-                AddParamForms();
+            this.existingRunOn = lastRunOn;
+            if (runbookType == "Python2")
+            {
+                this.runbookType = runbookType;
+                AddPthonForms();
+            }
+            else
+            {
+                if (parameterDict.Count > 0)
+                    AddParamForms();
+            }
             if (hybridGroups.Count > 0)
                 AddRunOnForms();
         }
 
+        private void AddPthonForms()
+        {
+            /* Update the UI Grid to fit everything */
+            for (int i = 0; i < 2; i++)
+            {
+                RowDefinition rowDef = new RowDefinition();
+                rowDef.Height = System.Windows.GridLength.Auto;
+                ParametersGrid.RowDefinitions.Add(rowDef);
+            }
+            Grid.SetRow(ButtonsPanel, ParametersGrid.RowDefinitions.Count - 1);
+
+            Label argLabel = new Label();
+            argLabel.Content = "Enter any arguments";
+            Grid.SetRow(argLabel, ParametersGrid.RowDefinitions.Count - 3);
+            Grid.SetColumn(argLabel, 0);
+            Grid.SetColumnSpan(argLabel, 2);
+            /* Input field */
+            TextBox parameterValueBox = new TextBox();
+            // Set previous value for this parameter if available
+            String argLine = null;
+            if (existingParamsDict != null)
+            {
+                foreach (var param in existingParamsDict.Values)
+                {
+                    try
+                    {
+                        argLine = argLine + JsonConvert.DeserializeObject(param) + " ";
+                    }
+                    catch
+                    {
+                        argLine = argLine + param + " ";
+                    }
+                }
+                parameterValueBox.Text = argLine;
+          //     var paramValue = existingParamsDict.FirstOrDefault(x => x.Key == paramName).Value;
+          //      if (paramValue != null) parameterValueBox.Text = paramValue;
+            }
+            parameterValueBox.MinWidth = 200;
+            parameterValueBox.Margin = new System.Windows.Thickness(0, 5, 5, 5);
+            Grid.SetColumn(parameterValueBox, 0);
+            Grid.SetRow(parameterValueBox, ParametersGrid.RowDefinitions.Count - 2);
+            Grid.SetColumnSpan(parameterValueBox, 2);
+            /* Add to Grid */
+            ParametersGrid.Children.Add(argLabel);
+            ParametersGrid.Children.Add(parameterValueBox);
+        }
+
+        [DllImport("shell32.dll", SetLastError = true)]
+        static extern IntPtr CommandLineToArgvW(
+        [MarshalAs(UnmanagedType.LPWStr)] string lpCmdLine, out int pNumArgs);
+
+        public static string[] ReturnArgs(string arguments)
+        {
+            int argc;
+            var argv = CommandLineToArgvW(arguments, out argc);
+            if (argv == IntPtr.Zero)
+                throw new System.ComponentModel.Win32Exception();
+            try
+            {
+                var args = new string[argc];
+                for (var i = 0; i < args.Length; i++)
+                {
+                    var p = Marshal.ReadIntPtr(argv, i * IntPtr.Size);
+                    args[i] = Marshal.PtrToStringUni(p);
+                }
+
+                return args;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(argv);
+            }
+        }
+        /*
+        private static MatchCollection ReturnArgs(string arguments)
+        {
+            var pattern = new Regex(@"("".*?""|[^ ""]+)+");
+            return pattern.Matches(arguments);
+        }
+        */
         private void AddRunOnForms()
         {
             /* Update the UI Grid to fit everything */
@@ -66,7 +160,12 @@ namespace AutomationISE
             }
             ComboBox runOnComboBox = new ComboBox();
             runOnComboBox.ItemsSource = runOnOptions;
-            runOnComboBox.SelectedIndex = 0;
+            if (existingRunOn != null)
+            {
+                runOnComboBox.SelectedItem = existingRunOn;
+                _runOnSelection = existingRunOn;
+            }
+            else runOnComboBox.SelectedIndex = 0;
             runOnComboBox.SelectionChanged += changeRunOnSelection;
             Grid.SetRow(runOnComboBox, ParametersGrid.RowDefinitions.Count - 2);
             Grid.SetColumn(runOnComboBox, 0);
@@ -149,15 +248,35 @@ namespace AutomationISE
             /* Validate parameters and return */
             _paramValues = new Dictionary<string, string>();
             string validationErrors = null;
+            int count = 0;
             foreach (UIElement element in ParametersGrid.Children)
             {
                 try
                 {
                     TextBox inputField = (TextBox)element;
-                    if (String.IsNullOrEmpty(inputField.Text) && parameterDict[inputField.Name].IsMandatory == true)
-                        validationErrors += "A value was not provided for the required parameter:  " + inputField.Name + "\r\n";
-                    if (!String.IsNullOrEmpty(inputField.Text))
-                        _paramValues.Add(inputField.Name, inputField.Text);
+                    if (this.runbookType == "Python2")
+                    {
+                        var args = ReturnArgs("AddOn.exe " + inputField.Text);
+                        if (args.Count() > 1)
+                        {
+                            // Remove AddOn.exe from the argument list
+                            args = args.Where((val, index) => index != 0).ToArray();
+                            foreach (var arg in args)
+                            {
+                                count++;
+                                if (!String.IsNullOrEmpty(arg.ToString()))
+                                    _paramValues.Add("[Parameter " + count.ToString() + "]", JsonConvert.SerializeObject(arg.ToString()));
+
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (String.IsNullOrEmpty(inputField.Text) && parameterDict[inputField.Name].IsMandatory == true)
+                            validationErrors += "A value was not provided for the required parameter:  " + inputField.Name + "\r\n";
+                        if (!String.IsNullOrEmpty(inputField.Text))
+                            _paramValues.Add(inputField.Name, inputField.Text);
+                    }
                 }
                 catch { /* not an input field */ }
             }
