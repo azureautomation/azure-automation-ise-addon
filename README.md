@@ -46,6 +46,7 @@ If you want to build the standalone AddOn for use with Visual Studio or VSCode, 
 * You can then copy the AddOn.exe that is built into the existing [AzureAutomationAuthoringToolkit/ISEaddon](https://github.com/azureautomation/azure-automation-ise-addon/tree/master/AzureAutomationAuthoringToolkit/ISEaddon) directory where the AutomationISE files were copied previously. 
 * From PowerShell, run Import-Module AzureAutomationToolkit to get the required configuration files created.
 * You can then run AddOn.exe and use outside of the PowerShell ISE with Visual Studio or VS Code.
+![alt text](https://github.com/azureautomation/azure-automation-ise-addon/blob/master/Screenshots/VSCodeAddOn.png " Azure Automation Add-On")
 
 If you want the PowerShell ISE to always automatically load the Azure Automation ISE add-on:
 * Open the PowerShell ISE, and run `Install-AzureAutomationIseAddOn`
