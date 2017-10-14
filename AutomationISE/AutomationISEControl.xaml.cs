@@ -413,6 +413,7 @@ namespace AutomationISE
             catch (Exception exception)
             {
                 refreshAuthTokenTimer.Stop();
+                loginButton.Content = "Sign In";
                 System.Windows.Forms.MessageBox.Show("Your session expired and could not be refreshed. Please sign in again./r/nDetails: " + exception.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
         }
@@ -579,6 +580,7 @@ namespace AutomationISE
                 if (exception.HResult == tokenExpiredResult)
                 {
                     refreshAccountDataTimer.Stop();
+                    loginButton.Content = "Sign In";
                 }
                 if (exception.HResult == -2146233029)
                 {
@@ -606,7 +608,11 @@ namespace AutomationISE
             {
                 ScriptAnalyzerTextBlock_ISEAddon.Visibility = Visibility.Collapsed;
                 UpdateStatusBox(configurationStatusTextBox, "Launching login window...");
-                iseClient.azureADAuthResult = AutomationISE.Model.AuthenticateHelper.GetInteractiveLogin(userNameTextBox.Text);
+                if (loginButton.Content.ToString() == "Sign In")
+                    iseClient.azureADAuthResult = AutomationISE.Model.AuthenticateHelper.GetInteractiveLogin(userNameTextBox.Text);
+                else
+                    iseClient.azureADAuthResult = AutomationISE.Model.AuthenticateHelper.GetInteractiveLogin(userNameTextBox.Text,"common",true);
+                loginButton.Content = "Switch User";
                 refreshAccountDataTimer.Stop();
 
                 if (HostObject == null)

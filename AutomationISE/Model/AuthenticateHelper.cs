@@ -38,10 +38,13 @@ namespace AutomationISE.Model
             return await AuthContext.AcquireTokenAsync(Properties.Settings.Default.appIdURI, Constants.clientID, Creds);
         }
 
-        public static AuthenticationResult GetInteractiveLogin(String Username = null, String authority = "common")
+        public static AuthenticationResult GetInteractiveLogin(String Username = null, String authority = "common", Boolean prompt=false)
         {
             var ctx = new AuthenticationContext(string.Format(Properties.Settings.Default.loginAuthority + authority, Constants.tenant));
-            return ctx.AcquireToken(Properties.Settings.Default.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Always);
+            if (prompt)
+                return ctx.AcquireToken(Properties.Settings.Default.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Always);
+            else
+                return ctx.AcquireToken(Properties.Settings.Default.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Auto);
         }
 
         public static AuthenticationResult RefreshTokenByAuthority(String authority,String appIdURI)
