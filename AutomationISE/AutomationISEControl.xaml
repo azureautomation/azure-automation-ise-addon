@@ -39,6 +39,7 @@
                     <TextBox x:Name="workspaceTextBox" Margin="5,0,5,5" VerticalAlignment="Bottom" TextChanged="workspaceTextBox_TextChanged" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2"/>
                     <Button x:Name="workspaceButton" Content=" Browse " Margin="5,0,5,5" VerticalAlignment="Bottom" Click="workspaceButton_Click" Grid.Column="2" Grid.Row="0"/>
                     <TextBox x:Name="userNameTextBox" Margin="5,0,5,5" VerticalAlignment="Bottom" Grid.Column="0" Grid.Row="1" IsReadOnly="True" IsReadOnlyCaretVisible="True" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Grid.ColumnSpan="2"/>
+                    <ComboBox x:Name="AzureEnvironmentComboBox" Margin="5,0,5,5" Grid.Row="1" Grid.Column="1"  VerticalAlignment="Top" SelectionChanged="AzureEnvironmentComboBox_SelectionChanged" Grid.ColumnSpan="1" />
                     <Button x:Name="loginButton" Content="Sign In" Margin="5,0,5,5" VerticalAlignment="Bottom" Click="loginButton_Click" Grid.Column="2" Grid.Row="1"/>
                     <ComboBox x:Name="subscriptionComboBox" Margin="5,0,5,5" Grid.Row="2" Grid.Column="0"  VerticalAlignment="Bottom" SelectionChanged="SubscriptionComboBox_SelectionChanged" Grid.ColumnSpan="2" />
                     <ComboBox x:Name="accountsComboBox" Margin="5,0,5,5" VerticalAlignment="Bottom" SelectionChanged="accountsComboBox_SelectionChanged" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"/>

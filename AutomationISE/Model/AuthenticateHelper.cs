@@ -34,19 +34,19 @@ namespace AutomationISE.Model
         public static async Task<AuthenticationResult> GetAuthorizationHeader(String Username, SecureString Password, String authority = "common")
         {
             var Creds = new Microsoft.IdentityModel.Clients.ActiveDirectory.UserCredential(Username, Password);
-            var AuthContext = new AuthenticationContext(Constants.loginAuthority + authority);
-            return await AuthContext.AcquireTokenAsync(Constants.appIdURI, Constants.clientID, Creds);
+            var AuthContext = new AuthenticationContext(Properties.Settings.Default.loginAuthority + authority);
+            return await AuthContext.AcquireTokenAsync(Properties.Settings.Default.appIdURI, Constants.clientID, Creds);
         }
 
         public static AuthenticationResult GetInteractiveLogin(String Username = null, String authority = "common")
         {
-            var ctx = new AuthenticationContext(string.Format(Constants.loginAuthority + authority, Constants.tenant));
-            return ctx.AcquireToken(Constants.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Always);
+            var ctx = new AuthenticationContext(string.Format(Properties.Settings.Default.loginAuthority + authority, Constants.tenant));
+            return ctx.AcquireToken(Properties.Settings.Default.appIdURI, Constants.clientID, new Uri(Constants.redirectURI), PromptBehavior.Always);
         }
 
-        public static AuthenticationResult RefreshTokenByAuthority(String authority,String appIdURI = Constants.appIdURI )
+        public static AuthenticationResult RefreshTokenByAuthority(String authority,String appIdURI)
         {
-            var ctx = new AuthenticationContext(string.Format(Constants.loginAuthority + authority, Constants.tenant));
+            var ctx = new AuthenticationContext(string.Format(Properties.Settings.Default.loginAuthority + authority, Constants.tenant));
             // Refresh the token for the logged in user only.
             UserIdentifier userName = new UserIdentifier(Properties.Settings.Default["ADUserName"].ToString(), UserIdentifierType.OptionalDisplayableId);
             try

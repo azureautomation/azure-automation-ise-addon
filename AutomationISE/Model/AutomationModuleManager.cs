@@ -43,9 +43,9 @@ namespace AutomationISE.Model
             try
             {
                 // Get the token for the tenant on this subscription.
-                var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(authority);
+                var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(authority, Properties.Settings.Default.appIdURI);
                 var subscriptionCreds = new TokenCloudCredentials(storageSubID, cloudtoken.AccessToken);
-                var resourceManagementClient = new ResourceManagementClient(subscriptionCreds);
+                var resourceManagementClient = new ResourceManagementClient(subscriptionCreds, new Uri(Properties.Settings.Default.appIdURI));
 
                 // Check if the resource group exists, otherwise create it.
                 var rgExists = resourceManagementClient.ResourceGroups.CheckExistence(storageResourceGroup);
@@ -57,7 +57,7 @@ namespace AutomationISE.Model
 
                 // Create storage client and set subscription to work against
                 var token = new Microsoft.Rest.TokenCredentials(cloudtoken.AccessToken);
-                var storageManagementClient = new Microsoft.Azure.Management.Storage.StorageManagementClient(token);
+                var storageManagementClient = new Microsoft.Azure.Management.Storage.StorageManagementClient(new Uri(Properties.Settings.Default.appIdURI), token);
                 storageManagementClient.SubscriptionId = storageSubID;
 
                 // Use Standard local replication as the sku since it is not critical to keep these modules replicated
@@ -87,7 +87,7 @@ namespace AutomationISE.Model
             {
                 // Create storage client and set subscription to work against
                 var token = new Microsoft.Rest.TokenCredentials(auth.AccessToken);
-                var storageManagementClient = new Microsoft.Azure.Management.Storage.StorageManagementClient(token);
+                var storageManagementClient = new Microsoft.Azure.Management.Storage.StorageManagementClient(new Uri(Properties.Settings.Default.appIdURI), token);
                 storageManagementClient.SubscriptionId = storageSubID;
 
                 // Get storage key and set up connection to storage account

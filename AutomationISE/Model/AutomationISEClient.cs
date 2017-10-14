@@ -66,9 +66,9 @@ namespace AutomationISE.Model
 
             // Common subscription object to host subscriptions from RDFE & ARM
             IList<SubscriptionObject> subscriptionList = new List<SubscriptionObject>();
-
+ 
             subscriptionCredentials = new Microsoft.Azure.TokenCloudCredentials(azureADAuthResult.AccessToken);
-            subscriptionClient = new Microsoft.Azure.Subscriptions.SubscriptionClient(subscriptionCredentials);
+            subscriptionClient = new Microsoft.Azure.Subscriptions.SubscriptionClient(subscriptionCredentials, new Uri(Properties.Settings.Default.appIdURI));
 
             var cancelToken = new CancellationToken();
 
@@ -76,9 +76,9 @@ namespace AutomationISE.Model
             // Get subscriptions for each tenant
             foreach (var tenant in tenants.TenantIds)
             {
-                AuthenticationResult tenantTokenCreds = AuthenticateHelper.RefreshTokenByAuthority(tenant.TenantId);
+                AuthenticationResult tenantTokenCreds = AuthenticateHelper.RefreshTokenByAuthority(tenant.TenantId, Properties.Settings.Default.appIdURI);
                 subscriptionCredentials = new Microsoft.Azure.TokenCloudCredentials(tenantTokenCreds.AccessToken);
-                var tenantSubscriptionClient = new Microsoft.Azure.Subscriptions.SubscriptionClient((subscriptionCredentials));
+                var tenantSubscriptionClient = new Microsoft.Azure.Subscriptions.SubscriptionClient(subscriptionCredentials,new Uri(Properties.Settings.Default.appIdURI));
                 var subscriptionListResults = tenantSubscriptionClient.Subscriptions.ListAsync(cancelToken).Result;
 
                 foreach (var subscription in subscriptionListResults.Subscriptions)
@@ -109,7 +109,7 @@ namespace AutomationISE.Model
             if (azureADAuthResult == null)
                 throw new Exception(Properties.Resources.AzureADAuthResult);
             var subscriptionCredentials = new Microsoft.WindowsAzure.TokenCloudCredentials(azureADAuthResult.AccessToken);
-            var subscriptionClient = new Microsoft.WindowsAzure.Subscriptions.SubscriptionClient(subscriptionCredentials);
+            var subscriptionClient = new Microsoft.WindowsAzure.Subscriptions.SubscriptionClient(subscriptionCredentials, new Uri(Properties.Settings.Default.appIdURI));
 
             var cancelToken = new CancellationToken();
             Microsoft.WindowsAzure.Subscriptions.Models.SubscriptionListOperationResponse subscriptionResults = await subscriptionClient.Subscriptions.ListAsync(cancelToken);
@@ -128,10 +128,10 @@ namespace AutomationISE.Model
             if (currSubscription.Name == null) return;
             if (azureARMAuthResult.ExpiresOn.ToLocalTime() < DateTime.Now.AddMinutes(Constants.tokenRefreshInterval + 2))
             {
-                azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.Authority);
+                azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.Authority, Properties.Settings.Default.appIdURI);
                 subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, azureARMAuthResult.AccessToken);
 
-                automationManagementClient = new AutomationManagementClient(subscriptionCreds);
+                automationManagementClient = new AutomationManagementClient(subscriptionCreds, new Uri(Properties.Settings.Default.appIdURI));
 
                 // Add user agent string to indicate this is coming from the ISE automation client.
                 ProductInfoHeaderValue ISEClientAgent = new ProductInfoHeaderValue(Constants.ISEUserAgent, Constants.ISEVersion);
@@ -145,10 +145,10 @@ namespace AutomationISE.Model
                 throw new Exception(Properties.Resources.SubscriptionNotSet);
 
             // Get the token for the tenant on this subscription.
-            azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.Authority);
+            azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(currSubscription.Authority, Properties.Settings.Default.appIdURI);
             subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, azureARMAuthResult.AccessToken);
 
-            automationManagementClient = new AutomationManagementClient(subscriptionCreds);
+            automationManagementClient = new AutomationManagementClient(subscriptionCreds, new Uri(Properties.Settings.Default.appIdURI));
             
             // Add user agent string to indicate this is coming from the ISE automation client.
             ProductInfoHeaderValue ISEClientAgent = new ProductInfoHeaderValue(Constants.ISEUserAgent, Constants.ISEVersion);
@@ -192,9 +192,9 @@ namespace AutomationISE.Model
                 throw new Exception(Properties.Resources.SubscriptionNotSet);
 
             // Get the token for the tenant on this subscription.
-            var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(azureARMAuthResult.TenantId);
+            var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(azureARMAuthResult.TenantId, Properties.Settings.Default.appIdURI);
             subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, cloudtoken.AccessToken);
-            resourceManagementClient = new ResourceManagementClient(subscriptionCreds);
+            resourceManagementClient = new ResourceManagementClient(subscriptionCreds, new Uri(Properties.Settings.Default.appIdURI));
 
             // Only get automation account resources
             ResourceListParameters automationResourceParams = new ResourceListParameters();
@@ -209,10 +209,10 @@ namespace AutomationISE.Model
                 throw new Exception(Properties.Resources.SubscriptionNotSet);
 
             // Get the token for the tenant on this subscription.
-            var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(azureARMAuthResult.TenantId);
+            var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(azureARMAuthResult.TenantId, Properties.Settings.Default.appIdURI);
             subscriptionCreds = new TokenCloudCredentials(currSubscription.SubscriptionId, cloudtoken.AccessToken);
 
-            resourceManagementClient = new ResourceManagementClient(subscriptionCreds);
+            resourceManagementClient = new ResourceManagementClient(subscriptionCreds, new Uri(Properties.Settings.Default.appIdURI));
 
             ResourceGroupListResult resourceGroupResult = await resourceManagementClient.ResourceGroups.ListAsync(null);
 

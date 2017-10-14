@@ -46,11 +46,11 @@ namespace AutomationISE
         private async void subscriptionComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var subObject = (AutomationISEClient.SubscriptionObject) subscriptionComboBox.SelectedItem;
-            var azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(subObject.Authority);
+            var azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(subObject.Authority, Properties.Settings.Default.appIdURI);
             authority = subObject.Authority;
             var authToken = azureARMAuthResult.AccessToken;
             var token = new Microsoft.Rest.TokenCredentials(authToken);
-            var storageManagementClient = new Microsoft.Azure.Management.Storage.StorageManagementClient(token);
+            var storageManagementClient = new Microsoft.Azure.Management.Storage.StorageManagementClient(new Uri(Properties.Settings.Default.appIdURI), token);
             storageManagementClient.SubscriptionId = subObject.SubscriptionId;
             resourceGroupcomboBox.Items.Clear();
             try
@@ -66,9 +66,9 @@ namespace AutomationISE
                         resourceGroupcomboBox.Items.Add(resourceGroup);
                     }
                 }
-                var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(authority);
+                var cloudtoken = AuthenticateHelper.RefreshTokenByAuthority(authority, Properties.Settings.Default.appIdURI);
                 var subscriptionCreds = new TokenCloudCredentials(((AutomationISEClient.SubscriptionObject)subscriptionComboBox.SelectedItem).SubscriptionId, cloudtoken.AccessToken);
-                var resourceManagementClient = new Microsoft.Azure.Subscriptions.SubscriptionClient(subscriptionCreds);
+                var resourceManagementClient = new Microsoft.Azure.Subscriptions.SubscriptionClient(subscriptionCreds, new Uri(Properties.Settings.Default.appIdURI));
                 CancellationToken cancelToken = new CancellationToken();
                 var subscriptionRegions = await resourceManagementClient.Subscriptions.ListLocationsAsync(((AutomationISEClient.SubscriptionObject)subscriptionComboBox.SelectedItem).SubscriptionId, cancelToken);
                 regionComboBox.ItemsSource = subscriptionRegions.Locations;
@@ -105,10 +105,10 @@ namespace AutomationISE
                     if (storageAccountcomboBox.SelectedItem == null)
                     {
                         var subObject = (AutomationISEClient.SubscriptionObject)subscriptionComboBox.SelectedItem;
-                        var azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(subObject.Authority);
+                        var azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(subObject.Authority, Properties.Settings.Default.appIdURI);
                         var authToken = azureARMAuthResult.AccessToken;
                         var token = new Microsoft.Rest.TokenCredentials(authToken);
-                        var storageManagementClient = new Microsoft.Azure.Management.Storage.StorageManagementClient(token);
+                        var storageManagementClient = new Microsoft.Azure.Management.Storage.StorageManagementClient(new Uri(Properties.Settings.Default.appIdURI), token);
                         storageManagementClient.SubscriptionId = subObject.SubscriptionId;
                         var result = await storageManagementClient.StorageAccounts.CheckNameAvailabilityAsync(storageAccountcomboBox.Text);
                         if (!(result.NameAvailable.Value))

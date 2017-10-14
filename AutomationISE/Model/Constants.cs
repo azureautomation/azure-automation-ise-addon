@@ -25,8 +25,10 @@ namespace AutomationISE.Model
         public const String localAssetsFileName = "LocalAssets.json";
         public const String secureLocalAssetsFileName = "SecureLocalAssets.json";
 
-        public const String loginAuthority = "https://login.microsoftonline.com/";
-        public const String appIdURI = "https://management.core.windows.net/";
+        public const String USGovernmentLoginAuthority = "https://login-us.microsoftonline.com/";
+        public const String publicLoginAuthority = "https://login.microsoftonline.com/";
+        public const String publicAppIdURI = "https://management.azure.com/";
+        public const String USGovernmentAppIdURI = "https://management.usgovcloudapi.net/";
         public const String graphURI = "https://graph.windows.net/";
         public const String clientID = "1950a258-227b-4e31-a9cf-717495945fc2";
         public const String tenant = "f0316def-610c-40f6-abf2-f0ab2296b483";

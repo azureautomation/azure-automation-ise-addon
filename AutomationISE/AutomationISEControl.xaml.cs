@@ -170,6 +170,20 @@ namespace AutomationISE
 
                 IDEComboBox.Visibility = Visibility.Collapsed;
                 IDEEditorLabel.Visibility = Visibility.Collapsed;
+
+                AzureEnvironmentComboBox.Items.Add("Public Azure");
+                AzureEnvironmentComboBox.Items.Add("US Government Azure");
+
+                String AzureEnvironment = Properties.Settings.Default.loginAuthority;
+                if (AzureEnvironment == Constants.publicLoginAuthority)
+                {
+                    AzureEnvironmentComboBox.SelectedItem = "Public Azure";
+                }
+                if (AzureEnvironment == Constants.USGovernmentLoginAuthority)
+                {
+                    AzureEnvironmentComboBox.SelectedItem = "US Government Azure";
+                }
+
             }
             catch (Exception exception)
             {
@@ -610,7 +624,7 @@ namespace AutomationISE
                     {
                         IDEComboBox.Items.Add("VS Code");
                     }
-                    if (editor != null)
+                    if (!String.IsNullOrEmpty(editor))
                         IDEComboBox.SelectedValue = editor;
                     else
                     {
@@ -678,7 +692,7 @@ namespace AutomationISE
             catch (Exception Ex)
             {
                 endBackgroundWork("Couldn't retrieve subscriptions.");
-                var detailsDialog = System.Windows.Forms.MessageBox.Show(Ex.Message);
+                var detailsDialog = System.Windows.Forms.MessageBox.Show(Ex.InnerException.Message);
             }
         }
 
@@ -3210,7 +3224,7 @@ namespace AutomationISE
                         continue;
                     try
                     {
-                        var azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(Properties.Settings.Default.StorageAuthority);
+                        var azureARMAuthResult = AuthenticateHelper.RefreshTokenByAuthority(Properties.Settings.Default.StorageAuthority, Properties.Settings.Default.loginAuthority);
                         beginBackgroundWork("Uploading module " + module.Name + "...");
 
                         // Get storage account information stored.
@@ -3432,6 +3446,22 @@ namespace AutomationISE
         private void IDEComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             Properties.Settings.Default.Editor = IDEComboBox.SelectedItem.ToString();
+            Properties.Settings.Default.Save();
+        }
+
+        private void AzureEnvironmentComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (String.Compare(AzureEnvironmentComboBox.SelectedItem.ToString(), "Public Azure") == 0)
+            {
+                Properties.Settings.Default.loginAuthority = Constants.publicLoginAuthority;
+                Properties.Settings.Default.appIdURI = Constants.publicAppIdURI;
+            }
+
+            if (String.Compare(AzureEnvironmentComboBox.SelectedItem.ToString(), "US Government Azure") == 0)
+            {
+                Properties.Settings.Default.loginAuthority = Constants.USGovernmentLoginAuthority;
+                Properties.Settings.Default.appIdURI = Constants.USGovernmentAppIdURI;
+            }
             Properties.Settings.Default.Save();
         }
     }

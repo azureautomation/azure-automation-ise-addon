@@ -38,5 +38,11 @@
     <Setting Name="Editor" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="loginAuthority" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://login.microsoftonline.com/</Value>
+    </Setting>
+    <Setting Name="appIdURI" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://management.core.windows.net/</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
