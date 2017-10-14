@@ -42,7 +42,7 @@
       <Value Profile="(Default)">https://login.microsoftonline.com/</Value>
     </Setting>
     <Setting Name="appIdURI" Type="System.String" Scope="User">
-      <Value Profile="(Default)">https://management.core.windows.net/</Value>
+      <Value Profile="(Default)">https://management.azure.com/</Value>
     </Setting>
   </Settings>
 </SettingsFile>

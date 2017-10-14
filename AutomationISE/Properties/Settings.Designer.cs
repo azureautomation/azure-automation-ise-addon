@@ -181,7 +181,7 @@ namespace AutomationISE.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("https://management.core.windows.net/")]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://management.azure.com/")]
         public string appIdURI {
             get {
                 return ((string)(this["appIdURI"]));
