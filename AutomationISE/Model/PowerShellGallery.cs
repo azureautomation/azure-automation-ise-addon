@@ -31,6 +31,7 @@ using System.Management.Automation;
 using System.Net;
 using System.IO;
 using System.Xml;
+using System.Management.Automation.Runspaces;
 
 namespace AutomationISE.Model
 {
@@ -59,23 +60,37 @@ namespace AutomationISE.Model
         /// <returns></returns>
         public static string GetLocalVersion()
         {
-
             String version = null;
-            using (PowerShell PowerShellInstance = PowerShell.Create())
-            {
-                PowerShellInstance.AddScript("Import-Module AzureAutomationAuthoringToolkit; Get-Module AzureAutomationAuthoringToolkit | Select Version");
-                Collection<PSObject> PSOutput = PowerShellInstance.Invoke();
 
-                foreach (PSObject outputItem in PSOutput)
+            using (Runspace runSpace = RunspaceFactory.CreateRunspace())
+            {
+
+                runSpace.Open();
+                using (Pipeline pipeline = runSpace.CreatePipeline())
                 {
-                    if (outputItem != null)
+                    Command getModuleCommand = new Command("Get-Command");
+                    getModuleCommand.Parameters.Add("Name", "Get-AutomationVariable");
+
+                    Command getVersionCommand = new Command("Select");
+                    getVersionCommand.Parameters.Add("Property", "Version");
+
+                    // Add commands to the pipeline
+                    pipeline.Commands.Add(getModuleCommand);
+                    pipeline.Commands.Add(getVersionCommand);
+
+                    Collection<PSObject> output = pipeline.Invoke();
+                    foreach (PSObject result in output)
                     {
-                        foreach (var prop in outputItem.Properties)
+                        if (result != null)
                         {
-                            version = prop.Value.ToString();
+                            foreach (var prop in result.Properties)
+                            {
+                                version = prop.Value.ToString();
+                            }
                         }
                     }
                 }
+                runSpace.Close();
             }
             return version;
         }
@@ -139,7 +154,8 @@ namespace AutomationISE.Model
             // Add the namespaces for the gallery xml content
             XmlNamespaceManager nsmgr = new XmlNamespaceManager(doc.NameTable);
             nsmgr.AddNamespace("ps", "http://www.w3.org/2005/Atom");
-            nsmgr.AddNamespace("d", "http://schemas.microsoft.com/ado/2007/08/dataservices");            nsmgr.AddNamespace("m", "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata");
+            nsmgr.AddNamespace("d", "http://schemas.microsoft.com/ado/2007/08/dataservices");
+            nsmgr.AddNamespace("m", "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata");
 
             // Find the version information
             XmlNode root = doc.DocumentElement;
@@ -213,7 +229,8 @@ namespace AutomationISE.Model
             // Add the namespaces for the gallery xml content
             XmlNamespaceManager nsmgr = new XmlNamespaceManager(doc.NameTable);
             nsmgr.AddNamespace("ps", "http://www.w3.org/2005/Atom");
-            nsmgr.AddNamespace("d", "http://schemas.microsoft.com/ado/2007/08/dataservices");            nsmgr.AddNamespace("m", "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata");
+            nsmgr.AddNamespace("d", "http://schemas.microsoft.com/ado/2007/08/dataservices");
+            nsmgr.AddNamespace("m", "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata");
 
             // Find the version information
             XmlNode root = doc.DocumentElement;

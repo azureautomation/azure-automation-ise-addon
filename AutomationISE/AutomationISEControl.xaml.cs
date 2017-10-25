@@ -38,6 +38,7 @@ using System.Drawing;
 using System.Net;
 using System.Management.Automation;
 using Microsoft.Azure.Management.Storage.Models;
+using System.Management.Automation.Runspaces;
 
 namespace AutomationISE
 {
@@ -1839,22 +1840,30 @@ namespace AutomationISE
             {
                 if (Directory.Exists(iseClient.currWorkspace))
                 {
+                    // Get all available modules in the system
                     List<string> localModules = new List<string>();
-                    PowerShell ps = PowerShell.Create();
-                    ps.AddScript("Get-Module -ListAvailable");
-
-                    var psModulePath = Environment.GetEnvironmentVariable("psmodulepath");
-                    var psPaths = psModulePath.Split(';');
-                    if (localFile == null)
+                    using (Runspace runSpace = RunspaceFactory.CreateRunspace())
                     {
-                        foreach (PSObject result in ps.Invoke())
-                        {
-                            var a = result;
 
-                            var moduleName = result.Properties["Name"].Value.ToString();
-                            if (!(copyModules.ContainsKey(moduleName))) copyModules.Add(moduleName, result);
+                        runSpace.Open();
+                        using (Pipeline pipeline = runSpace.CreatePipeline())
+                        {
+                            Command getModuleCommand = new Command("Get-Module");
+                            getModuleCommand.Parameters.Add("-ListAvailable");
+                            pipeline.Commands.Add(getModuleCommand);
+                            Collection<PSObject> output = pipeline.Invoke();
+                            foreach (PSObject result in output)
+                            {
+                                if (result != null)
+                                {
+                                    var moduleName = result.Properties["Name"].Value.ToString();
+                                    if (!(copyModules.ContainsKey(moduleName))) copyModules.Add(moduleName, result);
+                                }
+                            }
                         }
+                        runSpace.Close();
                     }
+                    
                     // Lock access to localModulesParsed dictionary so it is not overwritten when accessed by other threads.
                     lock (refreshModulesLock)
                     {
