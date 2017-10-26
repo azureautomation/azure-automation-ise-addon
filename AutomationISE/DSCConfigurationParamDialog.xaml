@@ -1,7 +1,7 @@
 ﻿<Window x:Class="AutomationISE.DSCConfigurationParamDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Runbook Parameters" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen">
+        Title="Configuration Parameters" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <Grid Name="ParametersGrid" Margin="15">
         <Grid.ColumnDefinitions>

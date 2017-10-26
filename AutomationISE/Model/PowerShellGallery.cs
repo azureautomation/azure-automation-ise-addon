@@ -68,9 +68,9 @@ namespace AutomationISE.Model
                 runSpace.Open();
                 using (Pipeline pipeline = runSpace.CreatePipeline())
                 {
-                    Command getModuleCommand = new Command("Get-Command");
-                    getModuleCommand.Parameters.Add("Name", "Get-AutomationVariable");
-
+                    Command getModuleCommand = new Command("Import-Module");
+                    getModuleCommand.Parameters.Add("Name", "AzureAutomationAuthoringToolkit");
+                    getModuleCommand.Parameters.Add("PassThru");
                     Command getVersionCommand = new Command("Select");
                     getVersionCommand.Parameters.Add("Property", "Version");
 
@@ -79,6 +79,25 @@ namespace AutomationISE.Model
                     pipeline.Commands.Add(getVersionCommand);
 
                     Collection<PSObject> output = pipeline.Invoke();
+
+                    if (pipeline.Error.Count > 0)
+                    {
+                        StringBuilder errors = new StringBuilder();
+                        while (!pipeline.Error.EndOfPipeline)
+                        {
+                            var errorValue = pipeline.Error.Read() as PSObject;
+                            if (errorValue != null)
+                            {
+                                var errorRecord = errorValue.BaseObject as ErrorRecord;
+                                if (errorRecord != null)
+                                {
+                                    errors.AppendLine(errorRecord.Exception.Message);
+                                }
+                            }
+                        }
+                        runSpace.Close();
+                        throw new Exception(errors.ToString());
+                    }
                     foreach (PSObject result in output)
                     {
                         if (result != null)
