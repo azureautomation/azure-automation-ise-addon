@@ -104,7 +104,7 @@ function _EncryptValue {
         if (Test-Path -Path Cert:\CurrentUser\My\$Thumbprint) {
                        
             # convert the value to a JSON string so that we don't lost type info when decrypting
-            $JsonValue = ConvertTo-Json -InputObject $Value -Depth 999
+            $JsonValue = ConvertTo-Json -InputObject $Value -Depth 99
 
             $Cert = Get-Item -Path Cert:\CurrentUser\My\$Thumbprint
             $Bytes = [Text.Encoding]::UTF8.GetBytes($JsonValue)

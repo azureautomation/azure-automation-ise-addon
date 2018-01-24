@@ -42,6 +42,7 @@ To build from source:
 If you want to build the standalone AddOn for use with Visual Studio or VSCode, perform the following:
 * Open AddOn/AddOn.sln in Visual Studio
 * Build the AutomationISE solution first cleanly.
+* Select x64 as the target platform.
 * Build the AddOn solution. Nuget will pull any required packages.
 * You can then copy the AddOn.exe that is built into the existing [AzureAutomationAuthoringToolkit/ISEaddon](https://github.com/azureautomation/azure-automation-ise-addon/tree/master/AzureAutomationAuthoringToolkit/ISEaddon) directory where the AutomationISE files were copied previously. 
 * From PowerShell, run Import-Module AzureAutomationAuthoringToolkit to get the required configuration files created.
