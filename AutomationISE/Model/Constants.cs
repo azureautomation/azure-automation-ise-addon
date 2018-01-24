@@ -50,8 +50,8 @@ namespace AutomationISE.Model
         public static readonly String[] excludeModules = new String[] { "Microsoft.PowerShell.Core", "Microsoft.PowerShell.Diagnostics", "Microsoft.PowerShell.Management", "Microsoft.PowerShell.Security", "Microsoft.PowerShell.Utility", "Orchestrator.AssetManagement.Cmdlets", "Microsoft.WSMan.Management" };
 
 
-        public const String feedbackURI = "http://iseautomation.azurewebsites.net/FeedbackForm.aspx";
-        public const String helpURI = "http://iseautomation.azurewebsites.net/Help.html";
+        public const String feedbackURI = "http://automationisewebsite.azurewebsites.net/FeedbackForm.aspx";
+        public const String helpURI = "http://automationisewebsite.azurewebsites.net/Help.html";
 
         public const int ExpirationLengthInDaysForSelfSignedCert = 365 * 2;
 
