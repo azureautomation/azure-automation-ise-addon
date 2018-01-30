@@ -31,7 +31,8 @@ namespace AutomationISE.Model
             try
             {
                 var jss = new JavaScriptSerializer();
-                this.setValue(jss.DeserializeObject(cloudVariable.Properties.Value));
+                if (cloudVariable.Properties.Value != null)
+                    this.setValue(jss.DeserializeObject(cloudVariable.Properties.Value));
             }
             catch
             {

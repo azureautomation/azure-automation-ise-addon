@@ -44,5 +44,8 @@
     <Setting Name="appIdURI" Type="System.String" Scope="User">
       <Value Profile="(Default)">https://management.azure.com/</Value>
     </Setting>
+    <Setting Name="lastAutomationAccount" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

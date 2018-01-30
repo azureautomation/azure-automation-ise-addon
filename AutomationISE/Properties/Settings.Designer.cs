@@ -190,5 +190,17 @@ namespace AutomationISE.Properties {
                 this["appIdURI"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string lastAutomationAccount {
+            get {
+                return ((string)(this["lastAutomationAccount"]));
+            }
+            set {
+                this["lastAutomationAccount"] = value;
+            }
+        }
     }
 }

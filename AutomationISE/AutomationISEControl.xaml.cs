@@ -734,7 +734,23 @@ namespace AutomationISE
                         if (accountsComboBox.HasItems)
                         {
                             endBackgroundWork(Properties.Resources.FoundAutomationAccounts);
-                            accountsComboBox.SelectedItem = accountsComboBox.Items[0];
+                            var lastAccountName = Properties.Settings.Default.lastAutomationAccount;
+                            if (lastAccountName != "")
+                            {
+                                // find if automation account is present in list
+                                foreach (AutomationAccount selectedAccount in accountsComboBox.Items)
+                                {
+                                    if (selectedAccount.Name.ToString() == Properties.Settings.Default.lastAutomationAccount.ToString())
+                                    {
+                                        accountsComboBox.SelectedItem = selectedAccount;
+                                    }
+                                }
+                                if (accountsComboBox.SelectedItem == null) accountsComboBox.SelectedItem = accountsComboBox.Items[0];
+                            }
+                            else
+                            {
+                                accountsComboBox.SelectedItem = accountsComboBox.Items[0];
+                            }
                             accountsComboBox.IsEnabled = true;
                         }
                         else
@@ -767,6 +783,9 @@ namespace AutomationISE
                 {
                     /* Update Status */
                     UpdateStatusBox(configurationStatusTextBox, "Selected automation account: " + account.Name);
+                    Properties.Settings.Default.lastAutomationAccount = account.Name;
+                    Properties.Settings.Default.Save();
+
                     if (iseClient.AccountWorkspaceExists())
                         accountPathTextBox.Text = iseClient.currWorkspace;
                     // Refresh local modules
