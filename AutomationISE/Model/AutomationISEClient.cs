@@ -226,9 +226,13 @@ namespace AutomationISE.Model
 
         private string getCurrentAccountWorkspace()
         {
-            //Account must be unique within the ResourceGroup: no need to include region
-            string[] pathFolders = new string[] { this.baseWorkspace, currSubscription.Name  + " - " + currSubscription.SubscriptionId, 
+            //Account must be unique within the ResourceGroup: no need to include region.
+            // Remove any invalid characters in the subscription name. Might have to clean others if required later.
+            string subscriptionName = new string(currSubscription.Name.Where(x => !(Path.GetInvalidFileNameChars()).Contains(x)).ToArray());
+
+            string[] pathFolders = new string[] { this.baseWorkspace, subscriptionName  + " - " + currSubscription.SubscriptionId, 
                 accountResourceGroups[currAccount].Name, currAccount.Name };
+
             return System.IO.Path.Combine(pathFolders);
         }
     }
