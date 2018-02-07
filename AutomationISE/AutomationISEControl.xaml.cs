@@ -2774,7 +2774,7 @@ namespace AutomationISE
                     }
                     else
                     {
-                        DeleteRunbookDialog deleteOptionsWindow = new DeleteRunbookDialog();
+                        DeleteRunbookDialog deleteOptionsWindow = new DeleteRunbookDialog(runbook.Name);
                         bool? result = deleteOptionsWindow.ShowDialog();
                         if (result.HasValue && result.Value)
                         {
@@ -2850,7 +2850,7 @@ namespace AutomationISE
                     }
                     else
                     {
-                        DeleteConfigurationDialog deleteOptionsWindow = new DeleteConfigurationDialog();
+                        DeleteConfigurationDialog deleteOptionsWindow = new DeleteConfigurationDialog(configuration.Name);
                         bool? result = deleteOptionsWindow.ShowDialog();
                         if (result.HasValue && result.Value)
                         {

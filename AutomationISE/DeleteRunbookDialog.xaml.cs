@@ -20,9 +20,11 @@ namespace AutomationISE
     public partial class DeleteRunbookDialog : Window
     {
         public bool deleteLocalOnly { get; set; }
-        public DeleteRunbookDialog()
+
+        public DeleteRunbookDialog(String RunbookName)
         {
             InitializeComponent();
+            this.PromptLabel.Content = "Delete " + RunbookName + " from where?";
             deleteLocalOnly = true;
         }
 

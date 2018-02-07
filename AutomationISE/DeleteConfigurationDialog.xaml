@@ -10,7 +10,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <Label x:Name="PromptLabel" Content="Delete configuratiaon from where?" Margin="10,10,10,0" Grid.Column="0"  Grid.Row="0"/>
+        <Label x:Name="PromptLabel" Content="Delete configuration from where?" Margin="10,10,10,0" Grid.Column="0"  Grid.Row="0"/>
         <StackPanel Grid.Row="3" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button x:Name="LocalButton" Content="Local Disk Only" IsDefault="True" Click="LocalButton_Click" Margin="10,10,0,10" Width="135" Grid.Row="1" />
             <Button x:Name="CloudButton" Content="Cloud and Local Disk" Click="CloudButton_Click" Margin="10,10,0,10" Width="135" Grid.Row="1" />

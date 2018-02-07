@@ -20,9 +20,10 @@ namespace AutomationISE
     public partial class DeleteConfigurationDialog : Window
     {
         public bool deleteLocalOnly { get; set; }
-        public DeleteConfigurationDialog()
+        public DeleteConfigurationDialog(String ConfigurationName)
         {
             InitializeComponent();
+            this.PromptLabel.Content = "Delete " + ConfigurationName + " from where?";
             deleteLocalOnly = true;
         }
 
