@@ -76,18 +76,29 @@ namespace AutomationISE.Model
             // Get subscriptions for each tenant
             foreach (var tenant in tenants.TenantIds)
             {
-                AuthenticationResult tenantTokenCreds = AuthenticateHelper.RefreshTokenByAuthority(tenant.TenantId, Properties.Settings.Default.appIdURI);
-                subscriptionCredentials = new Microsoft.Azure.TokenCloudCredentials(tenantTokenCreds.AccessToken);
-                var tenantSubscriptionClient = new Microsoft.Azure.Subscriptions.SubscriptionClient(subscriptionCredentials,new Uri(Properties.Settings.Default.appIdURI));
-                var subscriptionListResults = tenantSubscriptionClient.Subscriptions.ListAsync(cancelToken).Result;
-
-                foreach (var subscription in subscriptionListResults.Subscriptions)
+                try
                 {
-                    var subList = new SubscriptionObject();
-                    subList.Name = subscription.DisplayName;
-                    subList.SubscriptionId = subscription.SubscriptionId;
-                    subList.Authority = tenant.TenantId;
-                    subscriptionList.Add(subList);
+                    AuthenticationResult tenantTokenCreds =
+                        AuthenticateHelper.RefreshTokenByAuthority(tenant.TenantId,
+                            Properties.Settings.Default.appIdURI);
+                    subscriptionCredentials = new Microsoft.Azure.TokenCloudCredentials(tenantTokenCreds.AccessToken);
+                    var tenantSubscriptionClient =
+                        new Microsoft.Azure.Subscriptions.SubscriptionClient(subscriptionCredentials,
+                            new Uri(Properties.Settings.Default.appIdURI));
+                    var subscriptionListResults = tenantSubscriptionClient.Subscriptions.ListAsync(cancelToken).Result;
+
+                    foreach (var subscription in subscriptionListResults.Subscriptions)
+                    {
+                        var subList = new SubscriptionObject();
+                        subList.Name = subscription.DisplayName;
+                        subList.SubscriptionId = subscription.SubscriptionId;
+                        subList.Authority = tenant.TenantId;
+                        subscriptionList.Add(subList);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // ignored
                 }
             }
 
