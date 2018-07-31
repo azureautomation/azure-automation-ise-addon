@@ -243,7 +243,7 @@ namespace AutomationISE.Model
             public static void WriteJson(string jsonFilePath, Object assets)
             {
                 var assetsSerialized = JsonConvert.SerializeObject(assets, Formatting.Indented);
-                File.WriteAllText(jsonFilePath, assetsSerialized);
+                File.WriteAllText(jsonFilePath, assetsSerialized, System.Text.Encoding.UTF8);
             }
         }
 

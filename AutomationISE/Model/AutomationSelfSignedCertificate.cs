@@ -164,7 +164,7 @@ namespace AutomationISE.Model
             }
 
             JavaScriptSerializer jss = new JavaScriptSerializer();
-            File.WriteAllText(GetConfigPath(), jss.Serialize(config));
+            File.WriteAllText(GetConfigPath(), jss.Serialize(config), System.Text.Encoding.UTF8);
 
         }
 

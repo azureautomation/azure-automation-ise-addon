@@ -272,7 +272,7 @@ namespace AutomationISE.Model
 
             try
             {
-                File.WriteAllText(configurationFilePath, "Configuration " + configurationName + "\r\n{\r\n}");
+                File.WriteAllText(configurationFilePath, "Configuration " + configurationName + "\r\n{\r\n}", Encoding.UTF8);
             }
             catch (Exception Ex)
             {
@@ -280,7 +280,7 @@ namespace AutomationISE.Model
                 if (Ex.HResult == -2147024864)
                 {
                     Thread.Sleep(1000);
-                    File.WriteAllText(configurationFilePath, "Configuration " + configurationName + "\r\n{\r\n}");
+                    File.WriteAllText(configurationFilePath, "Configuration " + configurationName + "\r\n{\r\n}", Encoding.UTF8);
                 }
             }
 

@@ -46,7 +46,7 @@ namespace AutomationISE.Model
                 }
             }
 
-            File.WriteAllText(configFilePath, jss.Serialize(config)); // TODO: use a friendly JSON formatter for serialization
+            File.WriteAllText(configFilePath, jss.Serialize(config), Encoding.UTF8); // TODO: use a friendly JSON formatter for serialization
         }
 
         public static string findModulePath()
