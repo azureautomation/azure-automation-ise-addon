@@ -7,7 +7,7 @@
 RootModule = 'AzureAutomationAuthoringToolkit.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.2.4.1'
+ModuleVersion = '0.2.4.2'
 
 # Minimum version of the Windows PowerShell engine required by this module
 PowerShellVersion = '3.0'
