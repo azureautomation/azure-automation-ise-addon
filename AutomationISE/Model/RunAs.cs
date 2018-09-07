@@ -22,12 +22,19 @@ using Microsoft.Azure.Graph.RBAC;
 using Microsoft.Rest;
 using Microsoft.Azure.Graph.RBAC.Models;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.Azure.ActiveDirectory.GraphClient;
 
 namespace AutomationISE.Model
 {
     class RunAs
     {
         private static GraphRbacManagementClient graphClient;
+        private static ActiveDirectoryClient graphClient2;
+
+        private static async Task<string> GetAccessToken(AuthenticationResult token)
+        {
+            return token.AccessToken;
+        }
 
         public RunAs(AuthenticationResult token)
         {
@@ -35,12 +42,14 @@ namespace AutomationISE.Model
             {
                 TenantID = token.TenantId
             };
+            graphClient2 = new Microsoft.Azure.ActiveDirectory.GraphClient.ActiveDirectoryClient(new Uri(Constants.graphURI + token.TenantId), () => GetAccessToken(token));
         }
 
         public async Task<X509Certificate2> CreateLocalRunAs(string applicationID, String certName)
         {
             X509Certificate2 cert = null;
             var runAsApplication = await graphClient.Applications.ListAsync("$filter=appId eq '" + applicationID + "'");
+ 
             foreach (var app in runAsApplication)
             {
                 if (app.AppId == applicationID)
@@ -50,7 +59,7 @@ namespace AutomationISE.Model
                     {
                         var thumbprint = CreateSelfSignedCertificate(certName);
                         cert = AutomationSelfSignedCertificate.GetCertificateWithThumbprint(thumbprint);
-                        await UpdateADApplication(cert.NotBefore, cert.NotAfter, Convert.ToBase64String(cert.RawData), app.ObjectId);
+                        await UpdateADApplication(cert.NotBefore, cert.NotAfter, cert.RawData, app.ObjectId);
                     }
                 }
             }
@@ -79,46 +88,48 @@ namespace AutomationISE.Model
         private async Task UpdateADApplication(
             DateTime selfSignedCertStartTime,
             DateTime selfSignedCertEndTime,
-            string selfSignedCertString,
+            byte[] selfSignedCertString,
             string applicationObjectId)
         {
-            var listKeyCredential = new List<KeyCredential>();
-
-            // Query the existing KeyCredentials
-            var existingKeyCredentials = await graphClient.Applications.ListKeyCredentialsAsync(applicationObjectId);
-
-            foreach (var existingKeyCredential in existingKeyCredentials)
-            {
-                // using UTC date as the KeyCredentials dates are in UTC
-                var currentDate = DateTime.UtcNow.Date;
-
-                if (existingKeyCredential.EndDate != null)
-                {
-                    if (existingKeyCredential.EndDate >= currentDate)
-                    {
-                        listKeyCredential.Add(existingKeyCredential);
-                    }
-                }
-            }
-
-            var keyCredential = new KeyCredential();
-            keyCredential.Type = "AsymmetricX509Cert";
-            keyCredential.Usage = "Verify";
-            keyCredential.StartDate = selfSignedCertStartTime;
-            keyCredential.EndDate = selfSignedCertEndTime;
-            keyCredential.Value = selfSignedCertString;
-
-            // Add the new KeyCredential to the list 
-            listKeyCredential.Add(keyCredential);
-
-            var keyCredentialsUpdateParameters = new KeyCredentialsUpdateParameters(listKeyCredential);
-
-            // Update Application in AD with new cert
             try
             {
-                await graphClient.Applications.UpdateKeyCredentialsAsync(
-                    applicationObjectId,
-                    keyCredentialsUpdateParameters);
+                var listKeyCredential = new List<Microsoft.Azure.ActiveDirectory.GraphClient.KeyCredential>();
+ 
+                // Query the existing KeyCredentials
+                var application = await graphClient2.Applications.GetByObjectId(
+                                            applicationObjectId).ExecuteAsync().ConfigureAwait(true);
+            
+
+                foreach (var existingKeyCredential in application.KeyCredentials)
+                {
+                    // using UTC date as the KeyCredentials dates are in UTC
+                    var currentDate = DateTime.UtcNow.Date;
+
+                    if (existingKeyCredential.EndDate != null)
+                    {
+                        if (existingKeyCredential.EndDate >= currentDate)
+                        {
+                            listKeyCredential.Add(existingKeyCredential);
+                        }
+                    }
+                }
+
+                var keyCredential = new Microsoft.Azure.ActiveDirectory.GraphClient.KeyCredential();
+                keyCredential.Type = "AsymmetricX509Cert";
+                keyCredential.Usage = "Verify";
+                keyCredential.StartDate = selfSignedCertStartTime;
+                keyCredential.EndDate = selfSignedCertEndTime;
+                keyCredential.Value = selfSignedCertString;
+
+                listKeyCredential.Add(keyCredential);
+
+                // Clear the key credentials and add in the unexpired ones and the new one.
+                application.KeyCredentials.Clear();
+                listKeyCredential.ForEach((unExpiredKeyCredential) => application.KeyCredentials.Add(unExpiredKeyCredential));
+
+                // Update Application in AD with new cert
+
+                await application.UpdateAsync().ConfigureAwait(false);
             }
             catch (Exception exception)
             {
