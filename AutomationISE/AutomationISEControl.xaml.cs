@@ -618,6 +618,7 @@ namespace AutomationISE
 
                 if (HostObject == null)
                 {
+                    IDEComboBox.Items.Clear();
                     IDEEditorLabel.Visibility = Visibility.Visible;
                     IDEComboBox.Visibility = Visibility.Visible;
                     String editor = Properties.Settings.Default["Editor"].ToString();
@@ -1570,6 +1571,14 @@ namespace AutomationISE
                 {
                     var codeValue = VSCodeKey.GetValue("").ToString();
                     return (codeValue.Substring(0, codeValue.IndexOf('%') - 1).Replace("\"", string.Empty).Trim());
+                }
+                using (Microsoft.Win32.RegistryKey VSCodeCurrentUserKey = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Classes\Applications\Code.exe\shell\open\command"))
+                {
+                    if (VSCodeCurrentUserKey != null)
+                    {
+                        var codeValue = VSCodeCurrentUserKey.GetValue("").ToString();
+                        return (codeValue.Substring(0, codeValue.IndexOf('%') - 1).Replace("\"", string.Empty).Trim());
+                    }
                 }
                 return null;
             }
@@ -3479,8 +3488,11 @@ namespace AutomationISE
 
         private void IDEComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            Properties.Settings.Default.Editor = IDEComboBox.SelectedItem.ToString();
-            Properties.Settings.Default.Save();
+            if (IDEComboBox.HasItems)
+            {
+                Properties.Settings.Default.Editor = IDEComboBox.SelectedItem.ToString();
+                Properties.Settings.Default.Save();
+            }
         }
 
         private void AzureEnvironmentComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
