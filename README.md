@@ -34,18 +34,18 @@ Follow the instructions for our latest [release](https://github.com/azureautomat
 ### From Source
 To build from source:
 * [Download](https://github.com/azureautomation/azure-automation-ise-addon/archive/master.zip) or clone this repository, and extract from zip if necessary
+* Ensure the Azure SDK is installed (required to build in Visual Studio)
 * Open AutomationISE/AutomationISE.sln in Visual Studio
-* Install the Azure SDK
 * Build the solution. NuGet will pull the required packages.
-* Put the resulting binaries in the existing [AzureAutomationAuthoringToolkit/ISEaddon](https://github.com/azureautomation/azure-automation-ise-addon/tree/master/AzureAutomationAuthoringToolkit/ISEaddon) directory 
+* Copy the resulting binaries (all files/folders in AutomationISE/bin/Debug) to the existing [AzureAutomationAuthoringToolkit/ISEaddon](https://github.com/azureautomation/azure-automation-ise-addon/tree/master/AzureAutomationAuthoringToolkit/ISEaddon) directory 
 * Place the AzureAutomationAuthoringToolkit folder somewhere in your PSModulePath, ex: `C:\Users\<USERNAME>\Documents\WindowsPowerShell\Modules`
 
 If you want to build the standalone AddOn for use with Visual Studio or VSCode, perform the following:
 * Open AddOn/AddOn.sln in Visual Studio
-* Build the AutomationISE solution first cleanly.
+* Build the AutomationISE solution cleanly from source, as above.
 * Select x64 as the target platform.
 * Build the AddOn solution. Nuget will pull any required packages.
-* You can then copy the AddOn.exe that is built into the existing [AzureAutomationAuthoringToolkit/ISEaddon](https://github.com/azureautomation/azure-automation-ise-addon/tree/master/AzureAutomationAuthoringToolkit/ISEaddon) directory where the AutomationISE files were copied previously. 
+* Copy the AddOn.exe that is built into the existing [AzureAutomationAuthoringToolkit/ISEaddon](https://github.com/azureautomation/azure-automation-ise-addon/tree/master/AzureAutomationAuthoringToolkit/ISEaddon) directory where the AutomationISE files were copied previously. 
 * From PowerShell, run Import-Module AzureAutomationAuthoringToolkit to get the required configuration files created.
 * You can then run AddOn.exe and use outside of the PowerShell ISE with Visual Studio or VS Code.
 ![alt text](https://github.com/azureautomation/azure-automation-ise-addon/blob/master/Screenshots/VSCodeAddOn.png " Azure Automation Add-On")
