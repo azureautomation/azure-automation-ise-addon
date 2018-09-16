@@ -186,7 +186,15 @@ namespace AutomationISE.Model
                 if (String.Compare(node.FirstChild.Value, Version, StringComparison.CurrentCulture) == 0)
                 {
                     // Get the dependency list
-                    var dependencies = node.ParentNode.ChildNodes[4].InnerText;
+                    var dependencies = "";
+                    foreach (var childitem in node.ParentNode.ChildNodes)
+                    {
+                        if ((((System.Xml.XmlElement)childitem).Name) == "d:Dependencies")
+                            {
+                                dependencies = (((System.Xml.XmlElement)childitem).InnerText);
+                                break;
+                            }
+                    }
                     if (!(String.IsNullOrEmpty(dependencies)))
                         {
                         var splitDependencies = dependencies.Split('|');
@@ -195,9 +203,7 @@ namespace AutomationISE.Model
                             var Parts = dependent.Split(':');
                             var DependentmoduleName = Parts[0];
                             var DependencyVersion = Parts[1].Replace("[", "").Replace("]", "");
-                     //       DependencyVersion = DependencyVersion.Replace("]", "");
                             address = new Uri("https://www.powershellgallery.com/api/v2/package/" + DependentmoduleName + "/" + DependencyVersion);
-
                             request = WebRequest.Create(address) as HttpWebRequest;
                             // Get response  
                             using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
