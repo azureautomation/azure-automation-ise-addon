@@ -5,7 +5,7 @@
 
 The Azure Automation PowerShell ISE add-on makes it easy to author and test your runbooks in your local PowerShell ISE.
 
-**Note: This project is currently in development. Please open issues found or provide feedback in the feedback section of the add-on.**
+**Note: This is an open source project that is not officially supported but issues are fixed when time permits.**
 
 ## Features
 * Use Automation activities (Get-AutomationVariable, Get-AutomationPSCredential, etc) in local PowerShell Workflows and scripts
