@@ -392,7 +392,9 @@ function Get-AzureAutomationAuthoringToolkitConfiguration {
     if(!($Configuration.LocalAssetsPath -and $Configuration.SecureLocalAssetsPath -and $Configuration.EncryptionCertificateThumbprint)) {
         throw $ConfigurationError
     }
-
+    ## Replace hiphen issue
+    $Configuration.LocalAssetsPath = $Configuration.LocalAssetsPath.Replace('â€“','–')
+    $Configuration.SecureLocalAssetsPath = $Configuration.SecureLocalAssetsPath.Replace('â€“','–')    
     Write-Output $Configuration
 }
 
